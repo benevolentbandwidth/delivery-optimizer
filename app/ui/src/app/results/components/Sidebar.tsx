@@ -42,6 +42,9 @@ export default function Sidebar({ routes, isEditMode, onEditModeChange, onUpdate
     <aside
       className={`w-full h-full flex flex-col overflow-hidden border-r-2 bg-white p-4 ${isEditMode ? "border-amber-500" : "border-zinc-200"}`} // h-full helps the sidebar fill up the full height of the column next to the map instead of just being as tall as its content, flex flex-col stacks the children in the column and control their height, overflow hidden makes sure scrolling only happens inside the sidebar's content area
     >
+      {isEditMode && ( // If edit mode is true, show the message saying "Edit Mode Active"
+        <p className="mb-2 text-xs font-medium text-amber-700 bg-amber-50 rounded px-2 py-1">Edit Mode Active</p>
+      )}
       <div className="flex shrink-0 items-center justify-between gap-2 mb-4">
         <span className="text-sm font-medium text-zinc-700">Edit mode</span>
         <button
