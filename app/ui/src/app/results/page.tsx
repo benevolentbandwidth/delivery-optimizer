@@ -12,7 +12,7 @@ import type { MockRouteJson } from "./data/mockRouteLoader";
 import mockRouteJson from "./data/mock_route.json";
 
 export default function ResultsPage() {
-  const [routes] = useState<Route[]>(() => [mockRouteToRoute(mockRouteJson as MockRouteJson)]);
+  const [routes] = useState<Route[]>(() => [mockRouteToRoute(mockRouteJson as MockRouteJson)]); // Lazy initializer: compute initial routes once so first render already has data (no empty flash, no extra re-render)
   const [isSidebarOpen, setIsSidebarOpen] = useState(true); // initial state for sidebar is open
   const [isEditMode, setIsEditMode] = useState(false); // initial state for edit mode is off (false = view only, true = editing)
 
