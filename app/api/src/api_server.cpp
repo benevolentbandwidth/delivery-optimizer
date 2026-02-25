@@ -1,5 +1,6 @@
 #include "deliveryoptimizer/api/api_server.hpp"
 
+#include "deliveryoptimizer/api/endpoints/deliveries_optimize_endpoint.hpp"
 #include "deliveryoptimizer/api/endpoints/health_endpoint.hpp"
 #include "deliveryoptimizer/api/endpoints/optimize_endpoint.hpp"
 #include "deliveryoptimizer/api/endpoints/osrm_proxy_endpoint.hpp"
@@ -14,6 +15,7 @@ int RunApiServer() {
 
   RegisterHealthEndpoint(app);
   RegisterOptimizeEndpoint(app);
+  RegisterDeliveriesOptimizeEndpoint(app);
   RegisterOsrmProxyEndpoint(app);
 
   const auto options = LoadServerOptionsFromEnv();
