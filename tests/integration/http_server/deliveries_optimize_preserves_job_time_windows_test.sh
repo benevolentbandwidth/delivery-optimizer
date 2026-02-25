@@ -1,29 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ $# -lt 1 ]]; then
-  echo "usage: $0 <server-binary> [curl-binary]" >&2
-  exit 2
-fi
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=tests/integration/http_server/http_server_helpers.sh
+source "${script_dir}/http_server_helpers.sh"
 
-server_bin="$1"
-curl_bin="${2:-curl}"
-default_port="$((40000 + ($$ % 20000)))"
-port="${DELIVERYOPTIMIZER_TEST_PORT:-${default_port}}"
-response_file="$(mktemp)"
-payload_file="$(mktemp)"
-captured_input_file="$(mktemp)"
-stub_bin="$(mktemp)"
-log_file="$(mktemp)"
-
-cleanup() {
-  if [[ -n "${server_pid:-}" ]]; then
-    kill "${server_pid}" >/dev/null 2>&1 || true
-    wait "${server_pid}" >/dev/null 2>&1 || true
-  fi
-  rm -f "${response_file}" "${payload_file}" "${captured_input_file}" "${stub_bin}" "${log_file}"
-}
-trap cleanup EXIT
+http_server_init 40000 "$@"
+response_file="${work_dir}/response.json"
+payload_file="${work_dir}/payload.json"
+captured_input_file="${work_dir}/captured-input.json"
+stub_bin="${work_dir}/vroom-stub.sh"
 
 cat >"${stub_bin}" <<'SH'
 #!/usr/bin/env bash
@@ -55,23 +41,8 @@ JSON
 SH
 chmod +x "${stub_bin}"
 
-env DELIVERYOPTIMIZER_PORT="${port}" VROOM_BIN="${stub_bin}" VROOM_CAPTURE_INPUT="${captured_input_file}" "${server_bin}" >"${log_file}" 2>&1 &
-server_pid=$!
-
-ready=false
-for _ in $(seq 1 50); do
-  if "${curl_bin}" -fsS "http://127.0.0.1:${port}/optimize?deliveries=1&vehicles=1" >/dev/null 2>&1; then
-    ready=true
-    break
-  fi
-  sleep 0.2
-done
-
-if [[ "${ready}" != "true" ]]; then
-  echo "server failed to start on port ${port}" >&2
-  cat "${log_file}" >&2 || true
-  exit 1
-fi
+http_server_start VROOM_BIN="${stub_bin}" VROOM_CAPTURE_INPUT="${captured_input_file}"
+http_server_wait_until_ready
 
 cat >"${payload_file}" <<'JSON'
 {
@@ -95,7 +66,7 @@ http_code="$("${curl_bin}" -sS -o "${response_file}" -w "%{http_code}" \
   -X POST \
   -H "Content-Type: application/json" \
   --data-binary "@${payload_file}" \
-  "http://127.0.0.1:${port}/api/v1/deliveries/optimize")"
+  "$(http_server_url /api/v1/deliveries/optimize)")"
 
 if [[ "${http_code}" != "200" ]]; then
   echo "expected HTTP 200 from deliveries optimize, got ${http_code}" >&2

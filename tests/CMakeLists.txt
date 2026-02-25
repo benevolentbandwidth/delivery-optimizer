@@ -47,12 +47,20 @@ if(DELIVERYOPTIMIZER_ENABLE_WARNINGS)
   deliveryoptimizer_set_warnings(deliveryoptimizer_tests)
 endif()
 
-gtest_discover_tests(deliveryoptimizer_tests DISCOVERY_TIMEOUT 30)
+gtest_discover_tests(
+  deliveryoptimizer_tests
+  DISCOVERY_TIMEOUT 30
+  PROPERTIES
+    LABELS "unit"
+)
 
 find_program(BASH_PROGRAM bash REQUIRED)
 find_program(CURL_PROGRAM curl REQUIRED)
 find_program(PYTHON3_PROGRAM python3 REQUIRED)
 find_program(DOCKER_PROGRAM docker)
+
+set(DELIVERYOPTIMIZER_LOCAL_API_LABELS "integration;api;local")
+set(DELIVERYOPTIMIZER_LOCAL_API_REGRESSION_LABELS "integration;api;local;regression")
 
 function(deliveryoptimizer_set_local_http_test_port test_name port)
   set_tests_properties(
@@ -70,33 +78,45 @@ function(deliveryoptimizer_set_local_http_test_environment test_name environment
   )
 endfunction()
 
-add_test(
-  NAME DeliveryOptimizerApiTest.HealthAndOptimize
-  COMMAND "${BASH_PROGRAM}" "${CMAKE_CURRENT_SOURCE_DIR}/integration/http_server/health_and_optimize_test.sh"
-          "$<TARGET_FILE:deliveryoptimizer_api>" "${CURL_PROGRAM}"
+function(deliveryoptimizer_add_local_http_test test_name script_name timeout_seconds labels)
+  add_test(
+    NAME ${test_name}
+    COMMAND "${BASH_PROGRAM}" "${CMAKE_CURRENT_SOURCE_DIR}/integration/http_server/${script_name}"
+            "$<TARGET_FILE:deliveryoptimizer_api>" "${CURL_PROGRAM}"
+  )
+  set_tests_properties(
+    ${test_name}
+    PROPERTIES
+      TIMEOUT ${timeout_seconds}
+      LABELS "${labels}"
+  )
+endfunction()
+
+deliveryoptimizer_add_local_http_test(
+  DeliveryOptimizerApiTest.HealthAndOptimize
+  health_and_optimize_test.sh
+  30
+  "${DELIVERYOPTIMIZER_LOCAL_API_LABELS}"
 )
-set_tests_properties(DeliveryOptimizerApiTest.HealthAndOptimize PROPERTIES TIMEOUT 30)
 deliveryoptimizer_set_local_http_test_port(DeliveryOptimizerApiTest.HealthAndOptimize 20000)
 
-add_test(
-  NAME DeliveryOptimizerApiValidationTest.OptimizeRejectsNegativeDeliveries
-  COMMAND "${BASH_PROGRAM}"
-          "${CMAKE_CURRENT_SOURCE_DIR}/integration/http_server/optimize_rejects_negative_deliveries_test.sh"
-          "$<TARGET_FILE:deliveryoptimizer_api>" "${CURL_PROGRAM}"
+deliveryoptimizer_add_local_http_test(
+  DeliveryOptimizerApiValidationTest.OptimizeRejectsNegativeDeliveries
+  optimize_rejects_negative_deliveries_test.sh
+  30
+  "${DELIVERYOPTIMIZER_LOCAL_API_LABELS}"
 )
-set_tests_properties(DeliveryOptimizerApiValidationTest.OptimizeRejectsNegativeDeliveries PROPERTIES TIMEOUT 30)
 deliveryoptimizer_set_local_http_test_port(
   DeliveryOptimizerApiValidationTest.OptimizeRejectsNegativeDeliveries
   21000
 )
 
-add_test(
-  NAME DeliveryOptimizerApiValidationTest.OptimizeRejectsExcessiveDeliveries
-  COMMAND "${BASH_PROGRAM}"
-          "${CMAKE_CURRENT_SOURCE_DIR}/integration/http_server/optimize_rejects_excessive_deliveries_test.sh"
-          "$<TARGET_FILE:deliveryoptimizer_api>" "${CURL_PROGRAM}"
+deliveryoptimizer_add_local_http_test(
+  DeliveryOptimizerApiValidationTest.OptimizeRejectsExcessiveDeliveries
+  optimize_rejects_excessive_deliveries_test.sh
+  30
+  "${DELIVERYOPTIMIZER_LOCAL_API_LABELS}"
 )
-set_tests_properties(DeliveryOptimizerApiValidationTest.OptimizeRejectsExcessiveDeliveries PROPERTIES TIMEOUT 30)
 deliveryoptimizer_set_local_http_test_port(
   DeliveryOptimizerApiValidationTest.OptimizeRejectsExcessiveDeliveries
   22000
@@ -124,24 +144,28 @@ set_tests_properties(
   DeliveryOptimizerApiValidationTest.DeliveriesOptimizeRejectsExcessiveBodySize
   PROPERTIES
     TIMEOUT 30
+    LABELS "${DELIVERYOPTIMIZER_LOCAL_API_LABELS}"
+)
+deliveryoptimizer_set_local_http_test_port(
+  DeliveryOptimizerApiValidationTest.DeliveriesOptimizeRejectsExcessiveBodySize
+  23000
 )
 
-add_test(
-  NAME DeliveryOptimizerOsrmProxyTest.RejectsDisallowedService
-  COMMAND "${BASH_PROGRAM}"
-          "${CMAKE_CURRENT_SOURCE_DIR}/integration/http_server/osrm_proxy_rejects_disallowed_service_test.sh"
-          "$<TARGET_FILE:deliveryoptimizer_api>" "${CURL_PROGRAM}"
+deliveryoptimizer_add_local_http_test(
+  DeliveryOptimizerOsrmProxyTest.RejectsDisallowedService
+  osrm_proxy_rejects_disallowed_service_test.sh
+  30
+  "${DELIVERYOPTIMIZER_LOCAL_API_LABELS}"
 )
-set_tests_properties(DeliveryOptimizerOsrmProxyTest.RejectsDisallowedService PROPERTIES TIMEOUT 30)
 deliveryoptimizer_set_local_http_test_port(DeliveryOptimizerOsrmProxyTest.RejectsDisallowedService 34000)
 
-add_test(
-  NAME DeliveryOptimizerOsrmProxyTest.RejectsTripService
-  COMMAND "${BASH_PROGRAM}"
-          "${CMAKE_CURRENT_SOURCE_DIR}/integration/http_server/osrm_proxy_rejects_trip_service_test.sh"
-          "$<TARGET_FILE:deliveryoptimizer_api>" "${CURL_PROGRAM}"
+deliveryoptimizer_add_local_http_test(
+  DeliveryOptimizerOsrmProxyTest.RejectsTripService
+  osrm_proxy_rejects_trip_service_test.sh
+  30
+  "${DELIVERYOPTIMIZER_LOCAL_API_LABELS}"
 )
-set_tests_properties(DeliveryOptimizerOsrmProxyTest.RejectsTripService PROPERTIES TIMEOUT 30)
+deliveryoptimizer_set_local_http_test_port(DeliveryOptimizerOsrmProxyTest.RejectsTripService 35000)
 
 add_test(
   NAME DeliveryOptimizerOsrmProxyTest.ForwardsAllowedServiceWithQueryString
@@ -153,75 +177,112 @@ set_tests_properties(
   DeliveryOptimizerOsrmProxyTest.ForwardsAllowedServiceWithQueryString
   PROPERTIES
     TIMEOUT 30
+    LABELS "${DELIVERYOPTIMIZER_LOCAL_API_LABELS}"
 )
 deliveryoptimizer_set_local_http_test_environment(
   DeliveryOptimizerOsrmProxyTest.ForwardsAllowedServiceWithQueryString
   "DELIVERYOPTIMIZER_TEST_PORT=36000;DELIVERYOPTIMIZER_OSRM_STUB_PORT=52000"
 )
 
-add_test(
-  NAME DeliveryOptimizerApiContractTest.DeliveriesOptimizePreservesVehicleStartEnd
-  COMMAND "${BASH_PROGRAM}"
-          "${CMAKE_CURRENT_SOURCE_DIR}/integration/http_server/deliveries_optimize_preserves_vehicle_start_end_test.sh"
-          "$<TARGET_FILE:deliveryoptimizer_api>" "${CURL_PROGRAM}"
+deliveryoptimizer_add_local_http_test(
+  DeliveryOptimizerApiContractTest.DeliveriesOptimizePreservesVehicleStartEnd
+  deliveries_optimize_preserves_vehicle_start_end_test.sh
+  30
+  "${DELIVERYOPTIMIZER_LOCAL_API_LABELS}"
 )
-set_tests_properties(DeliveryOptimizerApiContractTest.DeliveriesOptimizePreservesVehicleStartEnd PROPERTIES TIMEOUT 30)
+deliveryoptimizer_set_local_http_test_port(
+  DeliveryOptimizerApiContractTest.DeliveriesOptimizePreservesVehicleStartEnd
+  24000
+)
+
+deliveryoptimizer_add_local_http_test(
+  DeliveryOptimizerApiContractTest.DeliveriesOptimizeResponseIncludesExternalIds
+  deliveries_optimize_response_includes_external_ids_test.sh
+  30
+  "${DELIVERYOPTIMIZER_LOCAL_API_LABELS}"
+)
+deliveryoptimizer_set_local_http_test_port(
+  DeliveryOptimizerApiContractTest.DeliveriesOptimizeResponseIncludesExternalIds
+  25000
+)
+
+deliveryoptimizer_add_local_http_test(
+  DeliveryOptimizerApiContractTest.HealthReportsDependencyReadiness
+  health_reports_dependency_readiness_test.sh
+  30
+  "${DELIVERYOPTIMIZER_LOCAL_API_LABELS}"
+)
+deliveryoptimizer_set_local_http_test_port(
+  DeliveryOptimizerApiContractTest.HealthReportsDependencyReadiness
+  26000
+)
+
+deliveryoptimizer_add_local_http_test(
+  DeliveryOptimizerApiContractTest.DeliveriesOptimizeMissingServiceDefaultsTo300
+  deliveries_optimize_missing_service_defaults_to_300_test.sh
+  30
+  "${DELIVERYOPTIMIZER_LOCAL_API_LABELS}"
+)
+deliveryoptimizer_set_local_http_test_port(
+  DeliveryOptimizerApiContractTest.DeliveriesOptimizeMissingServiceDefaultsTo300
+  27000
+)
+
+deliveryoptimizer_add_local_http_test(
+  DeliveryOptimizerApiRegressionTest.DeliveriesOptimizeEnforcesSolverTimeout
+  deliveries_optimize_enforces_solver_timeout_test.sh
+  30
+  "${DELIVERYOPTIMIZER_LOCAL_API_REGRESSION_LABELS}"
+)
+deliveryoptimizer_set_local_http_test_port(
+  DeliveryOptimizerApiRegressionTest.DeliveriesOptimizeEnforcesSolverTimeout
+  28000
+)
+
+deliveryoptimizer_add_local_http_test(
+  DeliveryOptimizerApiRegressionTest.DeliveriesOptimizePreservesVehicleTimeWindow
+  deliveries_optimize_preserves_vehicle_time_window_test.sh
+  30
+  "${DELIVERYOPTIMIZER_LOCAL_API_REGRESSION_LABELS}"
+)
+deliveryoptimizer_set_local_http_test_port(
+  DeliveryOptimizerApiRegressionTest.DeliveriesOptimizePreservesVehicleTimeWindow
+  29000
+)
+
+deliveryoptimizer_add_local_http_test(
+  DeliveryOptimizerApiRegressionTest.DeliveriesOptimizePreservesJobTimeWindows
+  deliveries_optimize_preserves_job_time_windows_test.sh
+  30
+  "${DELIVERYOPTIMIZER_LOCAL_API_REGRESSION_LABELS}"
+)
+deliveryoptimizer_set_local_http_test_port(
+  DeliveryOptimizerApiRegressionTest.DeliveriesOptimizePreservesJobTimeWindows
+  30000
+)
+
+deliveryoptimizer_add_local_http_test(
+  DeliveryOptimizerApiRegressionTest.DeliveriesOptimizeRejectsOutOfRangeCoordinates
+  deliveries_optimize_rejects_out_of_range_coordinates_test.sh
+  30
+  "${DELIVERYOPTIMIZER_LOCAL_API_REGRESSION_LABELS}"
+)
+deliveryoptimizer_set_local_http_test_port(
+  DeliveryOptimizerApiRegressionTest.DeliveriesOptimizeRejectsOutOfRangeCoordinates
+  31000
+)
 
 add_test(
-  NAME DeliveryOptimizerApiContractTest.DeliveriesOptimizeResponseIncludesExternalIds
+  NAME DeliveryOptimizerTestHarnessTest.HttpServerHelpersKeepPortInRange
   COMMAND "${BASH_PROGRAM}"
-          "${CMAKE_CURRENT_SOURCE_DIR}/integration/http_server/deliveries_optimize_response_includes_external_ids_test.sh"
-          "$<TARGET_FILE:deliveryoptimizer_api>" "${CURL_PROGRAM}"
+          "${CMAKE_CURRENT_SOURCE_DIR}/integration/http_server/http_server_helpers_keep_port_in_range_test.sh"
 )
-set_tests_properties(DeliveryOptimizerApiContractTest.DeliveriesOptimizeResponseIncludesExternalIds PROPERTIES TIMEOUT 30)
-
-add_test(
-  NAME DeliveryOptimizerApiContractTest.HealthReportsDependencyReadiness
-  COMMAND "${BASH_PROGRAM}"
-          "${CMAKE_CURRENT_SOURCE_DIR}/integration/http_server/health_reports_dependency_readiness_test.sh"
-          "$<TARGET_FILE:deliveryoptimizer_api>" "${CURL_PROGRAM}"
+set_tests_properties(
+  DeliveryOptimizerTestHarnessTest.HttpServerHelpersKeepPortInRange
+  PROPERTIES
+    TIMEOUT 30
+    LABELS "integration;local;regression"
 )
-set_tests_properties(DeliveryOptimizerApiContractTest.HealthReportsDependencyReadiness PROPERTIES TIMEOUT 30)
-
-add_test(
-  NAME DeliveryOptimizerApiContractTest.DeliveriesOptimizeMissingServiceDefaultsTo300
-  COMMAND "${BASH_PROGRAM}"
-          "${CMAKE_CURRENT_SOURCE_DIR}/integration/http_server/deliveries_optimize_missing_service_defaults_to_300_test.sh"
-          "$<TARGET_FILE:deliveryoptimizer_api>" "${CURL_PROGRAM}"
-)
-set_tests_properties(DeliveryOptimizerApiContractTest.DeliveriesOptimizeMissingServiceDefaultsTo300 PROPERTIES TIMEOUT 30)
-
-add_test(
-  NAME DeliveryOptimizerApiRegressionTest.DeliveriesOptimizeEnforcesSolverTimeout
-  COMMAND "${BASH_PROGRAM}"
-          "${CMAKE_CURRENT_SOURCE_DIR}/integration/http_server/deliveries_optimize_enforces_solver_timeout_test.sh"
-          "$<TARGET_FILE:deliveryoptimizer_api>" "${CURL_PROGRAM}"
-)
-set_tests_properties(DeliveryOptimizerApiRegressionTest.DeliveriesOptimizeEnforcesSolverTimeout PROPERTIES TIMEOUT 30)
-
-add_test(
-  NAME DeliveryOptimizerApiRegressionTest.DeliveriesOptimizePreservesVehicleTimeWindow
-  COMMAND "${BASH_PROGRAM}"
-          "${CMAKE_CURRENT_SOURCE_DIR}/integration/http_server/deliveries_optimize_preserves_vehicle_time_window_test.sh"
-          "$<TARGET_FILE:deliveryoptimizer_api>" "${CURL_PROGRAM}"
-)
-set_tests_properties(DeliveryOptimizerApiRegressionTest.DeliveriesOptimizePreservesVehicleTimeWindow PROPERTIES TIMEOUT 30)
-
-add_test(
-  NAME DeliveryOptimizerApiRegressionTest.DeliveriesOptimizePreservesJobTimeWindows
-  COMMAND "${BASH_PROGRAM}"
-          "${CMAKE_CURRENT_SOURCE_DIR}/integration/http_server/deliveries_optimize_preserves_job_time_windows_test.sh"
-          "$<TARGET_FILE:deliveryoptimizer_api>" "${CURL_PROGRAM}"
-)
-set_tests_properties(DeliveryOptimizerApiRegressionTest.DeliveriesOptimizePreservesJobTimeWindows PROPERTIES TIMEOUT 30)
-
-add_test(
-  NAME DeliveryOptimizerApiRegressionTest.DeliveriesOptimizeRejectsOutOfRangeCoordinates
-  COMMAND "${BASH_PROGRAM}"
-          "${CMAKE_CURRENT_SOURCE_DIR}/integration/http_server/deliveries_optimize_rejects_out_of_range_coordinates_test.sh"
-          "$<TARGET_FILE:deliveryoptimizer_api>" "${CURL_PROGRAM}"
-)
-set_tests_properties(DeliveryOptimizerApiRegressionTest.DeliveriesOptimizeRejectsOutOfRangeCoordinates PROPERTIES TIMEOUT 30)
 
 if(DOCKER_PROGRAM)
   set(DELIVERYOPTIMIZER_E2E_ENV_FILE "${CMAKE_SOURCE_DIR}/tests/integration/e2e/e2e_stack.env")
@@ -237,9 +298,9 @@ if(DOCKER_PROGRAM)
     set_tests_properties(
       ${test_name}
       PROPERTIES
-        DISABLED TRUE
         RUN_SERIAL TRUE
         TIMEOUT ${timeout_seconds}
+        LABELS "e2e;docker"
     )
   endfunction()
 
@@ -255,7 +316,7 @@ if(DOCKER_PROGRAM)
       PROPERTIES
         RUN_SERIAL TRUE
         TIMEOUT ${timeout_seconds}
-        LABELS "e2e;api"
+        LABELS "e2e;docker;api"
     )
   endfunction()
 
@@ -270,9 +331,10 @@ if(DOCKER_PROGRAM)
   set_tests_properties(
     DeliveryOptimizerRoutingSmokeTest.OsrmAndVroom
     PROPERTIES
-      DISABLED TRUE
       RUN_SERIAL TRUE
       TIMEOUT 1800
+      DISABLED TRUE
+      LABELS "e2e;docker;routing;smoke"
   )
 
   deliveryoptimizer_add_docker_e2e_test(
@@ -285,22 +347,22 @@ if(DOCKER_PROGRAM)
     vroom_help_is_available_e2e_test.sh
     1800
   )
-  deliveryoptimizer_add_docker_e2e_test(
+  deliveryoptimizer_add_docker_api_e2e_test(
     DeliveryOptimizerE2ETest.HealthEndpointReturnsOk
     health_endpoint_returns_ok_e2e_test.sh
     1800
   )
-  deliveryoptimizer_add_docker_e2e_test(
+  deliveryoptimizer_add_docker_api_e2e_test(
     DeliveryOptimizerE2ETest.OptimizeValidQueryReturnsSummary
     optimize_valid_query_returns_summary_e2e_test.sh
     1800
   )
-  deliveryoptimizer_add_docker_e2e_test(
+  deliveryoptimizer_add_docker_api_e2e_test(
     DeliveryOptimizerE2ETest.OptimizeRejectsNegativeDeliveries
     optimize_rejects_negative_deliveries_e2e_test.sh
     1800
   )
-  deliveryoptimizer_add_docker_e2e_test(
+  deliveryoptimizer_add_docker_api_e2e_test(
     DeliveryOptimizerE2ETest.OptimizeRejectsExcessiveDeliveries
     optimize_rejects_excessive_deliveries_e2e_test.sh
     1800
