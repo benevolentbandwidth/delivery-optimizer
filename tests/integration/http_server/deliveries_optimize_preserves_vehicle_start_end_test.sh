@@ -103,7 +103,7 @@ if ! grep -Eq '\[[[:space:]]*7\.5[0-9]*[[:space:]]*,[[:space:]]*43\.8[0-9]*[[:sp
   exit 1
 fi
 
-if ! grep -Eq '\[[[:space:]]*(7\.6[0-9]*|7\.59[0-9]*)[[:space:]]*,[[:space:]]*(43\.9[0-9]*|43\.89[0-9]*)[[:space:]]*\]' "${captured_input_file}"; then
+if ! grep -Eq '\[[[:space:]]*7\.6[0-9]*[[:space:]]*,[[:space:]]*43\.9[0-9]*[[:space:]]*\]' "${captured_input_file}"; then
   echo "expected optimize request to preserve vehicle end coordinates" >&2
   cat "${captured_input_file}" >&2 || true
   exit 1

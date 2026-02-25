@@ -159,6 +159,38 @@ deliveryoptimizer_set_local_http_test_environment(
   "DELIVERYOPTIMIZER_TEST_PORT=36000;DELIVERYOPTIMIZER_OSRM_STUB_PORT=52000"
 )
 
+add_test(
+  NAME DeliveryOptimizerApiContractTest.DeliveriesOptimizePreservesVehicleStartEnd
+  COMMAND "${BASH_PROGRAM}"
+          "${CMAKE_CURRENT_SOURCE_DIR}/integration/http_server/deliveries_optimize_preserves_vehicle_start_end_test.sh"
+          "$<TARGET_FILE:deliveryoptimizer_api>" "${CURL_PROGRAM}"
+)
+set_tests_properties(DeliveryOptimizerApiContractTest.DeliveriesOptimizePreservesVehicleStartEnd PROPERTIES TIMEOUT 30)
+
+add_test(
+  NAME DeliveryOptimizerApiContractTest.DeliveriesOptimizeResponseIncludesExternalIds
+  COMMAND "${BASH_PROGRAM}"
+          "${CMAKE_CURRENT_SOURCE_DIR}/integration/http_server/deliveries_optimize_response_includes_external_ids_test.sh"
+          "$<TARGET_FILE:deliveryoptimizer_api>" "${CURL_PROGRAM}"
+)
+set_tests_properties(DeliveryOptimizerApiContractTest.DeliveriesOptimizeResponseIncludesExternalIds PROPERTIES TIMEOUT 30)
+
+add_test(
+  NAME DeliveryOptimizerApiContractTest.HealthReportsDependencyReadiness
+  COMMAND "${BASH_PROGRAM}"
+          "${CMAKE_CURRENT_SOURCE_DIR}/integration/http_server/health_reports_dependency_readiness_test.sh"
+          "$<TARGET_FILE:deliveryoptimizer_api>" "${CURL_PROGRAM}"
+)
+set_tests_properties(DeliveryOptimizerApiContractTest.HealthReportsDependencyReadiness PROPERTIES TIMEOUT 30)
+
+add_test(
+  NAME DeliveryOptimizerApiContractTest.DeliveriesOptimizeMissingServiceDefaultsTo300
+  COMMAND "${BASH_PROGRAM}"
+          "${CMAKE_CURRENT_SOURCE_DIR}/integration/http_server/deliveries_optimize_missing_service_defaults_to_300_test.sh"
+          "$<TARGET_FILE:deliveryoptimizer_api>" "${CURL_PROGRAM}"
+)
+set_tests_properties(DeliveryOptimizerApiContractTest.DeliveriesOptimizeMissingServiceDefaultsTo300 PROPERTIES TIMEOUT 30)
+
 if(DOCKER_PROGRAM)
   set(DELIVERYOPTIMIZER_E2E_ENV_FILE "${CMAKE_SOURCE_DIR}/tests/integration/e2e/e2e_stack.env")
   set(DELIVERYOPTIMIZER_E2E_COMPOSE_FILE "${CMAKE_SOURCE_DIR}/deploy/compose/docker-compose.arm64.yml")
