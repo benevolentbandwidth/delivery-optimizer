@@ -68,3 +68,11 @@ add_test(
           "$<TARGET_FILE:deliveryoptimizer_api>" "${CURL_PROGRAM}"
 )
 set_tests_properties(DeliveryOptimizerApiValidationTest.OptimizeRejectsExcessiveDeliveries PROPERTIES TIMEOUT 30)
+
+add_test(
+  NAME DeliveryOptimizerApiValidationTest.OptimizeRejectsMalformedDeliveries
+  COMMAND "${BASH_PROGRAM}"
+          "${CMAKE_CURRENT_SOURCE_DIR}/integration/http_server/optimize_rejects_malformed_deliveries_test.sh"
+          "$<TARGET_FILE:deliveryoptimizer_api>" "${CURL_PROGRAM}"
+)
+set_tests_properties(DeliveryOptimizerApiValidationTest.OptimizeRejectsMalformedDeliveries PROPERTIES TIMEOUT 30)
