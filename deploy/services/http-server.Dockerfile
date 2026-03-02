@@ -3,11 +3,13 @@
 ARG UBUNTU_VERSION=24.04
 ARG CONAN_VERSION=2.9.2
 ARG VROOM_REF=v1.14.0
+ARG VROOM_COMMIT=1fd711bc8c20326dd8e9538e2c7e4cb1ebd67bdb
 ARG VROOM_BUILD_JOBS=2
 
 FROM --platform=$TARGETPLATFORM ubuntu:${UBUNTU_VERSION} AS builder
 ARG CONAN_VERSION
 ARG VROOM_REF
+ARG VROOM_COMMIT
 ARG VROOM_BUILD_JOBS
 ARG TARGETPLATFORM
 ARG TARGETARCH
@@ -66,6 +68,8 @@ RUN --mount=type=cache,target=/tmp/conan-home,sharing=locked \
 
 RUN git clone --recurse-submodules --shallow-submodules --depth 1 --branch "${VROOM_REF}" \
       https://github.com/VROOM-Project/vroom.git /tmp/vroom \
+    && git -C /tmp/vroom fetch --depth 1 origin "${VROOM_COMMIT}" \
+    && git -C /tmp/vroom checkout "${VROOM_COMMIT}" \
     && make -C /tmp/vroom/src -j"${VROOM_BUILD_JOBS}" \
     && install -D /tmp/vroom/bin/vroom /usr/local/bin/vroom \
     && strip /usr/local/bin/vroom || true

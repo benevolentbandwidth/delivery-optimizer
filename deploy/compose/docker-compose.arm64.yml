@@ -10,6 +10,7 @@ services:
       args:
         UBUNTU_VERSION: ${OSRM_UBUNTU_VERSION:-22.04}
         OSRM_REF: ${OSRM_REF:-v5.27.1}
+        OSRM_COMMIT: ${OSRM_COMMIT:-6bff4d6d557389bcf641eaa522e30bb87a4d4fb9}
         OSRM_BUILD_JOBS: ${OSRM_BUILD_JOBS:-2}
     environment:
       OSRM_DATA_DIR: /data
@@ -44,6 +45,7 @@ services:
         UBUNTU_VERSION: ${UBUNTU_VERSION:-24.04}
         CONAN_VERSION: ${CONAN_VERSION:-2.9.2}
         VROOM_REF: ${VROOM_REF:-v1.14.0}
+        VROOM_COMMIT: ${VROOM_COMMIT:-1fd711bc8c20326dd8e9538e2c7e4cb1ebd67bdb}
         VROOM_BUILD_JOBS: ${VROOM_BUILD_JOBS:-2}
     environment:
       OSRM_URL: http://osrm:${OSRM_INTERNAL_PORT:-5001}

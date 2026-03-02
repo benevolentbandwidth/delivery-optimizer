@@ -2,6 +2,7 @@
 
 ARG UBUNTU_VERSION=22.04
 ARG OSRM_REF=v5.27.1
+ARG OSRM_COMMIT=6bff4d6d557389bcf641eaa522e30bb87a4d4fb9
 ARG OSRM_BUILD_JOBS=2
 ARG OSRM_CXX_FLAGS="-Wno-error=free-nonheap-object -Wno-free-nonheap-object"
 
@@ -12,6 +13,7 @@ ARG TARGETPLATFORM
 ARG TARGETARCH
 ARG TARGETVARIANT
 ARG OSRM_REF
+ARG OSRM_COMMIT
 ARG OSRM_BUILD_JOBS
 ARG OSRM_CXX_FLAGS
 
@@ -43,6 +45,8 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 WORKDIR /opt/osrm-backend
 
 RUN git clone --depth 1 --branch "${OSRM_REF}" https://github.com/Project-OSRM/osrm-backend.git /opt/osrm-backend \
+    && git -C /opt/osrm-backend fetch --depth 1 origin "${OSRM_COMMIT}" \
+    && git -C /opt/osrm-backend checkout "${OSRM_COMMIT}" \
     && cmake -S . -B build -G Ninja \
       -DCMAKE_BUILD_TYPE=Release \
       -DCMAKE_CXX_FLAGS="${OSRM_CXX_FLAGS}" \
