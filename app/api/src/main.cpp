@@ -1,6 +1,7 @@
 #include "deliveryoptimizer/adapters/routing_facade.hpp"
 
 #include <drogon/drogon.h>
+#include <thread>
 #include <utility>
 
 int main() {
@@ -27,7 +28,9 @@ int main() {
       });
 
   drogon::app().addListener("0.0.0.0", 8080);
-  drogon::app().setThreadNum(1);
+  const unsigned int detected_threads = std::thread::hardware_concurrency();
+  const unsigned int thread_count = detected_threads == 0U ? 1U : detected_threads;
+  drogon::app().setThreadNum(thread_count);
   drogon::app().run();
 
   return 0;
