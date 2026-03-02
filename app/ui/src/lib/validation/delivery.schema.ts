@@ -26,7 +26,10 @@ export const deliverySchema = z.object({
         z.number().int()
       ]).refine(
         ([start, end]) => end > start,
-        { message: "time_window end must be after start" }
+        {
+          message: "timeWindows end must be after start",
+          path: [1]
+        }
       )
     )
     .optional()

@@ -88,39 +88,27 @@ curl -f http://localhost:5050/health
 Expected: HTTP `200` and JSON with `"status":"ok"`.
 
 If port `5000` is free on your machine and you want that exact endpoint, set `OSRM_PUBLIC_PORT=5000` in `infra/env/routing.env`.
-# Delivery Optimizer UI
+## Delivery Optimizer UI
 
-Frontend application for optimizing delivery routes.
+The frontend lives in `app/ui`.
 
-## Prerequisites
+### Prerequisites
 
-- Node.js 18+ or Bun
-- Backend API running (see main repo README)
+- Node.js `>=20.9.0`
+- npm
 
-## Environment Setup
-
-Copy `.env.example` to `.env.local`:
+### Development
 
 ```bash
-cp .env.example .env.local
+npm --prefix app/ui install
+npm --prefix app/ui run dev
+```
 
-Configure your backend API URL:
-NEXT_PUBLIC_API_URL=http://localhost:5050
+Open [http://localhost:3000](http://localhost:3000).
 
-Development
+### UI Checks
 
-npm install
-npm run dev
-
-Open http://localhost:3000
-
-Project Structure
-
-- src/app/ - Next.js App Router pages
-- src/components/ - Reusable React components (coming soon)
-- src/lib/ - Utilities and API clients (coming soon)
-
-Connecting to Backend
-
-The backend API (PR #27) must be running for full functionality.
-See CLAUDE.md or main README for setup instructions.
+```bash
+npm --prefix app/ui run lint
+npm --prefix app/ui run build
+```

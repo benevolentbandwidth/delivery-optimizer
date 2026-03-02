@@ -29,7 +29,8 @@ export const vehicleSchema = z.object({
     data.returnTime == null ||
     data.returnTime > data.departureTime,
   {
-    message: "returnTime must be after departureTime"
+    message: "returnTime must be after departureTime",
+    path: ["returnTime"]
   })
 
 export const vehiclesSchema = z.array(vehicleSchema)
