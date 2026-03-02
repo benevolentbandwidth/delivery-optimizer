@@ -667,7 +667,6 @@ void RegisterDeliveriesOptimizeEndpoint(drogon::HttpAppFramework& app) {
                         ApplyExternalIdsToUnassigned(unassigned, job_map);
                         body["routes"] = std::move(routes);
                         body["unassigned"] = std::move(unassigned);
-                        body["raw"] = *vroom_output;
 
                         std::move(callback)(drogon::HttpResponse::newHttpJsonResponse(body));
                       },
