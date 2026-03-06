@@ -20,9 +20,7 @@ function filenameTimestamp(date: Date) {
 }
 
 // uses in-memory state and puts it in a save format 
-export function buildSessionSave(state: OptimizeRequest): SessionSaveFile {
-  const now = new Date()
-
+export function buildSessionSave(state: OptimizeRequest, now: Date = new Date()): SessionSaveFile {
   const saveFile = {
     version: 1,
     savedAt: now.toISOString(),
@@ -37,11 +35,7 @@ export function buildSessionSave(state: OptimizeRequest): SessionSaveFile {
 export function downloadSessionSave(state: OptimizeRequest): SessionExportResult {
   try {
     const now = new Date()
-    const saveFile = sessionSaveSchema.parse({
-      version: 1,
-      savedAt: now.toISOString(),
-      data: state,
-    })
+    const saveFile = buildSessionSave(state, now)
 
     const filename = `routes_${filenameTimestamp(now)}.json`
     const jsonString = JSON.stringify(saveFile, null, 2)
