@@ -1,3 +1,4 @@
+import { ZodError } from "zod"
 import type { OptimizeRequest } from "../types/optimize.types"
 import { parseSessionSaveFile } from "../validation/session.schema"
 import { sanitizeOptimizeRequest } from "../validation/json-sanitization"
@@ -73,8 +74,9 @@ export function loadSessionFromFile(
 }
 
 function formatValidationError(e: unknown): string | null {
-  const anyErr = e as any
-  const issue = anyErr?.issues?.[0]
+  if (!(e instanceof ZodError)) return null
+
+  const issue = e.issues[0]
   if (!issue) return null
 
   const path =

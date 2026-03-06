@@ -3,7 +3,7 @@ import type { OptimizeRequest } from "../types/optimize.types"
 function cleanText(value: string): string {
   return value
     .replace(/javascript:/gi, "")
-    .replace(/<\s*script/gi, "<script")
+    .replace(/<\s*script/gi, "")
 }
 
 export function sanitizeOptimizeRequest(state: OptimizeRequest): OptimizeRequest {
