@@ -15,8 +15,9 @@ int main() {
       });
 
   drogon::app().registerHandler(
-      "/optimize", [](const drogon::HttpRequestPtr& request,
-                      std::function<void(const drogon::HttpResponsePtr&)>&& callback) {
+      "/optimize",
+      [](const drogon::HttpRequestPtr& request,
+         std::function<void(const drogon::HttpResponsePtr&)>&& callback) {
         const int deliveries_param = request->getOptionalParameter<int>("deliveries").value_or(1);
         const int vehicles_param = request->getOptionalParameter<int>("vehicles").value_or(1);
 
@@ -37,7 +38,8 @@ int main() {
         body["summary"] =
             deliveryoptimizer::adapters::RoutingFacade::Optimize(deliveries, vehicles);
         std::move(callback)(drogon::HttpResponse::newHttpJsonResponse(body));
-      });
+      },
+      {drogon::Post});
 
   drogon::app().addListener("0.0.0.0", 8080);
   const unsigned int detected_threads = std::thread::hardware_concurrency();
