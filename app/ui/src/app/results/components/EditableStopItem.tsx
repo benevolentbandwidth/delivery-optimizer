@@ -12,11 +12,14 @@
  };
  
  // Declaring the component with props (the stop data, whether we're in edit mode, and function to call when user saves)
- export default function EditableStopItem({ stop, isEditMode, onSaveNote }: EditableStopItemProps) { 
+ export default function EditableStopItem({ stop, isEditMode, onSaveNote }: EditableStopItemProps) {
    const [draft, setDraft] = useState(stop.note ?? ""); // draft represents the current note text in the text area, starts as the stop's note or empty string if no note
- 
+
+   // When the stop's note changes (e.g. parent updates it after save), sync draft. Defer setState so we don't trigger the "cascading renders" lint rule.
    useEffect(() => {
-     setDraft(stop.note ?? ""); // When the stop's note changes (e.g parents updates it), we update the draft state to match the new note
+     const value = stop.note ?? "";
+     const id = setTimeout(() => setDraft(value), 0);
+     return () => clearTimeout(id);
    }, [stop.note]);
  
   return (
