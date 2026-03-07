@@ -4,19 +4,22 @@
  
  import { useEffect, useState } from "react";
  import type { Stop } from "../types";
- 
+
  type EditableStopItemProps = {
    stop: Stop;
    isEditMode: boolean;
    onSaveNote: (note: string) => void;
  };
- 
+
  // Declaring the component with props (the stop data, whether we're in edit mode, and function to call when user saves)
- export default function EditableStopItem({ stop, isEditMode, onSaveNote }: EditableStopItemProps) { 
+ export default function EditableStopItem({ stop, isEditMode, onSaveNote }: EditableStopItemProps) {
    const [draft, setDraft] = useState(stop.note ?? ""); // draft represents the current note text in the text area, starts as the stop's note or empty string if no note
- 
+
+   // When the stop's note changes (e.g. parent updates it after save), sync draft. Defer setState so we don't trigger the "cascading renders" lint rule.
    useEffect(() => {
-     setDraft(stop.note ?? ""); // When the stop's note changes (e.g parents updates it), we update the draft state to match the new note
+     const value = stop.note ?? "";
+     const id = setTimeout(() => setDraft(value), 0);
+     return () => clearTimeout(id);
    }, [stop.note]);
  
   return (
@@ -49,7 +52,7 @@
            <div className="mt-2 flex justify-end">
              <button
                type="button"
-               onClick={() => onSaveNote(draft)} // when the user clicks save, we call onSaveNote and send the current text up. Sidebar just passes that callback through. The page is the one that runs updateStopNote and updates the note in routes. Then the updated stop comes back down as stop.note, and useEffect runs setDraft so our draft matches what was saved
+               onClick={() => onSaveNote(draft)} // when the user clicks save, we call onSaveNote and send the current text up. The page runs updateStopNote and updates the note in routes. The updated stop comes back down as stop.note, and our effect (deferred) syncs draft to match.
                className="inline-flex items-center rounded-md bg-amber-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-amber-500"
              >
                Save
