@@ -51,7 +51,7 @@ if [[ "${ready}" != "true" ]]; then
   exit 1
 fi
 
-http_code="$("${curl_bin}" -sS -o "${response_file}" -w "%{http_code}" \
+http_code="$("${curl_bin}" -sS -X POST -o "${response_file}" -w "%{http_code}" \
   "http://127.0.0.1:${port}/optimize?deliveries=-1&vehicles=1")"
 
 if [[ "${http_code}" != "400" ]]; then

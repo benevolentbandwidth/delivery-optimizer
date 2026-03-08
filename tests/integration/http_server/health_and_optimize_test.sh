@@ -23,6 +23,7 @@ mktemp_file() {
 
 health_file="$(mktemp_file)"
 optimize_file="$(mktemp_file)"
+method_file="$(mktemp_file)"
 log_file="$(mktemp_file)"
 
 cleanup() {
@@ -30,7 +31,7 @@ cleanup() {
     kill "${server_pid}" >/dev/null 2>&1 || true
     wait "${server_pid}" >/dev/null 2>&1 || true
   fi
-  rm -f "${health_file}" "${optimize_file}" "${log_file}"
+  rm -f "${health_file}" "${optimize_file}" "${method_file}" "${log_file}"
 }
 trap cleanup EXIT
 
@@ -58,7 +59,17 @@ if ! grep -Eq '"status"[[:space:]]*:[[:space:]]*"ok"' "${health_file}"; then
   exit 1
 fi
 
-"${curl_bin}" -fsS "http://127.0.0.1:${port}/optimize?deliveries=4&vehicles=2" >"${optimize_file}"
+method_status="$("${curl_bin}" -sS -o "${method_file}" -w "%{http_code}" \
+  "http://127.0.0.1:${port}/optimize?deliveries=4&vehicles=2")"
+
+if [[ "${method_status}" != "405" ]]; then
+  echo "GET /optimize should return 405" >&2
+  cat "${method_file}" >&2 || true
+  exit 1
+fi
+
+"${curl_bin}" -fsS -X POST "http://127.0.0.1:${port}/optimize?deliveries=4&vehicles=2" \
+  >"${optimize_file}"
 
 if ! grep -Eq '"summary"[[:space:]]*:[[:space:]]*"optimized-plan: deliveries=4, vehicles=2"' \
   "${optimize_file}"; then

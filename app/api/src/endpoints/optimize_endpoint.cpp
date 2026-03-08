@@ -43,8 +43,9 @@ namespace deliveryoptimizer::api {
 
 void RegisterOptimizeEndpoint(drogon::HttpAppFramework& app) {
   app.registerHandler(
-      "/optimize", [](const drogon::HttpRequestPtr& request,
-                      std::function<void(const drogon::HttpResponsePtr&)>&& callback) {
+      "/optimize",
+      [](const drogon::HttpRequestPtr& request,
+         std::function<void(const drogon::HttpResponsePtr&)>&& callback) {
         const auto deliveries =
             ResolveBoundedCount(request->getOptionalParameter<std::string>("deliveries"),
                                 kDefaultDeliveries, kMaxDeliveries);
@@ -67,7 +68,8 @@ void RegisterOptimizeEndpoint(drogon::HttpAppFramework& app) {
         body["summary"] = deliveryoptimizer::adapters::RoutingFacade::Optimize(deliveries.value(),
                                                                                vehicles.value());
         std::move(callback)(drogon::HttpResponse::newHttpJsonResponse(body));
-      });
+      },
+      {drogon::Post});
 }
 
 } // namespace deliveryoptimizer::api
