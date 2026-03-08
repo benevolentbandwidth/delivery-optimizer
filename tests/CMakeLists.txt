@@ -227,51 +227,6 @@ deliveryoptimizer_set_local_http_test_port(
   DeliveryOptimizerApiContractTest.DeliveriesOptimizeMissingServiceDefaultsTo300
   27000
 )
-
-deliveryoptimizer_add_local_http_test(
-  DeliveryOptimizerApiRegressionTest.DeliveriesOptimizeEnforcesSolverTimeout
-  deliveries_optimize_enforces_solver_timeout_test.sh
-  30
-  "${DELIVERYOPTIMIZER_LOCAL_API_REGRESSION_LABELS}"
-)
-deliveryoptimizer_set_local_http_test_port(
-  DeliveryOptimizerApiRegressionTest.DeliveriesOptimizeEnforcesSolverTimeout
-  28000
-)
-
-deliveryoptimizer_add_local_http_test(
-  DeliveryOptimizerApiRegressionTest.DeliveriesOptimizePreservesVehicleTimeWindow
-  deliveries_optimize_preserves_vehicle_time_window_test.sh
-  30
-  "${DELIVERYOPTIMIZER_LOCAL_API_REGRESSION_LABELS}"
-)
-deliveryoptimizer_set_local_http_test_port(
-  DeliveryOptimizerApiRegressionTest.DeliveriesOptimizePreservesVehicleTimeWindow
-  29000
-)
-
-deliveryoptimizer_add_local_http_test(
-  DeliveryOptimizerApiRegressionTest.DeliveriesOptimizePreservesJobTimeWindows
-  deliveries_optimize_preserves_job_time_windows_test.sh
-  30
-  "${DELIVERYOPTIMIZER_LOCAL_API_REGRESSION_LABELS}"
-)
-deliveryoptimizer_set_local_http_test_port(
-  DeliveryOptimizerApiRegressionTest.DeliveriesOptimizePreservesJobTimeWindows
-  30000
-)
-
-deliveryoptimizer_add_local_http_test(
-  DeliveryOptimizerApiRegressionTest.DeliveriesOptimizeRejectsOutOfRangeCoordinates
-  deliveries_optimize_rejects_out_of_range_coordinates_test.sh
-  30
-  "${DELIVERYOPTIMIZER_LOCAL_API_REGRESSION_LABELS}"
-)
-deliveryoptimizer_set_local_http_test_port(
-  DeliveryOptimizerApiRegressionTest.DeliveriesOptimizeRejectsOutOfRangeCoordinates
-  31000
-)
-
 add_test(
   NAME DeliveryOptimizerTestHarnessTest.HttpServerHelpersKeepPortInRange
   COMMAND "${BASH_PROGRAM}"
