@@ -40,7 +40,7 @@ export default function Sidebar({ routes, isEditMode, onEditModeChange }: Sideba
             <li key={route.vehicleId} className="text-sm"> 
               <span className="font-medium text-zinc-800">{route.driverName}</span> {/* Route/driver name: dark so it reads as a heading */}
               <ul className="ml-2 mt-1 space-y-1 text-zinc-600">
-                {route.stops // Using the stops of the current route
+                {[...route.stops] // Copy so we don't mutate the original
                   .sort((a, b) => a.sequence - b.sequence) // Sorting the stops by sequence number
                   .map((stop) => (
                     <li key={stop.id}>

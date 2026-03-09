@@ -15,12 +15,10 @@
  export default function EditableStopItem({ stop, isEditMode, onSaveNote }: EditableStopItemProps) {
    const [draft, setDraft] = useState(stop.note ?? ""); // draft represents the current note text in the text area, starts as the stop's note or empty string if no note
 
-   // When the stop's note changes (e.g. parent updates it after save), sync draft. Defer setState so we don't trigger the "cascading renders" lint rule.
-   useEffect(() => {
-     const value = stop.note ?? "";
-     const id = setTimeout(() => setDraft(value), 0);
-     return () => clearTimeout(id);
-   }, [stop.note]);
+  // When the stop's note changes (e.g. parent updates it after save), sync draft to match.
+  useEffect(() => {
+    setDraft(stop.note ?? "");
+  }, [stop.note]);
  
   return (
     <div className="rounded-lg border border-zinc-200 bg-white p-3"> {/* Outer container for the stop row (rounded border with white background) */}
