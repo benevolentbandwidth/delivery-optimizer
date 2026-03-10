@@ -24,7 +24,7 @@ export const CSVUploader: React.FC<CSVUploaderProps> = ({
         CSV Format: type, id, address, buffer_time, demand_value, time_window_start, time_window_end, vehicle_type, capacity_units, start_address, end_address
       </p>
       <p className="text-xs text-gray-500 mb-2">
-        💡 Time windows: Use seconds from midnight (e.g., 28800 for 8:00 AM) or time format (e.g., "9:00 AM")
+        💡 Time windows: Use seconds from midnight (e.g., 28800 for 8:00 AM) or time format (e.g., &quot;9:00 AM&quot;)
       </p>
       <input
         type="file"

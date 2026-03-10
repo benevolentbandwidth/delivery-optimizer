@@ -124,7 +124,7 @@ export default function AddressGeocoder() {
     setActiveAddressField(null);
   };
 
-  // CSV Upload Handler
+// CSV Upload Handler
   const handleCSVUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -133,7 +133,7 @@ export default function AddressGeocoder() {
     setError(null);
     setValidationErrors([]);
 
-    Papa.parse(file, {
+    Papa.parse<Record<string, string>>(file, { 
       header: true,
       skipEmptyLines: true,
       encoding: 'UTF-8',
@@ -143,7 +143,7 @@ export default function AddressGeocoder() {
           const vehiclesData: VehicleForm[] = [];
           const errors: string[] = [];
 
-          results.data.forEach((row: any, rowIndex: number) => {
+          results.data.forEach((row: Record<string, string>, rowIndex: number) => {
             const rowType = row.type?.toLowerCase();
 
             if (rowType === 'delivery') {
@@ -235,8 +235,7 @@ export default function AddressGeocoder() {
         setError(`CSV parsing error: ${error.message}`);
       },
     });
-  }, [secondsToTimeAMPM]); // ADD secondsToTimeAMPM HERE
-
+  }, [secondsToTimeAMPM]);
   // Geocoding Handler
   const handleGeocode = async () => {
     setLoading(true);

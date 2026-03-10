@@ -140,7 +140,7 @@ export const DeliveryFormComponent: React.FC<DeliveryFormProps> = ({
       
       {/* Helper text for time windows */}
       <p className="text-xs text-gray-500 mt-2">
-        💡 Times: Use "9:00 AM" or "14:00" format. Defaults: 7:00 AM - 9:00 PM
+        💡 Times: Use &quot;9:00 AM&quot; or &quot;14:00&quot; format. Defaults: 7:00 AM - 9:00 PM
       </p>
     </div>
   );

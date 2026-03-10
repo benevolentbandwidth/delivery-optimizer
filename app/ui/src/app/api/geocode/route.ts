@@ -3,11 +3,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import type { 
   VehicleInput, 
   DeliveryInput, 
-  GeocodingRequest,
   OptimizedResponse,
   Vehicle,
   Delivery,
-  Location
 } from '@/app/types/geocoding';
 
 // SINGLETON RATE LIMITER - Shared across all requests

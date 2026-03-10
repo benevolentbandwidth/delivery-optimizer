@@ -59,7 +59,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, onDownl
 
       <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
         <p className="text-green-800 font-medium">
-          ✓ Geocoding complete! Click "Download JSON" above to save your optimized route data.
+          ✓ Geocoding complete! Click &quot;Download JSON&quot; above to save your optimized route data.
         </p>
       </div>
     </div>
