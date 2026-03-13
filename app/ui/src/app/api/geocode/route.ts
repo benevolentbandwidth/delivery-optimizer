@@ -1,303 +1,273 @@
 // app/api/geocode/route.ts
-import { NextRequest, NextResponse } from 'next/server';
-import type { 
-  VehicleInput, 
-  DeliveryInput, 
-  OptimizedResponse,
-  Vehicle,
-  Delivery,
-} from '@/app/types/geocoding';
+import { NextResponse } from 'next/server';
+import { z } from 'zod';
 
-// SINGLETON RATE LIMITER - Shared across all requests
+// TODO: Before production deployment:
+// 1. Implement external rate limiting (Redis/Upstash) - current in-memory solution resets on serverless cold starts
+// 2. Add request queue for fair distribution across concurrent requests
+// 3. Consider caching geocoding results to reduce API calls
+// 4. Update User-Agent email to actual contact address
 
+// Zod validation schemas
+const DeliveryInputSchema = z.object({
+  address: z.string().min(1, 'Address is required'),
+  bufferTime: z.number().int().min(0).optional().default(300),
+  demand: z.number().int().min(1).optional().default(1),
+  timeWindowStart: z.number().int().min(0).max(86400).optional(),
+  timeWindowEnd: z.number().int().min(0).max(86400).optional(),
+});
+
+const VehicleInputSchema = z.object({
+  id: z.string().min(1, 'Vehicle ID is required'),
+  vehicleType: z.string().min(1, 'Vehicle type is required'),
+  startAddress: z.string().min(1, 'Start address is required'),
+  endAddress: z.string().min(1, 'End address is required'),
+  capacity: z.number().int().min(1, 'Capacity must be at least 1'),
+});
+
+const GeocodingRequestSchema = z.object({
+  deliveries: z.array(DeliveryInputSchema).min(1, 'At least one delivery is required'),
+  vehicles: z.array(VehicleInputSchema).min(1, 'At least one vehicle is required'),
+});
+
+// Rate limiter class
 class RateLimiter {
-  private lastRequestTime = 0;
-  private delay: number;
+  private lastRequestTime: number = 0;
+  private readonly minInterval: number;
 
-  constructor(delayMs: number = 1000) {
-    this.delay = delayMs;
+  constructor(requestsPerSecond: number) {
+    this.minInterval = 1000 / requestsPerSecond;
   }
 
-  async throttle(): Promise<void> {
+  async waitForSlot(): Promise<void> {
     const now = Date.now();
-    const elapsed = now - this.lastRequestTime;
+    const timeSinceLastRequest = now - this.lastRequestTime;
     
-    if (elapsed < this.delay) {
-      await new Promise(resolve => setTimeout(resolve, this.delay - elapsed));
+    if (timeSinceLastRequest < this.minInterval) {
+      const waitTime = this.minInterval - timeSinceLastRequest;
+      await new Promise(resolve => setTimeout(resolve, waitTime));
     }
     
     this.lastRequestTime = Date.now();
   }
 }
 
+// Geocoding service
 class GeocodingService {
-  private rateLimiter: RateLimiter;
   private provider: 'nominatim' | 'google';
-  private apiKey?: string;
+  private googleApiKey?: string;
+  private rateLimiter: RateLimiter;
 
-  constructor(provider: 'nominatim' | 'google' = 'nominatim', apiKey?: string) {
+  constructor(provider: 'nominatim' | 'google' = 'nominatim', googleApiKey?: string) {
     this.provider = provider;
-    this.apiKey = apiKey;
-    this.rateLimiter = new RateLimiter(1000);
+    this.googleApiKey = googleApiKey;
+    this.rateLimiter = new RateLimiter(1); // 1 request per second for Nominatim
   }
 
-  async geocode(address: string): Promise<{
-    latitude?: number;
-    longitude?: number;
-    formattedAddress: string;
-    status: string;
-    confidence?: number;
-    error?: string;
-  }> {
-    await this.rateLimiter.throttle();
+  async geocode(address: string): Promise<{ lat: number; lng: number } | null> {
+    if (this.provider === 'nominatim') {
+      return this.geocodeNominatim(address);
+    } else if (this.provider === 'google' && this.googleApiKey) {
+      return this.geocodeGoogle(address);
+    }
+    return null;
+  }
+
+  private async geocodeNominatim(address: string): Promise<{ lat: number; lng: number } | null> {
+    await this.rateLimiter.waitForSlot();
 
     try {
-      if (this.provider === 'nominatim') {
-        return await this.geocodeNominatim(address);
-      } else if (this.provider === 'google') {
-        return await this.geocodeGoogle(address);
+      const params = new URLSearchParams({
+        q: address,
+        format: 'json',
+        limit: '1',
+      });
+
+      // Nominatim ToS requires contact email in User-Agent
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?${params}`,
+        {
+          headers: {
+            'User-Agent': 'DeliveryOptimizer/1.0 (contact@yourcompany.com)', // TODO: Replace with actual contact email
+          },
+        }
+      );
+
+      if (!response.ok) {
+        console.error(`Nominatim error: ${response.statusText}`);
+        return null;
+      }
+
+      const data = await response.json();
+      
+      if (data && data.length > 0) {
+        return {
+          lat: parseFloat(data[0].lat),
+          lng: parseFloat(data[0].lon),
+        };
       }
       
-      throw new Error('Invalid provider');
+      return null;
     } catch (error) {
-      return {
-        formattedAddress: address,
-        status: 'error',
-        error: error instanceof Error ? error.message : 'Unknown error',
-      };
+      console.error('Geocoding error:', error);
+      return null;
     }
   }
 
-  private async geocodeNominatim(address: string) {
-    const params = new URLSearchParams({
-      q: address,
-      format: 'json',
-      limit: '1',
-    });
+  private async geocodeGoogle(address: string): Promise<{ lat: number; lng: number } | null> {
+    if (!this.googleApiKey) return null;
 
-    const response = await fetch(
-      `https://nominatim.openstreetmap.org/search?${params}`,
-      {
-        headers: {
-          'User-Agent': 'AddressGeocodingApp/1.0',
-        },
+    try {
+      const params = new URLSearchParams({
+        address,
+        key: this.googleApiKey,
+      });
+
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?${params}`
+      );
+
+      if (!response.ok) {
+        console.error(`Google Maps error: ${response.statusText}`);
+        return null;
       }
-    );
 
-    if (!response.ok) {
-      throw new Error(`Nominatim API error: ${response.statusText}`);
+      const data = await response.json();
+
+      if (data.status === 'OK' && data.results && data.results.length > 0) {
+        const location = data.results[0].geometry.location;
+        return {
+          lat: location.lat,
+          lng: location.lng,
+        };
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Google geocoding error:', error);
+      return null;
     }
-
-    const data = await response.json();
-
-    if (data && data.length > 0) {
-      const result = data[0];
-      return {
-        latitude: parseFloat(result.lat),
-        longitude: parseFloat(result.lon),
-        formattedAddress: result.display_name,
-        status: 'success',
-        confidence: parseFloat(result.importance || '0.5'),
-      };
-    }
-
-    return {
-      formattedAddress: address,
-      status: 'not_found',
-    };
-  }
-
-  private async geocodeGoogle(address: string) {
-    if (!this.apiKey) {
-      throw new Error('Google Maps API key is required');
-    }
-
-    const params = new URLSearchParams({
-      address: address,
-      key: this.apiKey,
-    });
-
-    const response = await fetch(
-      `https://maps.googleapis.com/maps/api/geocode/json?${params}`
-    );
-
-    if (!response.ok) {
-      throw new Error(`Google Maps API error: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-
-    if (data.status === 'OK' && data.results && data.results.length > 0) {
-      const result = data.results[0];
-      const location = result.geometry.location;
-
-      return {
-        latitude: location.lat,
-        longitude: location.lng,
-        formattedAddress: result.formatted_address,
-        status: 'success',
-        confidence:
-          result.geometry.location_type === 'ROOFTOP' ? 1.0 : 0.8,
-      };
-    }
-
-    return {
-      formattedAddress: address,
-      status: data.status.toLowerCase(),
-    };
   }
 }
 
+// Module-level singleton
+// NOTE: This will reset on serverless cold starts - implement external rate limiting for production
 const globalGeocoder = new GeocodingService('nominatim', process.env.GOOGLE_MAPS_API_KEY);
 
-interface RequestInput {
-  deliveries: DeliveryInput[];
-  vehicles: VehicleInput[];
-}
+// Batch size limit to prevent timeout
+const MAX_ADDRESSES = 8;
 
-// Main geocoding handler
-export async function POST(request: NextRequest) {
+// Default time window (7 AM to 9 PM in seconds)
+const DEFAULT_START_TIME = 7 * 3600;  // 25200
+const DEFAULT_END_TIME = 21 * 3600;   // 75600
+
+export async function POST(request: Request) {
   try {
-    const body: RequestInput = await request.json();
-    const { deliveries, vehicles } = body;
+    const body = await request.json();
 
-    if (!deliveries || !Array.isArray(deliveries)) {
-      return NextResponse.json(
-        { error: 'Invalid input: deliveries array required' },
-        { status: 400 }
-      );
-    }
-
-    if (!vehicles || !Array.isArray(vehicles)) {
-      return NextResponse.json(
-        { error: 'Invalid input: vehicles array required' },
-        { status: 400 }
-      );
-    }
-    const MAX_ADDRESSES = 50;
-    const totalAddresses = deliveries.length + (vehicles.length * 2);
+    // Validate request body with Zod
+    const validationResult = GeocodingRequestSchema.safeParse(body);
     
-    if (totalAddresses > MAX_ADDRESSES) {
+    if (!validationResult.success) {
       return NextResponse.json(
-        { 
-          error: `Batch size too large. Maximum ${MAX_ADDRESSES} addresses allowed (you have ${totalAddresses}). Please split into smaller batches.`,
-          details: {
-            deliveries: deliveries.length,
-            vehicles: vehicles.length,
-            totalAddresses: totalAddresses,
-            maxAllowed: MAX_ADDRESSES,
-          }
+        {
+          error: 'Validation failed',
+          details: validationResult.error.format(),
         },
         { status: 400 }
       );
     }
 
-    const geocoder = globalGeocoder;
+    const { deliveries, vehicles } = validationResult.data;
+
+    // Check batch size limit
+    const totalAddresses = deliveries.length + (vehicles.length * 2);
+    if (totalAddresses > MAX_ADDRESSES) {
+      return NextResponse.json(
+        {
+          error: `Too many addresses to geocode. Maximum ${MAX_ADDRESSES} addresses allowed (you have ${totalAddresses}). Please reduce the batch size.`,
+        },
+        { status: 400 }
+      );
+    }
 
     let successCount = 0;
     let failCount = 0;
 
-    // Default time window: 7 AM to 9 PM in seconds
-    const DEFAULT_START_TIME = 7 * 3600;  
-    const DEFAULT_END_TIME = 21 * 3600;  
-
-    // Process deliveries
-    const processedDeliveries: Delivery[] = [];
-    for (let i = 0; i < deliveries.length; i++) {
-      const delivery = deliveries[i];
-      const geoResult = await geocoder.geocode(delivery.address);
-
-      if (geoResult.status === 'success' && geoResult.latitude && geoResult.longitude) {
-        // Determine time window start (default to 7 AM if not provided or is 0)
-        const timeStart = delivery.timeWindowStart && delivery.timeWindowStart > 0 
-          ? delivery.timeWindowStart 
-          : DEFAULT_START_TIME;
+    // Geocode deliveries
+    const geocodedDeliveries = await Promise.all(
+      deliveries.map(async (delivery, index) => {
+        const location = await globalGeocoder.geocode(delivery.address);
         
-        // Determine time window end (default to 9 PM if not provided or is 0)
-        const timeEnd = delivery.timeWindowEnd && delivery.timeWindowEnd > 0
-          ? delivery.timeWindowEnd
-          : DEFAULT_END_TIME;
+        if (location) {
+          successCount++;
+        } else {
+          failCount++;
+        }
 
-        const deliveryData: Delivery = {
-          id: `delivery_${i + 1}`,
+        const timeWindows: number[][] = [];
+        const startTime = delivery.timeWindowStart ?? DEFAULT_START_TIME;
+        const endTime = delivery.timeWindowEnd ?? DEFAULT_END_TIME;
+        
+        if (startTime && endTime) {
+          timeWindows.push([startTime, endTime]);
+        }
+
+        return {
+          id: `delivery_${index + 1}`,
           address: delivery.address,
-          location: {
-            lat: geoResult.latitude,
-            lng: geoResult.longitude,
-          },
-          bufferTime: delivery.bufferTime || 300,
+          location: location || { lat: 0, lng: 0 },
+          bufferTime: delivery.bufferTime,
           demand: {
             type: 'units',
-            value: delivery.demand || 1,
+            value: delivery.demand,
           },
-          time_windows: [[timeStart, timeEnd]], 
+          time_windows: timeWindows,
         };
+      })
+    );
 
-        processedDeliveries.push(deliveryData);
-        successCount++;
-      } else {
-        failCount++;
-        console.error(`Failed to geocode delivery: ${delivery.address}`);
-      }
-    }
+    // Geocode vehicles
+    const geocodedVehicles = await Promise.all(
+      vehicles.map(async (vehicle) => {
+        const startLocation = await globalGeocoder.geocode(vehicle.startAddress);
+        const endLocation = await globalGeocoder.geocode(vehicle.endAddress);
 
-    // Process vehicles
-    const processedVehicles: Vehicle[] = [];
-    for (const vehicle of vehicles) {
-      const startGeoResult = await geocoder.geocode(vehicle.startAddress);
-      const endGeoResult = await geocoder.geocode(vehicle.endAddress);
+        if (startLocation) successCount++;
+        else failCount++;
 
-      if (
-        startGeoResult.status === 'success' &&
-        startGeoResult.latitude &&
-        startGeoResult.longitude &&
-        endGeoResult.status === 'success' &&
-        endGeoResult.latitude &&
-        endGeoResult.longitude
-      ) {
-        processedVehicles.push({
+        if (endLocation) successCount++;
+        else failCount++;
+
+        return {
           id: vehicle.id,
           vehicleType: vehicle.vehicleType,
-          startLocation: {
-            lat: startGeoResult.latitude,
-            lng: startGeoResult.longitude,
-          },
-          endLocation: {
-            lat: endGeoResult.latitude,
-            lng: endGeoResult.longitude,
-          },
+          startLocation: startLocation || { lat: 0, lng: 0 },
+          endLocation: endLocation || { lat: 0, lng: 0 },
           capacity: {
             type: 'units',
             value: vehicle.capacity,
           },
-        });
-        successCount += 2;
-      } else {
-        failCount += 2;
-        console.error(`Failed to geocode vehicle: ${vehicle.id}`);
-      }
-    }
+        };
+      })
+    );
 
-    const response: OptimizedResponse = {
-      vehicles: processedVehicles,
-      deliveries: processedDeliveries,
+    // Return optimized response format
+    return NextResponse.json({
+      vehicles: geocodedVehicles,
+      deliveries: geocodedDeliveries,
       metadata: {
         generatedAt: new Date().toISOString(),
-        totalDeliveries: processedDeliveries.length,
-        totalVehicles: processedVehicles.length,
+        totalDeliveries: deliveries.length,
+        totalVehicles: vehicles.length,
         successfulGeocoding: successCount,
         failedGeocoding: failCount,
       },
-    };
-
-    return NextResponse.json(response);
+    });
   } catch (error) {
-    console.error('Geocoding error:', error);
+    console.error('Geocoding API error:', error);
     return NextResponse.json(
-      {
-        error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

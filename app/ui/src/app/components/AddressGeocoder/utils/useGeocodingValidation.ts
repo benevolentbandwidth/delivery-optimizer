@@ -1,12 +1,10 @@
 // app/components/AddressGeocoder/hooks/useGeocodingValidation.ts
 
-import { useTimeConversion } from './useTimeConversion';
+import { isValidTime, isStartBeforeEnd } from './timeConversion';
 import { hasAtLeastOneLetter } from '../utils';
 import type { DeliveryForm, VehicleForm } from '../types';
 
 export const useGeocodingValidation = () => {
-  const { isValidTime, isStartBeforeEnd } = useTimeConversion();
-
   const validateDeliveries = (deliveries: DeliveryForm[]): {
     valid: DeliveryForm[];
     errors: string[];
@@ -26,14 +24,12 @@ export const useGeocodingValidation = () => {
       if (d.timeWindowStart && d.timeWindowStart.trim().length > 0) {
         if (!isValidTime(d.timeWindowStart)) {
           errors.push(`${deliveryName}: Start time must be between 7:00 AM and 9:00 PM`);
-          return false;
         }
       }
       
       if (d.timeWindowEnd && d.timeWindowEnd.trim().length > 0) {
         if (!isValidTime(d.timeWindowEnd)) {
           errors.push(`${deliveryName}: End time must be between 7:00 AM and 9:00 PM`);
-          return false;
         }
       }
       
@@ -41,7 +37,6 @@ export const useGeocodingValidation = () => {
           d.timeWindowEnd && d.timeWindowEnd.trim().length > 0) {
         if (!isStartBeforeEnd(d.timeWindowStart, d.timeWindowEnd)) {
           errors.push(`${deliveryName}: Start time must be before end time`);
-          return false;
         }
       }
       

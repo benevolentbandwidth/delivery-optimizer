@@ -1,4 +1,5 @@
 // app/components/AddressGeocoder/index.tsx
+
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
@@ -9,9 +10,9 @@ import { VehicleFormComponent } from './VehicleForm';
 import { CSVUploader } from './CSVUploader';
 import { ResultsDisplay } from './ResultsDisplay';
 import { ValidationErrors } from './ValidationErrors';
-import { useAddressAutocomplete } from './hooks/useAddressAutocomplete';
-import { useGeocodingValidation } from './hooks/useGeocodingValidation';
-import { useTimeConversion } from './hooks/useTimeConversion';
+import { useAddressAutocomplete } from './utils/useAddressAutocomplete';
+import { useGeocodingValidation } from './utils/useGeocodingValidation';
+import { timeToSeconds, secondsToTimeAMPM } from './utils/timeConversion';
 import { hasAtLeastOneLetter, generateDeliveryDefaults, generateVehicleDefaults } from './utils';
 import type { DeliveryForm, VehicleForm, AddressSuggestion, ActiveAddressField } from './types';
 
@@ -41,10 +42,8 @@ export default function AddressGeocoder() {
   // Hooks: Autocomplete for vehicles
   const vehicleAutocomplete = useAddressAutocomplete();
 
-  // Hooks: Validation and time conversion
+  // Hooks: Validation
   const { validateDeliveries, validateVehicles } = useGeocodingValidation();
-  const { timeToSeconds, secondsToTimeAMPM } = useTimeConversion();
-
 
   // Delivery Handlers
   const handleAddDelivery = () => {
@@ -124,7 +123,7 @@ export default function AddressGeocoder() {
     setActiveAddressField(null);
   };
 
-// CSV Upload Handler
+  // CSV Upload Handler
   const handleCSVUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -133,7 +132,7 @@ export default function AddressGeocoder() {
     setError(null);
     setValidationErrors([]);
 
-    Papa.parse<Record<string, string>>(file, { 
+    Papa.parse<Record<string, string>>(file, {
       header: true,
       skipEmptyLines: true,
       encoding: 'UTF-8',
@@ -143,7 +142,7 @@ export default function AddressGeocoder() {
           const vehiclesData: VehicleForm[] = [];
           const errors: string[] = [];
 
-          results.data.forEach((row: Record<string, string>, rowIndex: number) => {
+          results.data.forEach((row, rowIndex) => {
             const rowType = row.type?.toLowerCase();
 
             if (rowType === 'delivery') {
@@ -235,7 +234,8 @@ export default function AddressGeocoder() {
         setError(`CSV parsing error: ${error.message}`);
       },
     });
-  }, [secondsToTimeAMPM]);
+  }, []);
+
   // Geocoding Handler
   const handleGeocode = async () => {
     setLoading(true);
@@ -335,7 +335,7 @@ export default function AddressGeocoder() {
     URL.revokeObjectURL(url);
   };
 
-  // Click outside to close dropdowns
+  // Click outside to close dropdowns - FIXED: Destructure specific values
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
@@ -365,7 +365,12 @@ export default function AddressGeocoder() {
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [deliveryAutocomplete, vehicleAutocomplete]);
+  }, [
+    deliveryAutocomplete.showSuggestions,
+    deliveryAutocomplete.clearSuggestions,
+    vehicleAutocomplete.showSuggestions,
+    vehicleAutocomplete.clearSuggestions
+  ]);
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
