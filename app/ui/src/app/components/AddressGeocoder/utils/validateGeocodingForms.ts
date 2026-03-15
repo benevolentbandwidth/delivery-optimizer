@@ -1,5 +1,4 @@
 // app/components/AddressGeocoder/hooks/useGeocodingValidation.ts
-
 import { isValidTime, isStartBeforeEnd } from './timeConversion';
 import { hasAtLeastOneLetter } from '../utils';
 import type { DeliveryForm, VehicleForm } from '../types';
@@ -10,37 +9,47 @@ export const useGeocodingValidation = () => {
     errors: string[];
   } => {
     const errors: string[] = [];
-    
+
     const valid = deliveries.filter((d, index) => {
       const deliveryName = `Delivery ${index + 1}`;
-      
+
       if (!d.address.trim()) return false;
-      
+
       if (!hasAtLeastOneLetter(d.address)) {
         errors.push(`${deliveryName}: Address must contain at least one letter`);
         return false;
       }
-      
+
+      // Track time window validity explicitly so errors actually block the
+      // delivery — previously all three branches below pushed errors but still
+      // fell through to `return true`, so invalid windows were never filtered.
+      let isValid = true;
+
       if (d.timeWindowStart && d.timeWindowStart.trim().length > 0) {
         if (!isValidTime(d.timeWindowStart)) {
           errors.push(`${deliveryName}: Start time must be between 7:00 AM and 9:00 PM`);
+          isValid = false;
         }
       }
-      
+
       if (d.timeWindowEnd && d.timeWindowEnd.trim().length > 0) {
         if (!isValidTime(d.timeWindowEnd)) {
           errors.push(`${deliveryName}: End time must be between 7:00 AM and 9:00 PM`);
+          isValid = false;
         }
       }
-      
-      if (d.timeWindowStart && d.timeWindowStart.trim().length > 0 && 
-          d.timeWindowEnd && d.timeWindowEnd.trim().length > 0) {
+
+      if (
+        d.timeWindowStart && d.timeWindowStart.trim().length > 0 &&
+        d.timeWindowEnd && d.timeWindowEnd.trim().length > 0
+      ) {
         if (!isStartBeforeEnd(d.timeWindowStart, d.timeWindowEnd)) {
           errors.push(`${deliveryName}: Start time must be before end time`);
+          isValid = false;
         }
       }
-      
-      return true;
+
+      return isValid;
     });
 
     return { valid, errors };
@@ -51,21 +60,21 @@ export const useGeocodingValidation = () => {
     errors: string[];
   } => {
     const errors: string[] = [];
-    
+
     const valid = vehicles.filter((v, index) => {
       const vehicleName = `Vehicle ${index + 1}`;
       let isValid = true;
-      
+
       if (!v.startAddress.trim() || !hasAtLeastOneLetter(v.startAddress)) {
         errors.push(`${vehicleName}: Start address must contain at least one letter`);
         isValid = false;
       }
-      
+
       if (!v.endAddress.trim() || !hasAtLeastOneLetter(v.endAddress)) {
         errors.push(`${vehicleName}: End address must contain at least one letter`);
         isValid = false;
       }
-      
+
       return isValid;
     });
 

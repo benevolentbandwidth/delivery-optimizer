@@ -1,8 +1,7 @@
 // app/components/AddressGeocoder/index.tsx
-
 'use client';
-
 import { useState, useCallback, useEffect } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import Papa from 'papaparse';
 import type { OptimizedResponse } from '@/app/types/geocoding';
 import { DeliveryFormComponent } from './DeliveryForm';
@@ -11,21 +10,22 @@ import { CSVUploader } from './CSVUploader';
 import { ResultsDisplay } from './ResultsDisplay';
 import { ValidationErrors } from './ValidationErrors';
 import { useAddressAutocomplete } from './utils/useAddressAutocomplete';
-import { useGeocodingValidation } from './utils/useGeocodingValidation';
+import { useGeocodingValidation } from './utils/validateGeocodingForms';
 import { timeToSeconds, secondsToTimeAMPM } from './utils/timeConversion';
+import { geocodeAddress } from './utils/nominatim';
 import { hasAtLeastOneLetter, generateDeliveryDefaults, generateVehicleDefaults } from './utils';
 import type { DeliveryForm, VehicleForm, AddressSuggestion, ActiveAddressField } from './types';
 
 export default function AddressGeocoder() {
   // State: Deliveries
   const [deliveries, setDeliveries] = useState<DeliveryForm[]>([
-    { _reactId: crypto.randomUUID(), ...generateDeliveryDefaults() }
+    { _reactId: uuidv4(), ...generateDeliveryDefaults() }
   ]);
   const [activeDeliveryId, setActiveDeliveryId] = useState<string | null>(null);
 
   // State: Vehicles
   const [vehicles, setVehicles] = useState<VehicleForm[]>([
-    { _reactId: crypto.randomUUID(), ...generateVehicleDefaults(0) }
+    { _reactId: uuidv4(), ...generateVehicleDefaults(0) }
   ]);
   const [activeAddressField, setActiveAddressField] = useState<ActiveAddressField | null>(null);
 
@@ -38,7 +38,7 @@ export default function AddressGeocoder() {
 
   // Hooks: Autocomplete for deliveries
   const deliveryAutocomplete = useAddressAutocomplete();
-  
+
   // Hooks: Autocomplete for vehicles
   const vehicleAutocomplete = useAddressAutocomplete();
 
@@ -47,9 +47,9 @@ export default function AddressGeocoder() {
 
   // Delivery Handlers
   const handleAddDelivery = () => {
-    setDeliveries([...deliveries, { 
-      _reactId: crypto.randomUUID(), 
-      ...generateDeliveryDefaults() 
+    setDeliveries([...deliveries, {
+      _reactId: uuidv4(),
+      ...generateDeliveryDefaults()
     }]);
   };
 
@@ -60,7 +60,7 @@ export default function AddressGeocoder() {
   };
 
   const handleDeliveryFieldChange = (reactId: string, field: keyof DeliveryForm, value: string) => {
-    setDeliveries(deliveries.map(d => 
+    setDeliveries(deliveries.map(d =>
       d._reactId === reactId ? { ...d, [field]: value } : d
     ));
   };
@@ -77,7 +77,6 @@ export default function AddressGeocoder() {
 
   const handleSelectDeliverySuggestion = (suggestion: AddressSuggestion) => {
     if (activeDeliveryId === null) return;
-    
     handleDeliveryFieldChange(activeDeliveryId, 'address', suggestion.display_name);
     deliveryAutocomplete.clearSuggestions();
     setActiveDeliveryId(null);
@@ -86,7 +85,7 @@ export default function AddressGeocoder() {
   // Vehicle Handlers
   const handleAddVehicle = () => {
     setVehicles([...vehicles, {
-      _reactId: crypto.randomUUID(),
+      _reactId: uuidv4(),
       ...generateVehicleDefaults(vehicles.length),
     }]);
   };
@@ -98,7 +97,7 @@ export default function AddressGeocoder() {
   };
 
   const handleVehicleFieldChange = (reactId: string, field: keyof VehicleForm, value: string) => {
-    setVehicles(vehicles.map(v => 
+    setVehicles(vehicles.map(v =>
       v._reactId === reactId ? { ...v, [field]: value } : v
     ));
   };
@@ -116,7 +115,6 @@ export default function AddressGeocoder() {
 
   const handleSelectVehicleSuggestion = (suggestion: AddressSuggestion) => {
     if (!activeAddressField) return;
-
     const fieldName = activeAddressField.field === 'start' ? 'startAddress' : 'endAddress';
     handleVehicleFieldChange(activeAddressField.vehicleId, fieldName, suggestion.display_name);
     vehicleAutocomplete.clearSuggestions();
@@ -148,43 +146,35 @@ export default function AddressGeocoder() {
             if (rowType === 'delivery') {
               const address = row.address?.trim() || '';
               const deliveryName = `Delivery ${deliveriesData.length + 1}`;
-              
+
               if (address && hasAtLeastOneLetter(address)) {
-                // Parse time window start (handle both seconds and time string)
                 let timeWindowStart = '';
                 if (row.time_window_start) {
                   const rawStart = String(row.time_window_start).trim();
-                  // Check if it's a number (seconds from midnight)
                   if (/^\d+$/.test(rawStart)) {
-                    const seconds = parseInt(rawStart);
-                    timeWindowStart = secondsToTimeAMPM(seconds);
+                    timeWindowStart = secondsToTimeAMPM(parseInt(rawStart));
                   } else {
-                    // Already in time format
                     timeWindowStart = rawStart;
                   }
                 }
-                
-                // Parse time window end (handle both seconds and time string)
+
                 let timeWindowEnd = '';
                 if (row.time_window_end) {
                   const rawEnd = String(row.time_window_end).trim();
-                  // Check if it's a number (seconds from midnight)
                   if (/^\d+$/.test(rawEnd)) {
-                    const seconds = parseInt(rawEnd);
-                    timeWindowEnd = secondsToTimeAMPM(seconds);
+                    timeWindowEnd = secondsToTimeAMPM(parseInt(rawEnd));
                   } else {
-                    // Already in time format
                     timeWindowEnd = rawEnd;
                   }
                 }
-                
+
                 deliveriesData.push({
-                  _reactId: crypto.randomUUID(),
-                  address: address,
+                  _reactId: uuidv4(),
+                  address,
                   bufferTime: row.buffer_time || '300',
                   demandValue: row.demand_value || '1',
-                  timeWindowStart: timeWindowStart,
-                  timeWindowEnd: timeWindowEnd,
+                  timeWindowStart,
+                  timeWindowEnd,
                 });
               } else {
                 errors.push(`${deliveryName} (CSV row ${rowIndex + 2}): Address must contain at least one letter`);
@@ -193,19 +183,18 @@ export default function AddressGeocoder() {
               const startAddress = row.start_address?.trim() || '';
               const endAddress = row.end_address?.trim() || '';
               const vehicleName = `Vehicle ${vehiclesData.length + 1}`;
-              
               const validStartAddress = hasAtLeastOneLetter(startAddress) ? startAddress : '';
               const validEndAddress = hasAtLeastOneLetter(endAddress) ? endAddress : '';
-              
+
               if (!validStartAddress) {
                 errors.push(`${vehicleName} (CSV row ${rowIndex + 2}): Start address must contain at least one letter`);
               }
               if (!validEndAddress) {
                 errors.push(`${vehicleName} (CSV row ${rowIndex + 2}): End address must contain at least one letter`);
               }
-              
+
               vehiclesData.push({
-                _reactId: crypto.randomUUID(),
+                _reactId: uuidv4(),
                 id: row.id || `vehicle_${vehiclesData.length + 1}`,
                 vehicleType: row.vehicle_type || 'car',
                 startAddress: validStartAddress,
@@ -244,10 +233,8 @@ export default function AddressGeocoder() {
     setValidationErrors([]);
 
     try {
-      // Validate
       const { valid: validDeliveries, errors: deliveryErrors } = validateDeliveries(deliveries);
       const { valid: validVehicles, errors: vehicleErrors } = validateVehicles(vehicles);
-      
       const allErrors = [...deliveryErrors, ...vehicleErrors];
 
       if (allErrors.length > 0) {
@@ -268,48 +255,73 @@ export default function AddressGeocoder() {
         return;
       }
 
-      // Convert to API format
-      const deliveriesToGeocode = validDeliveries.map(d => {
-        const startSeconds = d.timeWindowStart && d.timeWindowStart.trim().length > 0 
-          ? timeToSeconds(d.timeWindowStart) 
-          : undefined;
-        const endSeconds = d.timeWindowEnd && d.timeWindowEnd.trim().length > 0
-          ? timeToSeconds(d.timeWindowEnd) 
-          : undefined;
+      // Geocode all addresses client-side through the shared nominatim utility.
+      // This guarantees the 1 req/s clock is shared with autocomplete — no
+      // separate server module that could race and trigger 429s.
+      const failedAddresses: Array<{ entryId: string; address: string; field: string }> = [];
 
-        return {
-          address: d.address,
-          bufferTime: parseInt(d.bufferTime) || 300,
-          demand: parseInt(d.demandValue) || 1,
-          timeWindowStart: startSeconds,
-          timeWindowEnd: endSeconds,
-        };
-      });
+      const geocodedDeliveries = await Promise.all(
+        validDeliveries.map(async (d, index) => {
+          const entryId = `delivery_${index + 1}`;
+          const location = await geocodeAddress(d.address);
+          if (!location) failedAddresses.push({ entryId, address: d.address, field: 'address' });
 
-      const vehiclesToGeocode = validVehicles.map(v => ({
-        id: v.id,
-        vehicleType: v.vehicleType,
-        startAddress: v.startAddress,
-        endAddress: v.endAddress,
-        capacity: parseInt(v.capacity) || 100,
-      }));
+          const startSeconds = d.timeWindowStart && d.timeWindowStart.trim().length > 0
+            ? timeToSeconds(d.timeWindowStart)
+            : undefined;
+          const endSeconds = d.timeWindowEnd && d.timeWindowEnd.trim().length > 0
+            ? timeToSeconds(d.timeWindowEnd)
+            : undefined;
 
-      // Call API
-      const response = await fetch('/api/geocode', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          deliveries: deliveriesToGeocode,
-          vehicles: vehiclesToGeocode,
-        }),
-      });
+          const timeWindows: number[][] = [];
+          if (startSeconds !== undefined && endSeconds !== undefined) {
+            timeWindows.push([startSeconds, endSeconds]);
+          }
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Geocoding failed');
+          return {
+            id: entryId,
+            address: d.address,
+            location: location!,
+            bufferTime: parseInt(d.bufferTime) || 300,
+            demand: { type: 'units', value: parseInt(d.demandValue) || 1 },
+            timeWindows,
+          };
+        })
+      );
+
+      const geocodedVehicles = await Promise.all(
+        validVehicles.map(async (v) => {
+          const startLocation = await geocodeAddress(v.startAddress);
+          const endLocation = await geocodeAddress(v.endAddress);
+          if (!startLocation) failedAddresses.push({ entryId: v.id, address: v.startAddress, field: 'startAddress' });
+          if (!endLocation) failedAddresses.push({ entryId: v.id, address: v.endAddress, field: 'endAddress' });
+
+          return {
+            id: v.id,
+            vehicleType: v.vehicleType,
+            startLocation: startLocation!,
+            endLocation: endLocation!,
+            capacity: { type: 'units', value: parseInt(v.capacity) || 100 },
+          };
+        })
+      );
+
+      if (failedAddresses.length > 0) {
+        const list = failedAddresses.map(f => `${f.entryId} (${f.address})`).join(', ');
+        throw new Error(`Geocoding failed for ${failedAddresses.length} address(es): ${list}. Please correct them and try again.`);
       }
 
-      const data: OptimizedResponse = await response.json();
+      const data: OptimizedResponse = {
+        vehicles: geocodedVehicles,
+        deliveries: geocodedDeliveries,
+        metadata: {
+          generatedAt: new Date().toISOString(),
+          totalDeliveries: geocodedDeliveries.length,
+          totalVehicles: geocodedVehicles.length,
+          successfulGeocoding: geocodedDeliveries.length + geocodedVehicles.length,
+          failedGeocoding: 0,
+        },
+      };
       setResults(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error occurred');
@@ -321,7 +333,6 @@ export default function AddressGeocoder() {
   // Download JSON
   const downloadJSON = () => {
     if (!results) return;
-
     const blob = new Blob([JSON.stringify(results, null, 2)], {
       type: 'application/json',
     });
@@ -335,27 +346,23 @@ export default function AddressGeocoder() {
     URL.revokeObjectURL(url);
   };
 
-  // Click outside to close dropdowns - FIXED: Destructure specific values
+  // Click outside to close dropdowns
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
-      
-      // Check if click is outside delivery suggestions
+
       if (deliveryAutocomplete.showSuggestions) {
         const clickedInside = Array.from(document.querySelectorAll('[data-delivery-input]'))
           .some(el => el.contains(target));
-        
         if (!clickedInside) {
           deliveryAutocomplete.clearSuggestions();
           setActiveDeliveryId(null);
         }
       }
 
-      // Check if click is outside vehicle suggestions
       if (vehicleAutocomplete.showSuggestions) {
         const clickedInside = Array.from(document.querySelectorAll('[data-vehicle-input]'))
           .some(el => el.contains(target));
-        
         if (!clickedInside) {
           vehicleAutocomplete.clearSuggestions();
           setActiveAddressField(null);
@@ -369,7 +376,7 @@ export default function AddressGeocoder() {
     deliveryAutocomplete.showSuggestions,
     deliveryAutocomplete.clearSuggestions,
     vehicleAutocomplete.showSuggestions,
-    vehicleAutocomplete.clearSuggestions
+    vehicleAutocomplete.clearSuggestions,
   ]);
 
   return (
@@ -379,14 +386,12 @@ export default function AddressGeocoder() {
           <h1 className="text-3xl font-bold text-gray-900 mb-6">
             Delivery Route Optimizer
           </h1>
-
           <CSVUploader
             onUpload={handleCSVUpload}
             fileName={csvFileName}
             deliveryCount={deliveries.length}
             vehicleCount={vehicles.length}
           />
-
           <div className="grid lg:grid-cols-2 gap-12">
             {/* Deliveries Section */}
             <div className="flex flex-col">
@@ -402,7 +407,6 @@ export default function AddressGeocoder() {
                   <span className="mr-1">+</span> Add Delivery
                 </button>
               </div>
-
               <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
                 {deliveries.map((delivery, index) => (
                   <div key={delivery._reactId} data-delivery-input>
@@ -424,7 +428,6 @@ export default function AddressGeocoder() {
                   </div>
                 ))}
               </div>
-
               <p className="mt-3 text-xs text-gray-500">
                 💡 Type at least 3 characters to see address suggestions
               </p>
@@ -444,7 +447,6 @@ export default function AddressGeocoder() {
                   <span className="mr-1">+</span> Add Vehicle
                 </button>
               </div>
-
               <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
                 {vehicles.map((vehicle, index) => (
                   <div key={vehicle._reactId} data-vehicle-input>
@@ -474,7 +476,6 @@ export default function AddressGeocoder() {
                   </div>
                 ))}
               </div>
-
               <p className="mt-3 text-xs text-gray-500">
                 💡 Type at least 3 characters to see address suggestions
               </p>

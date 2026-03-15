@@ -25,7 +25,7 @@ export interface Delivery {
     type: string;
     value: number;
   };
-  time_windows: number[][];
+  timeWindows: number[][];
 }
 
 export interface OptimizedResponse {
