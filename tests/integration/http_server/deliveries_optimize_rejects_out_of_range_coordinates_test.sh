@@ -63,6 +63,18 @@ if [[ "${http_code}" != "400" ]]; then
   exit 1
 fi
 
+if ! grep -Eq '"field"[[:space:]]*:[[:space:]]*"depot\.location"' "${response_file}"; then
+  echo "expected validation issue for depot.location" >&2
+  cat "${response_file}" >&2 || true
+  exit 1
+fi
+
+if ! grep -Eq '"message"[[:space:]]*:[[:space:]]*"must be an array \[lon, lat\] with longitude in \[-180, 180\] and latitude in \[-90, 90\]\."' "${response_file}"; then
+  echo "expected coordinate range validation message" >&2
+  cat "${response_file}" >&2 || true
+  exit 1
+fi
+
 if [[ -f "${vroom_called_file}" ]]; then
   echo "expected validation failure before invoking VROOM" >&2
   cat "${response_file}" >&2 || true

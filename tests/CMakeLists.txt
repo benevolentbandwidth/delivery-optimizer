@@ -145,6 +145,10 @@ set_tests_properties(
     TIMEOUT 30
     LABELS "${DELIVERYOPTIMIZER_LOCAL_API_LABELS}"
 )
+deliveryoptimizer_set_local_http_test_port(
+  DeliveryOptimizerApiValidationTest.DeliveriesOptimizeRejectsExcessiveBodySize
+  23000
+)
 
 deliveryoptimizer_add_local_http_test(
   DeliveryOptimizerOsrmProxyTest.RejectsDisallowedService
