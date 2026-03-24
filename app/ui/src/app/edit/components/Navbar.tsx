@@ -24,7 +24,8 @@ export default function Navbar() {
             <path d="M10 13V4M10 4L6 8M10 4L14 8" stroke="black" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             <path d="M4 14v1a2 2 0 002 2h8a2 2 0 002-2v-1" stroke="black" strokeWidth="1.5" strokeLinecap="round"/>
           </svg>
-        </button>        <button className={NAVBAR_OUTLINE_PILL}>
+        </button>        
+        <button className={NAVBAR_OUTLINE_PILL}>
           Save
         </button>
         <button className={NAVBAR_OUTLINE_PILL}>
