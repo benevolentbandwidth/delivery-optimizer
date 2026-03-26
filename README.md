@@ -66,6 +66,8 @@ cmake --preset conan-release
 cmake --build --preset conan-release
 ```
 
+Requires flakes enabled and Nix `>= 2.19`, because this repo's `flake.lock` uses format version `7`.
+
 The dev shell is backend-focused. It includes Docker and PostgreSQL tooling used by the backend
 and e2e stack, but it does not include frontend Node tooling.
 

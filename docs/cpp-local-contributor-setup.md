@@ -28,6 +28,8 @@ If you want a consistent LLVM toolchain for build + lint on macOS or Linux, pref
 nix develop
 ```
 
+Requires flakes enabled and Nix `>= 2.19`, because this repo's `flake.lock` uses format version `7`.
+
 The flake shell includes:
 
 - `clang`, `clangd`, `clang-format`, `clang-tidy`
