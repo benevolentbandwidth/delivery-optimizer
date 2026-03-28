@@ -1,4 +1,4 @@
-"use client";
+ï»¿"use client";
 
 /**
  * One vehicle in the grid: read-only summary, full-width edit for existing rows, or inline new row.
@@ -209,7 +209,7 @@ export default function VehicleRow({
       );
     }
 
-    // Editing (existing or new) GÇö shared fields; wrapper and actions differ by editingExisting
+    // Editing (existing or new) Gï¿½ï¿½ shared fields; wrapper and actions differ by editingExisting
     return (
       <div className={v.editingExisting ? VEHICLE_MOBILE_EDITING_CARD : VEHICLE_MOBILE_CARD}>
         <MobileFieldLabel>Name</MobileFieldLabel>

@@ -1,4 +1,4 @@
-/**
+ï»¿/**
  * Shared Tailwind class tokens for the delivery edit form. Prefer complete string literals so
  * Tailwind's scanner includes all utilities. Vehicle editing panel constants compose
  * `EDITING_EXISTING_HIGHLIGHT` at module load (still scanned in this file).
@@ -20,7 +20,7 @@ export const NAVBAR_OUTLINE_PILL =
 export const NAVBAR_SOLID_PILL =
   "h-11 px-6 rounded-full bg-zinc-300 text-black text-base font-normal hover:bg-zinc-400 transition-colors cursor-pointer";
 
-/** Invalid vs valid focus/border GÇö desktop inputs (Address desktop + all Vehicle fields). */
+/** Invalid vs valid focus/border Gï¿½ï¿½ desktop inputs (Address desktop + all Vehicle fields). */
 export function fieldBorder(invalid: boolean, mode: "desktop" | "mobile" = "desktop"): string {
   if (mode === "mobile") {
     if (invalid) {
@@ -34,7 +34,7 @@ export function fieldBorder(invalid: boolean, mode: "desktop" | "mobile" = "desk
   return "border-zinc-300 focus:border-zinc-500";
 }
 
-/** Editing an existing unlocked row GÇö same ring, border, and fill on address + vehicle surfaces. */
+/** Editing an existing unlocked row Gï¿½ï¿½ same ring, border, and fill on address + vehicle surfaces. */
 export const EDITING_EXISTING_HIGHLIGHT =
   "border border-blue-200 bg-blue-50 ring-2 ring-blue-200";
 
@@ -95,7 +95,7 @@ export const VEHICLE_AVAILABLE_SEGMENT_BUTTON =
 export const VEHICLE_AVAILABLE_SEGMENT_READ_ONLY_SPAN =
   "relative z-10 flex-1 min-w-0 text-center text-xs font-medium text-black py-1.5 bg-transparent";
 
-/** Locked summary cells GÇö w-full fills fixed-width grid columns and is harmless in fr columns. */
+/** Locked summary cells Gï¿½ï¿½ w-full fills fixed-width grid columns and is harmless in fr columns. */
 export const VEHICLE_LOCKED_CELL =
   "h-11 w-full bg-zinc-300 rounded-md flex items-center px-3 xl:px-4";
 
