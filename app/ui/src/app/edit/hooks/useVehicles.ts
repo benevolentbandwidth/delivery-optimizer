@@ -13,6 +13,7 @@ export function useVehicles() {
       locked: false,
       editingExisting: false,
       name: "",
+      startLocation: "",
       type: "",
       capacityUnit: "",
       capacity: 0,
@@ -28,6 +29,7 @@ export function useVehicles() {
   const activeVehicleIsValid =
     !!activeVehicle &&
     activeVehicle.name.trim() !== "" &&
+    activeVehicle.startLocation.trim() !== "" &&
     activeVehicle.type !== "" &&
     activeVehicle.capacityUnit !== "" &&
     activeVehicle.capacity > 0 &&
@@ -56,6 +58,7 @@ export function useVehicles() {
       const isValid =
         !!active &&
         active.name.trim() !== "" &&
+        active.startLocation.trim() !== "" &&
         active.type !== "" &&
         active.capacityUnit !== "" &&
         active.capacity > 0 &&
@@ -76,6 +79,7 @@ export function useVehicles() {
           locked: false,
           editingExisting: false,
           name: "",
+          startLocation: "",
           type: "",
           capacityUnit: "",
           capacity: 0,
@@ -108,6 +112,7 @@ export function useVehicles() {
       if (!v) return prev;
       const valid =
         v.name.trim() !== "" &&
+        v.startLocation.trim() !== "" &&
         v.type !== "" &&
         v.capacityUnit !== "" &&
         v.capacity > 0 &&

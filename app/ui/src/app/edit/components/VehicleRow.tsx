@@ -29,6 +29,7 @@ import {
   VEHICLE_DESKTOP_INPUT,
   VEHICLE_DESKTOP_NUMBER_INPUT,
   VEHICLE_DESKTOP_SELECT,
+  VEHICLE_DESKTOP_WIDE_INPUT,
   VEHICLE_GRID_INNER,
   VEHICLE_LOCKED_CELL,
   VEHICLE_MOBILE_CARD,
@@ -150,6 +151,7 @@ export default function VehicleRow({
   vehicleTouched,
 }: VehicleRowProps) {
   const nameInvalid = vehicleTouched && !v.name.trim();
+  const startLocationInvalid = vehicleTouched && !(v.startLocation ?? "").trim();
   const typeInvalid = vehicleTouched && !v.type;
   const capMeasureInvalid = vehicleTouched && !v.capacityUnit;
   const capacityInvalid = vehicleTouched && v.capacity <= 0;
@@ -165,6 +167,10 @@ export default function VehicleRow({
           <MobileFieldLabel>Name</MobileFieldLabel>
           <div className={VEHICLE_LOCKED_CELL}>
             <span className="text-base text-black truncate">{v.name}</span>
+          </div>
+          <MobileFieldLabel>Start Location</MobileFieldLabel>
+          <div className={VEHICLE_LOCKED_CELL}>
+            <span className="text-base text-black truncate">{v.startLocation}</span>
           </div>
           <MobileFieldLabel>Type</MobileFieldLabel>
           <div className={VEHICLE_LOCKED_CELL}>
@@ -219,6 +225,14 @@ export default function VehicleRow({
           className={`${inputClass(nameInvalid)} bg-white`}
           placeholder="Name"
           aria-label="Vehicle name"
+        />
+        <MobileFieldLabel>Start Location</MobileFieldLabel>
+        <input
+          value={v.startLocation ?? ""}
+          onChange={(e) => updateVehicle(v.id, "startLocation", e.target.value)}
+          className={`${inputClass(startLocationInvalid)} bg-white`}
+          placeholder="Address"
+          aria-label="Start location"
         />
         <MobileFieldLabel>Type</MobileFieldLabel>
         <select
@@ -326,6 +340,9 @@ export default function VehicleRow({
           <span className="text-sm xl:text-base text-black truncate">{v.name}</span>
         </div>
         <div className={VEHICLE_LOCKED_CELL}>
+          <span className="text-sm xl:text-base text-black truncate">{v.startLocation}</span>
+        </div>
+        <div className={VEHICLE_LOCKED_CELL}>
           <span className="text-sm xl:text-base text-black truncate">{capitalize(v.type)}</span>
         </div>
         <div className={VEHICLE_LOCKED_CELL}>
@@ -400,6 +417,13 @@ export default function VehicleRow({
         className={`${VEHICLE_DESKTOP_INPUT} ${fieldBorder(vehicleTouched && !v.name.trim())}`}
         placeholder=""
         aria-label="Vehicle name"
+      />
+      <input
+        value={v.startLocation ?? ""}
+        onChange={(e) => updateVehicle(v.id, "startLocation", e.target.value)}
+        className={`${VEHICLE_DESKTOP_WIDE_INPUT} ${fieldBorder(startLocationInvalid)}`}
+        placeholder=""
+        aria-label="Start location"
       />
       <select
         value={v.type}

@@ -48,6 +48,7 @@ export default function VehicleSection({
       {/* Desktop: headers + vehicle rows in one grid */}
       <div className={`${VEHICLE_GRID_WRAP} ${DESKTOP_VEHICLE_GRID_CLASS}`}>
         <span className={VEHICLE_HEADER_CELL_START}>Name</span>
+        <span className={VEHICLE_HEADER_CELL_START}>Start Location</span>
         <span className={VEHICLE_HEADER_CELL_START}>Type</span>
         <span className={VEHICLE_HEADER_CELL_START}>Capacity Unit</span>
         <span className={VEHICLE_HEADER_CELL_START}>Capacity</span>
@@ -70,7 +71,7 @@ export default function VehicleSection({
       </div>
 
       {/* Mobile: stacked cards */}
-      <div className="md:hidden space-y-6">
+      <div className="lg:hidden space-y-6">
         {vehicles.map((v) => (
           <VehicleRow
             key={`vehicle-mobile-${v.id}`}

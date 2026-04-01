@@ -56,10 +56,13 @@ export const ICON_BUTTON_9_DANGER =
 
 /** Name/type/measure/departure flex; capacity + Available (No/Yes pill) stay fixed width below xl. */
 export const DESKTOP_VEHICLE_GRID_CLASS =
-  "md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_88px_112px_minmax(0,1fr)_auto] xl:grid-cols-[1fr_1fr_1fr_144px_112px_144px_1fr]";
+  "lg:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1fr)_72px_108px_minmax(0,1fr)_auto] xl:grid-cols-[1fr_1.5fr_1fr_1fr_112px_112px_140px_auto]";
 
 export const VEHICLE_DESKTOP_INPUT =
   "h-11 bg-white rounded-md border px-3 xl:px-4 text-sm xl:text-base text-black focus:outline-none min-w-0";
+
+export const VEHICLE_DESKTOP_WIDE_INPUT =
+  "h-11 w-full bg-white rounded-md border px-3 xl:px-4 text-sm xl:text-base text-black focus:outline-none min-w-0";
 
 export const VEHICLE_DESKTOP_SELECT =
   "h-11 w-full bg-white rounded-md border px-3 xl:px-4 text-sm xl:text-base text-black focus:outline-none cursor-pointer select-chevron capitalize min-w-0";
@@ -124,7 +127,7 @@ export const VEHICLE_HEADER_CELL_START =
 export const VEHICLE_HEADER_CELL_CENTER =
   "text-xs lg:text-sm xl:text-base text-black justify-self-center";
 
-export const VEHICLE_GRID_WRAP = "hidden md:grid gap-x-3 xl:gap-x-4 gap-y-3 items-center";
+export const VEHICLE_GRID_WRAP = "hidden lg:grid gap-x-3 xl:gap-x-4 gap-y-3 items-center";
 
 export const VEHICLE_GRID_INNER = "gap-x-3 xl:gap-x-4 items-center";
 

@@ -10,6 +10,7 @@ export type VehicleRow = {
   locked: boolean;
   editingExisting: boolean;
   name: string;
+  startLocation: string;
   /** Empty string represents "not yet selected". */
   type: VehicleType | "";
   /** Empty string represents "not yet selected". */
