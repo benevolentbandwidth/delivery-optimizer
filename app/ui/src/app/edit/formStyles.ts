@@ -1,4 +1,4 @@
-﻿/**
+﻿﻿/**
  * Shared Tailwind class tokens for the delivery edit form. Prefer complete string literals so
  * Tailwind's scanner includes all utilities. Vehicle editing panel constants compose
  * `EDITING_EXISTING_HIGHLIGHT` at module load (still scanned in this file).
@@ -26,14 +26,13 @@ export function fieldBorder(invalid: boolean, mode: "desktop" | "mobile" = "desk
     if (invalid) {
       return "border-red-500 focus:border-red-500";
     }
-    return "focus:border-zinc-400";
+    return "border-zinc-300 focus:border-zinc-400";
   }
   if (invalid) {
     return "border-red-500 focus:border-red-500";
   }
   return "border-zinc-300 focus:border-zinc-500";
 }
-
 /** Editing an existing unlocked row G�� same ring, border, and fill on address + vehicle surfaces. */
 export const EDITING_EXISTING_HIGHLIGHT =
   "border border-blue-200 bg-blue-50 ring-2 ring-blue-200";
