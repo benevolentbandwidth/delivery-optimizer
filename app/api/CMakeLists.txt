@@ -18,6 +18,7 @@ target_sources(
     BASE_DIRS include
     FILES
       include/deliveryoptimizer/api/api_server.hpp
+      include/deliveryoptimizer/api/deliveries_optimize_limits.hpp
       include/deliveryoptimizer/api/endpoints/deliveries_optimize_endpoint.hpp
       include/deliveryoptimizer/api/endpoints/health_endpoint.hpp
       include/deliveryoptimizer/api/endpoints/optimize_endpoint.hpp

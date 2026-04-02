@@ -1,5 +1,6 @@
 #include "deliveryoptimizer/api/endpoints/deliveries_optimize_endpoint.hpp"
 
+#include "deliveryoptimizer/api/deliveries_optimize_limits.hpp"
 #include "deliveryoptimizer/api/solve_coordinator.hpp"
 #include "deliveryoptimizer/api/vroom_runner.hpp"
 
@@ -26,8 +27,10 @@ constexpr double kMinLatitude = -90.0;
 constexpr double kMaxLatitude = 90.0;
 constexpr std::string_view kCoordinateValidationMessage =
     "must be an array [lon, lat] with longitude in [-180, 180] and latitude in [-90, 90].";
-constexpr Json::ArrayIndex kMaxOptimizeVehicles = 2000U;
-constexpr Json::ArrayIndex kMaxOptimizeJobs = 10000U;
+constexpr Json::ArrayIndex kMaxOptimizeVehicles =
+    static_cast<Json::ArrayIndex>(deliveryoptimizer::api::kMaxDeliveriesOptimizeVehicles);
+constexpr Json::ArrayIndex kMaxOptimizeJobs =
+    static_cast<Json::ArrayIndex>(deliveryoptimizer::api::kMaxDeliveriesOptimizeJobs);
 
 struct Coordinate {
   double lon;

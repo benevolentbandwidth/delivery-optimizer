@@ -1,5 +1,7 @@
 #include "deliveryoptimizer/api/server_options.hpp"
 
+#include "deliveryoptimizer/api/deliveries_optimize_limits.hpp"
+
 #include <algorithm>
 #include <charconv>
 #include <chrono>
@@ -126,6 +128,22 @@ template <typename Integer>
   return *parsed_value;
 }
 
+[[nodiscard]] std::size_t ResolveClampedPositiveSizeOption(const std::string_view env_name,
+                                                           const std::size_t default_value,
+                                                           const std::size_t max_value,
+                                                           const std::string_view description) {
+  const std::size_t resolved_value =
+      ResolvePositiveSizeOption(env_name, default_value, description);
+  if (resolved_value <= max_value) {
+    return resolved_value;
+  }
+
+  std::cerr << "Capping " << env_name << "='" << resolved_value << "' to " << max_value
+            << " because the deliveries optimize request parser does not accept larger "
+            << description << " values.\n";
+  return max_value;
+}
+
 [[nodiscard]] std::size_t ResolveNonNegativeSizeOption(const std::string_view env_name,
                                                        const std::size_t default_value,
                                                        const std::string_view description) {
@@ -164,11 +182,13 @@ ResolveSolveAdmissionConfig(const std::size_t worker_threads) {
       .max_queue_size = ResolveNonNegativeSizeOption(kSolverMaxQueueSizeEnv, default_max_queue_size,
                                                      "solver queue size"),
       .max_queue_wait = ResolveQueueWaitTimeout(),
-      .max_sync_jobs = ResolvePositiveSizeOption(kSolverMaxSyncJobsEnv, kDefaultSolverMaxSyncJobs,
-                                                 "solver max synchronous jobs"),
+      .max_sync_jobs = ResolveClampedPositiveSizeOption(
+          kSolverMaxSyncJobsEnv, kDefaultSolverMaxSyncJobs,
+          deliveryoptimizer::api::kMaxDeliveriesOptimizeJobs, "solver max synchronous jobs"),
       .max_sync_vehicles =
-          ResolvePositiveSizeOption(kSolverMaxSyncVehiclesEnv, kDefaultSolverMaxSyncVehicles,
-                                    "solver max synchronous vehicles"),
+          ResolveClampedPositiveSizeOption(kSolverMaxSyncVehiclesEnv, kDefaultSolverMaxSyncVehicles,
+                                           deliveryoptimizer::api::kMaxDeliveriesOptimizeVehicles,
+                                           "solver max synchronous vehicles"),
   };
 }
 
