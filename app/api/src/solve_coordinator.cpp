@@ -1,5 +1,6 @@
 #include "deliveryoptimizer/api/solve_coordinator.hpp"
 
+#include <chrono>
 #include <utility>
 
 namespace {
@@ -27,18 +28,25 @@ ToCoordinatedSolveResult(const deliveryoptimizer::api::VroomRunResult& result) {
   };
 }
 
+[[nodiscard]] bool HasQueueWaitExpired(const std::chrono::steady_clock::time_point deadline) {
+  return std::chrono::steady_clock::now() >= deadline;
+}
+
 } // namespace
 
 namespace deliveryoptimizer::api {
 
 SolveCoordinator::SolveCoordinator(SolveAdmissionConfig config,
-                                   std::shared_ptr<const VroomRunner> runner)
-    : config_(std::move(config)), runner_(std::move(runner)) {
+                                   std::shared_ptr<const VroomRunner> runner,
+                                   SolveCoordinatorOptions options)
+    : config_(std::move(config)), options_(options), runner_(std::move(runner)) {
   workers_.reserve(config_.max_concurrency);
   for (std::size_t index = 0U; index < config_.max_concurrency; ++index) {
     workers_.emplace_back([this] { WorkerLoop(); });
   }
-  queue_timer_ = std::jthread([this] { QueueTimerLoop(); });
+  if (options_.enable_queue_timer) {
+    queue_timer_ = std::jthread([this] { QueueTimerLoop(); });
+  }
 }
 
 SolveCoordinator::~SolveCoordinator() {
@@ -85,6 +93,7 @@ SolveAdmissionStatus SolveCoordinator::Submit(const SolveRequestSize& request_si
 void SolveCoordinator::WorkerLoop() {
   while (true) {
     std::optional<QueuedSolveRequest> queued_request;
+    bool queue_wait_expired = false;
     {
       std::unique_lock<std::mutex> lock(mutex_);
       condition_.wait(lock, [this] { return shutting_down_ || !queue_.empty(); });
@@ -94,9 +103,20 @@ void SolveCoordinator::WorkerLoop() {
 
       queued_request = std::move(queue_.front());
       queue_.pop_front();
-      ++active_solves_;
+      queue_wait_expired = HasQueueWaitExpired(queued_request->deadline);
+      if (!queue_wait_expired) {
+        ++active_solves_;
+      }
     }
     condition_.notify_all();
+
+    if (queue_wait_expired) {
+      queued_request->callback(CoordinatedSolveResult{
+          .status = CoordinatedSolveStatus::kQueueWaitTimedOut,
+          .output = std::nullopt,
+      });
+      continue;
+    }
 
     const VroomRunResult solve_result = runner_->Run(queued_request->payload_factory());
     queued_request->callback(ToCoordinatedSolveResult(solve_result));
@@ -133,7 +153,7 @@ void SolveCoordinator::QueueTimerLoop() {
         continue;
       }
 
-      if (queue_.empty() || std::chrono::steady_clock::now() < queue_.front().deadline) {
+      if (queue_.empty() || !HasQueueWaitExpired(queue_.front().deadline)) {
         continue;
       }
 

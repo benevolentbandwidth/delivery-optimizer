@@ -29,12 +29,17 @@ struct CoordinatedSolveResult {
   std::optional<Json::Value> output;
 };
 
+struct SolveCoordinatorOptions {
+  bool enable_queue_timer{true};
+};
+
 class SolveCoordinator {
 public:
   using CompletionCallback = std::function<void(CoordinatedSolveResult)>;
   using PayloadFactory = std::function<Json::Value()>;
 
-  SolveCoordinator(SolveAdmissionConfig config, std::shared_ptr<const VroomRunner> runner);
+  SolveCoordinator(SolveAdmissionConfig config, std::shared_ptr<const VroomRunner> runner,
+                   SolveCoordinatorOptions options = {});
   ~SolveCoordinator();
 
   SolveCoordinator(const SolveCoordinator&) = delete;
@@ -58,6 +63,7 @@ private:
   void QueueTimerLoop();
 
   SolveAdmissionConfig config_;
+  SolveCoordinatorOptions options_;
   std::shared_ptr<const VroomRunner> runner_;
   std::mutex mutex_;
   std::condition_variable condition_;
