@@ -77,10 +77,12 @@ export function addressCardToDeliveryInput(
   a: AddressCard,
   location: Location
 ): DeliveryInput {
-  const timeWindow: [number, number] =
-    a.deliveryTimeMode === "by"
+  const rawTime = a.deliveryTimeMode === "by" ? a.deliveryBy : a.deliveryBetween;
+  const timeWindow: [number, number] | undefined = rawTime
+    ? a.deliveryTimeMode === "by"
       ? deliveryByToTimeWindow(a.deliveryBy)
-      : deliveryBetweenToTimeWindow(a.deliveryBetween);
+      : deliveryBetweenToTimeWindow(a.deliveryBetween)
+    : undefined;
 
   return {
     id: a.id,
@@ -88,6 +90,5 @@ export function addressCardToDeliveryInput(
     location,
     bufferTime: timeBufferToSeconds(a.timeBuffer),
     demand: { type: "units", value: a.deliveryQuantity },
-    timeWindows: [timeWindow],
-  };
+    ...(timeWindow && { timeWindows: [timeWindow] }),  };
 }

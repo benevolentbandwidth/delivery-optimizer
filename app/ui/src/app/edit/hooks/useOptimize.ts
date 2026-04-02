@@ -95,8 +95,14 @@ export function useOptimize(vehicles: VehicleRow[], addresses: AddressCard[]) {
         body: JSON.stringify({ vehicles: vehicleInputs, deliveries: deliveryInputs }),
       });
 
-      const data: unknown = await response.json();
-
+      let data: unknown;
+      try {
+        data = await response.json();
+      } catch {
+        setOptimizeError("Received invalid response from server.");
+        return;
+      }
+      
       if (!response.ok) {
         const message =
           data && typeof data === "object" && "error" in data && typeof (data as { error: unknown }).error === "string"
