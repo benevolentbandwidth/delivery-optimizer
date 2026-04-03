@@ -166,7 +166,17 @@ template <typename Integer>
   const std::size_t timeout_ms = ResolvePositiveSizeOption(
       kSolverQueueWaitMsEnv, static_cast<std::size_t>(kDefaultSolverQueueWaitMs),
       "solver queue wait timeout (ms)");
-  return std::chrono::milliseconds{timeout_ms};
+  const std::uint64_t max_timeout_ms =
+      static_cast<std::uint64_t>(std::chrono::milliseconds::max().count());
+  if (static_cast<std::uint64_t>(timeout_ms) > max_timeout_ms) {
+    std::cerr << "Capping " << kSolverQueueWaitMsEnv << "='" << timeout_ms << "' to "
+              << max_timeout_ms
+              << " because larger solver queue wait timeout (ms) values are not representable.\n";
+    return std::chrono::milliseconds::max();
+  }
+
+  return std::chrono::milliseconds{
+      static_cast<std::chrono::milliseconds::rep>(static_cast<std::uint64_t>(timeout_ms))};
 }
 
 [[nodiscard]] std::size_t ResolveSolverMaxConcurrency(const std::size_t worker_threads) {

@@ -3,6 +3,7 @@
 #include <chrono>
 #include <cstdlib>
 #include <gtest/gtest.h>
+#include <limits>
 #include <optional>
 #include <string>
 #include <utility>
@@ -123,6 +124,21 @@ TEST(ServerOptionsTest, ClampsSolverMaxConcurrencyToSupportedCap) {
 
   EXPECT_EQ(options.solve_admission.max_concurrency, 64U);
   EXPECT_NE(stderr_output.find("DELIVERYOPTIMIZER_SOLVER_MAX_CONCURRENCY"), std::string::npos);
+}
+
+TEST(ServerOptionsTest, ClampsSolverQueueWaitTimeoutToRepresentableRange) {
+  ScopedEnvVar solver_queue_wait_ms("DELIVERYOPTIMIZER_SOLVER_QUEUE_WAIT_MS");
+  const auto overflowing_timeout_ms = std::to_string(
+      static_cast<unsigned long long>(std::numeric_limits<std::chrono::milliseconds::rep>::max()) +
+      1ULL);
+  solver_queue_wait_ms.Set(overflowing_timeout_ms.c_str());
+
+  testing::internal::CaptureStderr();
+  const auto options = deliveryoptimizer::api::LoadServerOptionsFromEnv();
+  const std::string stderr_output = testing::internal::GetCapturedStderr();
+
+  EXPECT_EQ(options.solve_admission.max_queue_wait, std::chrono::milliseconds::max());
+  EXPECT_NE(stderr_output.find("DELIVERYOPTIMIZER_SOLVER_QUEUE_WAIT_MS"), std::string::npos);
 }
 
 TEST(ServerOptionsTest, ClampsSolverAdmissionSyncLimitsToSupportedParserCaps) {
