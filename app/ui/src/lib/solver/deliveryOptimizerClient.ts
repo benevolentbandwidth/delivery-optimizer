@@ -120,5 +120,12 @@ export async function postDeliveriesOptimize(
     })
   }
 
-  return response.json()
+  try {
+    return await response.json()
+  } catch {
+    throw createError("Optimizer returned invalid JSON", {
+      retryable: false,
+      status: response.status,
+    })
+  }
 }
