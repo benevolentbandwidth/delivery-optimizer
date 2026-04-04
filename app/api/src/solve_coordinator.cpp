@@ -33,17 +33,16 @@ ToCoordinatedSolveResult(const deliveryoptimizer::api::VroomRunResult& result) {
   return std::chrono::steady_clock::now() >= deadline;
 }
 
-[[nodiscard]] std::chrono::steady_clock::time_point
-BuildQueueDeadline(const std::chrono::milliseconds queue_wait) {
-  const auto now = std::chrono::steady_clock::now();
-  const auto remaining_until_max = std::chrono::steady_clock::time_point::max() - now;
-  const auto remaining_ms =
-      std::chrono::duration_cast<std::chrono::milliseconds>(remaining_until_max);
-  if (queue_wait > remaining_ms) {
-    return std::chrono::steady_clock::time_point::max();
-  }
-
-  return now + queue_wait;
+[[nodiscard]] std::chrono::steady_clock::time_point ResolveDeadline(
+    const std::chrono::steady_clock::time_point queued_at,
+    const std::chrono::milliseconds queue_wait) {
+  const auto max_queue_wait =
+      std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::duration::max());
+  const auto clamped_queue_wait = std::min(queue_wait, max_queue_wait);
+  const auto queue_wait_duration =
+      std::chrono::duration_cast<std::chrono::steady_clock::duration>(clamped_queue_wait);
+  const auto remaining_until_max = std::chrono::steady_clock::time_point::max() - queued_at;
+  return queued_at + std::min(queue_wait_duration, remaining_until_max);
 }
 
 [[nodiscard]] std::size_t
@@ -163,7 +162,7 @@ SolveAdmissionStatus SolveCoordinator::Submit(const SolveRequestSize& request_si
       .sequence_number = next_sequence_number_++,
       .payload_factory = std::move(payload_factory),
       .callback = std::move(callback),
-      .deadline = BuildQueueDeadline(config_.max_queue_wait),
+      .deadline = ResolveDeadline(queued_at, config_.max_queue_wait),
       .lifecycle = std::move(lifecycle),
       .started_immediately = started_immediately,
   });

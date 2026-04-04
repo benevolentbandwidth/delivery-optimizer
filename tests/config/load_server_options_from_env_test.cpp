@@ -136,8 +136,10 @@ TEST(ServerOptionsTest, ClampsSolverQueueWaitTimeoutToRepresentableRange) {
   testing::internal::CaptureStderr();
   const auto options = deliveryoptimizer::api::LoadServerOptionsFromEnv();
   const std::string stderr_output = testing::internal::GetCapturedStderr();
+  const auto expected_timeout = std::chrono::duration_cast<std::chrono::milliseconds>(
+      std::chrono::steady_clock::duration::max());
 
-  EXPECT_EQ(options.solve_admission.max_queue_wait, std::chrono::milliseconds::max());
+  EXPECT_EQ(options.solve_admission.max_queue_wait, expected_timeout);
   EXPECT_NE(stderr_output.find("DELIVERYOPTIMIZER_SOLVER_QUEUE_WAIT_MS"), std::string::npos);
 }
 
