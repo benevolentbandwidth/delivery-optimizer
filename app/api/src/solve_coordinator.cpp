@@ -53,14 +53,33 @@ ResolveCompletionWorkerCount(const deliveryoptimizer::api::SolveAdmissionConfig&
                                options.completion_worker_count.value_or(config.max_concurrency));
 }
 
+void UpdateLifecycleState(const std::shared_ptr<deliveryoptimizer::api::SolveLifecycle>& lifecycle,
+                          const std::size_t queue_depth, const std::size_t inflight_solves) {
+  if (lifecycle == nullptr) {
+    return;
+  }
+
+  lifecycle->queue_depth = queue_depth;
+  lifecycle->inflight_solves = inflight_solves;
+}
+
 } // namespace
 
 namespace deliveryoptimizer::api {
 
 SolveCoordinator::SolveCoordinator(SolveAdmissionConfig config,
                                    std::shared_ptr<const VroomRunner> runner,
-                                   SolveCoordinatorOptions options)
-    : config_(config), options_(options), runner_(std::move(runner)) {
+                                   SolveCoordinatorOptions options,
+                                   std::shared_ptr<ObservabilityRegistry> observability)
+    : config_(config),
+      options_(options),
+      runner_(std::move(runner)),
+      observability_(std::move(observability)) {
+  if (observability_ == nullptr) {
+    observability_ = std::make_shared<ObservabilityRegistry>();
+  }
+  observability_->SetSolverState(0U, 0U);
+
   const std::size_t completion_worker_count = ResolveCompletionWorkerCount(config_, options_);
   completion_workers_.reserve(completion_worker_count);
   for (std::size_t index = 0U; index < completion_worker_count; ++index) {
@@ -78,13 +97,17 @@ SolveCoordinator::SolveCoordinator(SolveAdmissionConfig config,
 
 SolveCoordinator::~SolveCoordinator() {
   std::deque<QueuedSolveRequest> drained_queue;
+  std::size_t active_solves = 0U;
   {
     std::lock_guard<std::mutex> lock(mutex_);
     shutting_down_ = true;
     drained_queue = std::move(queue_);
+    active_solves = active_solves_;
   }
+  observability_->SetSolverState(0U, active_solves);
   condition_.notify_all();
 
+  const auto completed_at = std::chrono::steady_clock::now();
   for (auto& queued_request : drained_queue) {
     EnqueueCompletion([callback = std::move(queued_request.callback)]() mutable {
       callback(CoordinatedSolveResult{
@@ -92,6 +115,10 @@ SolveCoordinator::~SolveCoordinator() {
           .output = std::nullopt,
       });
     });
+    if (queued_request.lifecycle != nullptr) {
+      queued_request.lifecycle->completed_at = completed_at;
+      UpdateLifecycleState(queued_request.lifecycle, 0U, active_solves);
+    }
   }
 
   queue_timer_ = std::jthread{};
@@ -107,8 +134,10 @@ SolveCoordinator::~SolveCoordinator() {
 
 SolveAdmissionStatus SolveCoordinator::Submit(const SolveRequestSize& request_size,
                                               PayloadFactory payload_factory,
-                                              CompletionCallback callback) {
+                                              CompletionCallback callback,
+                                              std::shared_ptr<SolveLifecycle> lifecycle) {
   std::lock_guard<std::mutex> lock(mutex_);
+  UpdateLifecycleState(lifecycle, queue_.size(), active_solves_);
   if (shutting_down_) {
     return SolveAdmissionStatus::kRejectedQueueFull;
   }
@@ -116,15 +145,30 @@ SolveAdmissionStatus SolveCoordinator::Submit(const SolveRequestSize& request_si
   const SolveAdmissionStatus admission_status =
       EvaluateSolveAdmission(config_, request_size, active_solves_, queue_.size());
   if (admission_status != SolveAdmissionStatus::kAccepted) {
+    UpdateLifecycleState(lifecycle, queue_.size(), active_solves_);
     return admission_status;
   }
 
+  const auto queued_at = std::chrono::steady_clock::now();
+  const bool started_immediately = active_solves_ < config_.max_concurrency && queue_.empty();
+  if (lifecycle != nullptr) {
+    lifecycle->accepted = true;
+    lifecycle->queued_at = queued_at;
+    lifecycle->queue_wait_duration = std::chrono::steady_clock::duration::zero();
+    lifecycle->solve_duration = std::chrono::steady_clock::duration::zero();
+    lifecycle->solve_started_at.reset();
+    lifecycle->completed_at.reset();
+  }
   queue_.push_back(QueuedSolveRequest{
       .sequence_number = next_sequence_number_++,
       .payload_factory = std::move(payload_factory),
       .callback = std::move(callback),
       .deadline = BuildQueueDeadline(config_.max_queue_wait),
+      .lifecycle = std::move(lifecycle),
+      .started_immediately = started_immediately,
   });
+  observability_->SetSolverState(queue_.size(), active_solves_);
+  UpdateLifecycleState(queue_.back().lifecycle, queue_.size(), active_solves_);
   condition_.notify_all();
   return SolveAdmissionStatus::kAccepted;
 }
@@ -141,6 +185,7 @@ void SolveCoordinator::WorkerLoop() {
   while (true) {
     std::optional<QueuedSolveRequest> queued_request;
     bool queue_wait_expired = false;
+    std::chrono::steady_clock::time_point dequeued_at;
     {
       std::unique_lock<std::mutex> lock(mutex_);
       condition_.wait(lock, [this] { return shutting_down_ || !queue_.empty(); });
@@ -150,10 +195,24 @@ void SolveCoordinator::WorkerLoop() {
 
       queued_request = std::move(queue_.front());
       queue_.pop_front();
+      dequeued_at = std::chrono::steady_clock::now();
       queue_wait_expired = HasQueueWaitExpired(queued_request->deadline);
       if (!queue_wait_expired) {
         ++active_solves_;
+        if (queued_request->lifecycle != nullptr) {
+          queued_request->lifecycle->solve_started_at = dequeued_at;
+          queued_request->lifecycle->queue_wait_duration =
+              queued_request->started_immediately
+                  ? std::chrono::steady_clock::duration::zero()
+                  : dequeued_at - queued_request->lifecycle->queued_at.value_or(dequeued_at);
+        }
+      } else if (queued_request->lifecycle != nullptr) {
+        queued_request->lifecycle->queue_wait_duration =
+            dequeued_at - queued_request->lifecycle->queued_at.value_or(dequeued_at);
+        queued_request->lifecycle->completed_at = dequeued_at;
       }
+      UpdateLifecycleState(queued_request->lifecycle, queue_.size(), active_solves_);
+      observability_->SetSolverState(queue_.size(), active_solves_);
     }
     condition_.notify_all();
 
@@ -168,9 +227,17 @@ void SolveCoordinator::WorkerLoop() {
     }
 
     const VroomRunResult solve_result = runner_->Run(queued_request->payload_factory());
+    const auto completed_at = std::chrono::steady_clock::now();
     {
       std::lock_guard<std::mutex> lock(mutex_);
+      if (queued_request->lifecycle != nullptr) {
+        queued_request->lifecycle->completed_at = completed_at;
+        queued_request->lifecycle->solve_duration =
+            completed_at - queued_request->lifecycle->solve_started_at.value_or(completed_at);
+      }
       --active_solves_;
+      UpdateLifecycleState(queued_request->lifecycle, queue_.size(), active_solves_);
+      observability_->SetSolverState(queue_.size(), active_solves_);
     }
     condition_.notify_all();
 
@@ -184,6 +251,7 @@ void SolveCoordinator::WorkerLoop() {
 void SolveCoordinator::QueueTimerLoop() {
   while (true) {
     std::optional<QueuedSolveRequest> expired_request;
+    std::chrono::steady_clock::time_point expired_at;
     {
       std::unique_lock<std::mutex> lock(mutex_);
       condition_.wait(lock, [this] { return shutting_down_ || !queue_.empty(); });
@@ -211,6 +279,14 @@ void SolveCoordinator::QueueTimerLoop() {
 
       expired_request = std::move(queue_.front());
       queue_.pop_front();
+      expired_at = std::chrono::steady_clock::now();
+      if (expired_request->lifecycle != nullptr) {
+        expired_request->lifecycle->queue_wait_duration =
+            expired_at - expired_request->lifecycle->queued_at.value_or(expired_at);
+        expired_request->lifecycle->completed_at = expired_at;
+      }
+      UpdateLifecycleState(expired_request->lifecycle, queue_.size(), active_solves_);
+      observability_->SetSolverState(queue_.size(), active_solves_);
     }
     condition_.notify_all();
 
