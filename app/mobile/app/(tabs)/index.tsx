@@ -155,13 +155,14 @@ export default function HomeScreen() {
             onToggle={() => handleToggle(stop.id)}
             onChangeNote={(value) => handleChangeNote(stop.id, value)}
             onComplete={() => handleComplete(stop.id)}
+            onReport={() => handleReport(stop.id)}
             onNavigate={() => handleNavigate(stop.id)}
           />
         ))}
 
         {completedStops.length > 0 && (
           <View style={styles.historySection}>
-            <Text style={styles.historyTitle}>Completed & Failed</Text>
+            <Text style={styles.historyTitle}>History</Text>
 
             {completedStops.map((stop) => (
               <DeliveryCard

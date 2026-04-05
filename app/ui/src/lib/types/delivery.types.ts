@@ -2,7 +2,11 @@ import { Location, Load } from "./common.types"
 
 export type DeliveryInput = {
   id: number
+<<<<<<< HEAD
   recipientName?: string
+=======
+  recipientName: string
+>>>>>>> b99938c (add collapsible UI and allow marking deliveries as complete with timestamp)
   phoneNumber?: string
   address?: string  // Not required for VROOM
   notes?: string

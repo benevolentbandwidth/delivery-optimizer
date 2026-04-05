@@ -8,7 +8,7 @@ type Props = {
   onToggle: () => void;
   onChangeNote: (value: string) => void;
   onComplete: () => void;
-  onReport?: () => void;
+  onReport: () => void;
   onNavigate?: () => void;
 };
 
@@ -84,21 +84,13 @@ export default function DeliveryCard({
                 <Text style={styles.actionText}>Complete</Text>
               </Pressable>
 
-              {onNavigate && (
-                <Pressable style={styles.actionButton} onPress={onNavigate}>
-                  <Text style={styles.actionText}>Navigate</Text>
-                </Pressable>
-              )}
+              <Pressable style={styles.actionButton} onPress={onNavigate}>
+                <Text style={styles.actionText}>Navigate</Text>
+              </Pressable>
 
-              {onReport ? (
-                <Pressable style={styles.actionButton} onPress={onReport}>
-                  <Text style={styles.actionText}>Report</Text>
-                </Pressable>
-              ) : (
-                <View style={[styles.actionButton, styles.disabledButton]}>
-                  <Text style={[styles.actionText, styles.disabledText]}>Report</Text>
-                </View>
-              )}
+              <Pressable style={styles.actionButton} onPress={onReport}>
+                <Text style={styles.actionText}>Report</Text>
+              </Pressable>
             </View>
           )}
         </View>
