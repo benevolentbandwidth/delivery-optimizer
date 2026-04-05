@@ -9,6 +9,7 @@ http_server_init 48000 "$@"
 first_response_file="${work_dir}/first-response.json"
 second_response_file="${work_dir}/second-response.json"
 third_response_file="${work_dir}/third-response.json"
+metrics_file="${work_dir}/metrics.txt"
 payload_file="${work_dir}/payload.json"
 first_http_code_file="${work_dir}/first-http-code.txt"
 second_http_code_file="${work_dir}/second-http-code.txt"
@@ -85,7 +86,25 @@ fi
   "$(http_server_url /api/v1/deliveries/optimize)" >"${second_http_code_file}" &
 second_pid=$!
 
-sleep 0.2
+queue_is_full=false
+for _ in $(seq 1 50); do
+  metrics_http_code="$("${curl_bin}" -sS -o "${metrics_file}" -w "%{http_code}" \
+    "$(http_server_url /metrics)")"
+  if [[ "${metrics_http_code}" == "200" ]] &&
+    grep -Fq 'deliveryoptimizer_solver_queue_depth 1' "${metrics_file}" &&
+    grep -Fq 'deliveryoptimizer_solver_inflight 1' "${metrics_file}"; then
+    queue_is_full=true
+    break
+  fi
+  sleep 0.1
+done
+
+if [[ "${queue_is_full}" != "true" ]]; then
+  echo "expected the second solve to occupy the queue before sending the third request" >&2
+  cat "${metrics_file}" >&2 || true
+  cat "${log_file}" >&2 || true
+  exit 1
+fi
 
 third_http_code="$("${curl_bin}" -sS -o "${third_response_file}" -w "%{http_code}" \
   -X POST \
