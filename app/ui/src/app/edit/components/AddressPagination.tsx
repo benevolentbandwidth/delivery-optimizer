@@ -27,6 +27,7 @@ export default function AddressPagination({
       {/* Step backward one page when not on the first page */}
       <button
         type="button"
+        disabled={addressPage <= 1}
         onClick={() => addressPage > 1 && setAddressPage(addressPage - 1)}
         className={PAGINATION_ICON_BUTTON}
       >
@@ -50,6 +51,7 @@ export default function AddressPagination({
       {/* Step forward when not on the last page */}
       <button
         type="button"
+        disabled={addressPage >= totalAddressPages}
         onClick={() => addressPage < totalAddressPages && setAddressPage(addressPage + 1)}
         className={PAGINATION_ICON_BUTTON}
       >
