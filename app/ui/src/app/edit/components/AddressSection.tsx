@@ -81,6 +81,7 @@ export default function AddressSection({
         <input
           type="search"
           value={searchQuery}
+          aria-label="Search addresses"
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Find address"
           className={ADDRESS_SEARCH_INPUT_DESKTOP}
