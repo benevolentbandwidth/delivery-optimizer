@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#e5e7eb',
   },
   failedCard: {
-    backgroundColor: '#ede9fe',
+    backgroundColor: '#fee2e2',
   },
   headerRow: {
     flexDirection: 'row',

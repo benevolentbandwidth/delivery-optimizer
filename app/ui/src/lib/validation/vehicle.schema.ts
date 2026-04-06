@@ -6,7 +6,7 @@ export const vehicleSchema = z.object({
 
   vehicleType: z.enum(["truck", "car", "bicycle"]),
 
-  driverName: z.string().min(1),
+  driverName: z.string().min(1).optional(),
 
   startLocation: locationSchema,
 
@@ -14,33 +14,20 @@ export const vehicleSchema = z.object({
 
   capacity: loadSchema,
 
-  departureTime: z
-    .number()
-    .int()
-    .nonnegative()
-    .optional(),
-
-  returnTime: z
-    .number()
-    .int()
-    .nonnegative()
+  timeWindow: z
+    .tuple([
+      z.number().int().nonnegative(),
+      z.number().int().nonnegative()
+    ])
+    .refine(
+      ([start, end]) => end > start,
+      {
+        message: "timeWindow end must be after start",
+        path: [1]
+      }
+    )
     .optional()
-}).refine(
-  (data) =>
-    (data.departureTime === undefined) === (data.returnTime === undefined),
-  {
-    message: "departureTime and returnTime must both be provided or both omitted",
-    path: ["returnTime"]
-  })
-.refine(
-  (data) =>
-    data.departureTime == null ||
-    data.returnTime == null ||
-    data.returnTime > data.departureTime,
-  {
-    message: "returnTime must be after departureTime",
-    path: ["returnTime"]
-  })
+})
 
 /**
  * Ensure each ID is unique

@@ -23,7 +23,7 @@ export function transformSessionToDriverRoute(input: OptimizeRequestLike): Drive
 
   return {
     driverName: firstVehicle?.driverName || 'Driver Assist',
-    routeLabel: `Route X · ${stops.length} stops`,
+    routeLabel: `Route ${firstVehicle?.id || '1'} · ${stops.length} stops`,
     stops,
   };
 }
