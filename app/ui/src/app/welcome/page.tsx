@@ -1,13 +1,24 @@
-// app/page.tsx
+// app/welcome/page.tsx
 'use client';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 import Navbar from '@/app/edit/components/Navbar';
 
-export default function LandingPage() {
+function WelcomeContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const userType = searchParams.get('type');
+
+  const handleRouteManager = () => {
+    if (userType === 'returning') {
+      router.push('/upload-save-point');
+    } else {
+      router.push('/address-entry');
+    }
+  };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#fff', fontFamily: "'DM Sans', sans-serif" }}>
+    <div style={{ minHeight: '100vh', background: '#ffffff', fontFamily: "'DM Sans', sans-serif" }}>
       <Navbar />
 
       <main style={{
@@ -26,12 +37,12 @@ export default function LandingPage() {
           textAlign: 'center',
           letterSpacing: '-0.02em',
         }}>
-          New or Returning User?
+          Welcome!
         </h1>
         <p style={{
           fontSize: '15px',
           color: '#888',
-          marginBottom: '48px',
+          marginBottom: '40px',
           textAlign: 'center',
         }}>
           Lorem ipsum dolor sit amet consectetur.
@@ -39,27 +50,26 @@ export default function LandingPage() {
 
         <div style={{
           display: 'flex',
-          gap: '20px',
+          gap: '16px',
           flexWrap: 'wrap',
           justifyContent: 'center',
           width: '100%',
           maxWidth: '720px',
         }}>
-          {/* New User Card */}
           <button
-            onClick={() => router.push('/welcome?type=new')}
+            onClick={handleRouteManager}
             style={{
               flex: '1 1 280px',
               maxWidth: '340px',
               padding: '40px 28px',
               border: '1.5px solid #d4d2d0',
-              borderRadius: '16px',
+              borderRadius: '14px',
               background: '#fff',
               cursor: 'pointer',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              gap: '16px',
+              gap: '12px',
               transition: 'border-color 0.15s, box-shadow 0.15s',
               textAlign: 'center',
             }}
@@ -72,34 +82,32 @@ export default function LandingPage() {
               (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none';
             }}
           >
-            <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-              <circle cx="16" cy="13" r="6" stroke="#222" strokeWidth="2" fill="none"/>
-              <path d="M4 34c0-7 5.4-12 12-12h2" stroke="#222" strokeWidth="2" strokeLinecap="round" fill="none"/>
-              <circle cx="30" cy="30" r="8" stroke="#222" strokeWidth="2" fill="none"/>
-              <line x1="30" y1="26" x2="30" y2="34" stroke="#222" strokeWidth="2" strokeLinecap="round"/>
-              <line x1="26" y1="30" x2="34" y2="30" stroke="#222" strokeWidth="2" strokeLinecap="round"/>
+            <svg width="40" height="40" viewBox="0 0 28 28" fill="none">
+              <circle cx="14" cy="10" r="4" stroke="#222" strokeWidth="1.8" fill="none"/>
+              <path d="M14 10v8" stroke="#222" strokeWidth="1.8" strokeLinecap="round"/>
+              <circle cx="14" cy="20" r="2" fill="#222"/>
+              <path d="M8 26c0-4 2.7-7 6-7s6 3 6 7" stroke="#222" strokeWidth="1.8" strokeLinecap="round" fill="none"/>
             </svg>
             <div>
-              <p style={{ fontSize: '17px', fontWeight: 700, color: '#111', marginBottom: '8px' }}>New</p>
-              <p style={{ fontSize: '14px', color: '#888', lineHeight: 1.5 }}>Lorem ipsum dolor sit amet consectetur.</p>
+              <p style={{ fontSize: '17px', fontWeight: 700, color: '#111', marginBottom: '8px' }}>Route Manager</p>
+              <p style={{ fontSize: '14px', color: '#999', lineHeight: 1.5 }}>Lorem ipsum dolor sit amet consectetur.</p>
             </div>
           </button>
 
-          {/* Returning User Card */}
           <button
-            onClick={() => router.push('/welcome?type=returning')}
+            onClick={() => router.push('/upload-route')}
             style={{
               flex: '1 1 280px',
               maxWidth: '340px',
               padding: '40px 28px',
               border: '1.5px solid #d4d2d0',
-              borderRadius: '16px',
+              borderRadius: '14px',
               background: '#fff',
               cursor: 'pointer',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              gap: '16px',
+              gap: '12px',
               transition: 'border-color 0.15s, box-shadow 0.15s',
               textAlign: 'center',
             }}
@@ -112,14 +120,16 @@ export default function LandingPage() {
               (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none';
             }}
           >
-            <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-              <circle cx="18" cy="13" r="6" stroke="#222" strokeWidth="2" fill="none"/>
-              <path d="M4 34c0-7 5.4-12 12-12h6" stroke="#222" strokeWidth="2" strokeLinecap="round" fill="none"/>
-              <path d="M24 28l4 4 8-8" stroke="#222" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+            <svg width="40" height="40" viewBox="0 0 28 28" fill="none">
+              <rect x="3" y="10" width="22" height="12" rx="3" stroke="#222" strokeWidth="1.8" fill="none"/>
+              <path d="M3 14h22" stroke="#222" strokeWidth="1.8"/>
+              <path d="M7 10V7a7 7 0 0114 0v3" stroke="#222" strokeWidth="1.8" strokeLinecap="round" fill="none"/>
+              <circle cx="8" cy="22" r="2.5" fill="#222"/>
+              <circle cx="20" cy="22" r="2.5" fill="#222"/>
             </svg>
             <div>
-              <p style={{ fontSize: '17px', fontWeight: 700, color: '#111', marginBottom: '8px' }}>Returning</p>
-              <p style={{ fontSize: '14px', color: '#888', lineHeight: 1.5 }}>Lorem ipsum dolor sit amet consectetur.</p>
+              <p style={{ fontSize: '17px', fontWeight: 700, color: '#111', marginBottom: '8px' }}>Driver</p>
+              <p style={{ fontSize: '14px', color: '#999', lineHeight: 1.5 }}>Lorem ipsum dolor sit amet consectetur.</p>
             </div>
           </button>
         </div>
@@ -127,7 +137,7 @@ export default function LandingPage() {
         <button
           onClick={() => router.back()}
           style={{
-            marginTop: '40px',
+            marginTop: '36px',
             background: 'none',
             border: 'none',
             cursor: 'pointer',
@@ -146,5 +156,13 @@ export default function LandingPage() {
         </button>
       </main>
     </div>
+  );
+}
+
+export default function WelcomePage() {
+  return (
+    <Suspense>
+      <WelcomeContent />
+    </Suspense>
   );
 }
