@@ -54,6 +54,7 @@ export default function AddressSection({
       <div className={ADDRESS_TOOLBAR_MOBILE_WRAP}>
         <button
           type="button"
+          disabled={!addEnabled}
           onClick={addAddress}
           className={addEnabled ? ADDRESS_ADD_PILL_MOBILE_ENABLED : ADDRESS_ADD_PILL_MOBILE_DISABLED}
         >
@@ -72,6 +73,7 @@ export default function AddressSection({
         <div className="flex-1 min-w-0" />
         <button
           type="button"
+          disabled={!addEnabled}
           onClick={addAddress}
           className={addEnabled ? ADDRESS_ADD_PILL_DESKTOP_ENABLED : ADDRESS_ADD_PILL_DESKTOP_DISABLED}
         >
