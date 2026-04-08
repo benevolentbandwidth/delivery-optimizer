@@ -178,6 +178,7 @@ TEST(SolveCoordinatorTest, WorkerRejectsQueuedSolveThatExpiredBeforeDequeue) {
       runner,
       deliveryoptimizer::api::SolveCoordinatorOptions{
           .enable_queue_timer = false,
+          .completion_worker_count = std::nullopt,
       });
   std::promise<deliveryoptimizer::api::CoordinatedSolveResult> first_result_promise;
   std::promise<deliveryoptimizer::api::CoordinatedSolveResult> second_result_promise;
@@ -316,6 +317,7 @@ TEST(SolveCoordinatorTest, DestructorFailsQueuedSolveBeforeActiveWorkerFinishes)
       runner,
       deliveryoptimizer::api::SolveCoordinatorOptions{
           .enable_queue_timer = false,
+          .completion_worker_count = std::nullopt,
       });
   std::promise<deliveryoptimizer::api::CoordinatedSolveResult> first_result_promise;
   std::promise<deliveryoptimizer::api::CoordinatedSolveResult> second_result_promise;
@@ -365,7 +367,11 @@ TEST(SolveCoordinatorTest, AcceptedSolveWithMaximumQueueWaitDoesNotTimeOutImmedi
   auto config = BuildConfig();
   config.max_queue_wait = std::chrono::milliseconds::max();
   deliveryoptimizer::api::SolveCoordinator coordinator(
-      config, runner, deliveryoptimizer::api::SolveCoordinatorOptions{.enable_queue_timer = false});
+      config, runner,
+      deliveryoptimizer::api::SolveCoordinatorOptions{
+          .enable_queue_timer = false,
+          .completion_worker_count = std::nullopt,
+      });
   std::promise<deliveryoptimizer::api::CoordinatedSolveResult> result_promise;
   auto result_future = result_promise.get_future();
   std::atomic<bool> payload_factory_called{false};
@@ -534,7 +540,10 @@ TEST(SolveCoordinatorTest, ReleasesActiveSolveSlotBeforeRunningCompletionCallbac
   auto runner = std::make_shared<ImmediateRunner>();
   deliveryoptimizer::api::SolveCoordinator coordinator(
       BuildConfig(), runner,
-      deliveryoptimizer::api::SolveCoordinatorOptions{.enable_queue_timer = false});
+      deliveryoptimizer::api::SolveCoordinatorOptions{
+          .enable_queue_timer = false,
+          .completion_worker_count = std::nullopt,
+      });
   std::promise<void> first_callback_started_promise;
   auto first_callback_started_future = first_callback_started_promise.get_future();
   std::promise<void> release_first_callback_promise;
@@ -588,7 +597,10 @@ TEST(SolveCoordinatorTest, ContinuesRunningQueuedSolvesWhileCompletionCallbackIs
   auto runner = std::make_shared<ImmediateRunner>();
   deliveryoptimizer::api::SolveCoordinator coordinator(
       BuildConfig(), runner,
-      deliveryoptimizer::api::SolveCoordinatorOptions{.enable_queue_timer = false});
+      deliveryoptimizer::api::SolveCoordinatorOptions{
+          .enable_queue_timer = false,
+          .completion_worker_count = std::nullopt,
+      });
   std::promise<void> first_callback_started_promise;
   auto first_callback_started_future = first_callback_started_promise.get_future();
   std::promise<void> release_first_callback_promise;

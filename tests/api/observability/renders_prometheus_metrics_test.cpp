@@ -8,15 +8,15 @@ namespace {
 
 deliveryoptimizer::api::SolveLifecycle BuildLifecycle(const std::string& request_id) {
   const auto completed_at = std::chrono::steady_clock::now();
-  return deliveryoptimizer::api::SolveLifecycle{
-      .request_id = request_id,
-      .method = "POST",
-      .path = "/api/v1/deliveries/optimize",
-      .jobs = 1U,
-      .vehicles = 1U,
-      .request_started_at = completed_at,
-      .completed_at = completed_at,
-  };
+  deliveryoptimizer::api::SolveLifecycle lifecycle{};
+  lifecycle.request_id = request_id;
+  lifecycle.method = "POST";
+  lifecycle.path = "/api/v1/deliveries/optimize";
+  lifecycle.jobs = 1U;
+  lifecycle.vehicles = 1U;
+  lifecycle.request_started_at = completed_at;
+  lifecycle.completed_at = completed_at;
+  return lifecycle;
 }
 
 } // namespace

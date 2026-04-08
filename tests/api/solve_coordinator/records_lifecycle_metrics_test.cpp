@@ -132,6 +132,7 @@ TEST(SolveCoordinatorLifecycleTest, RecordsQueuedTimeoutAndQueueGaugeTransitions
       runner,
       deliveryoptimizer::api::SolveCoordinatorOptions{
           .enable_queue_timer = false,
+          .completion_worker_count = std::nullopt,
       },
       observability);
 
