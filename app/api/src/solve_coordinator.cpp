@@ -140,20 +140,19 @@ SolveCoordinator::~SolveCoordinator() {
   completion_workers_.clear();
 }
 
+SolveAdmissionStatus SolveCoordinator::CheckAdmission(const SolveRequestSize& request_size,
+                                                      std::shared_ptr<SolveLifecycle> lifecycle) {
+  std::lock_guard<std::mutex> lock(mutex_);
+  return CheckAdmissionLocked(request_size, lifecycle);
+}
+
 SolveAdmissionStatus SolveCoordinator::Submit(const SolveRequestSize& request_size,
                                               PayloadFactory payload_factory,
                                               CompletionCallback callback,
                                               std::shared_ptr<SolveLifecycle> lifecycle) {
   std::lock_guard<std::mutex> lock(mutex_);
-  UpdateLifecycleState(lifecycle, queue_.size(), active_solves_);
-  if (shutting_down_) {
-    return SolveAdmissionStatus::kRejectedQueueFull;
-  }
-
-  const SolveAdmissionStatus admission_status =
-      EvaluateSolveAdmission(config_, request_size, active_solves_, queue_.size());
+  const SolveAdmissionStatus admission_status = CheckAdmissionLocked(request_size, lifecycle);
   if (admission_status != SolveAdmissionStatus::kAccepted) {
-    UpdateLifecycleState(lifecycle, queue_.size(), active_solves_);
     return admission_status;
   }
 
@@ -189,6 +188,17 @@ void SolveCoordinator::EnqueueCompletion(CompletionTask task) {
     completion_queue_.push_back(std::move(task));
   }
   completion_condition_.notify_one();
+}
+
+SolveAdmissionStatus SolveCoordinator::CheckAdmissionLocked(
+    const SolveRequestSize& request_size,
+    const std::shared_ptr<SolveLifecycle>& lifecycle) {
+  UpdateLifecycleState(lifecycle, queue_.size(), active_solves_);
+  if (shutting_down_) {
+    return SolveAdmissionStatus::kRejectedQueueFull;
+  }
+
+  return EvaluateSolveAdmission(config_, request_size, active_solves_, queue_.size());
 }
 
 void SolveCoordinator::WorkerLoop() {

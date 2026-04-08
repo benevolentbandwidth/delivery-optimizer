@@ -11,6 +11,7 @@ second_response_file="${work_dir}/second-response.json"
 third_response_file="${work_dir}/third-response.json"
 metrics_file="${work_dir}/metrics.txt"
 payload_file="${work_dir}/payload.json"
+third_payload_file="${work_dir}/third-payload.json"
 first_http_code_file="${work_dir}/first-http-code.txt"
 second_http_code_file="${work_dir}/second-http-code.txt"
 vroom_started_file="${work_dir}/vroom-started.txt"
@@ -55,6 +56,18 @@ cat >"${payload_file}" <<'JSON'
   ],
   "jobs": [
     { "id": "order-1", "location": [7.4212, 43.7308], "demand": 1 }
+  ]
+}
+JSON
+
+cat >"${third_payload_file}" <<'JSON'
+{
+  "depot": { "location": [7.4236, 43.7384] },
+  "vehicles": [
+    { "id": "van-1", "capacity": 8 }
+  ],
+  "jobs": [
+    { "id": "order-1", "location": ["bad", 43.7308], "demand": 1 }
   ]
 }
 JSON
@@ -109,11 +122,11 @@ fi
 third_http_code="$("${curl_bin}" -sS -o "${third_response_file}" -w "%{http_code}" \
   -X POST \
   -H "Content-Type: application/json" \
-  --data-binary "@${payload_file}" \
+  --data-binary "@${third_payload_file}" \
   "$(http_server_url /api/v1/deliveries/optimize)")"
 
 if [[ "${third_http_code}" != "503" ]]; then
-  echo "expected HTTP 503 when the admission queue is full, got ${third_http_code}" >&2
+  echo "expected HTTP 503 when the admission queue is full before deep validation, got ${third_http_code}" >&2
   cat "${third_response_file}" >&2 || true
   exit 1
 fi

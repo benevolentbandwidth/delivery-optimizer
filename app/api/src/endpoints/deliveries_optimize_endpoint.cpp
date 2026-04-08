@@ -437,6 +437,28 @@ void ParseJobs(const Json::Value& root, OptimizeRequestInput& parsed_input, Json
   return parsed_input;
 }
 
+[[nodiscard]] std::optional<deliveryoptimizer::api::SolveRequestSize>
+TryParseRequestSizeForAdmission(const Json::Value& root) {
+  if (!root.isObject()) {
+    return std::nullopt;
+  }
+
+  const Json::Value& vehicles = root["vehicles"];
+  const Json::Value& jobs = root["jobs"];
+  if (!vehicles.isArray() || !jobs.isArray()) {
+    return std::nullopt;
+  }
+
+  if (vehicles.size() > kMaxOptimizeVehicles || jobs.size() > kMaxOptimizeJobs) {
+    return std::nullopt;
+  }
+
+  return deliveryoptimizer::api::SolveRequestSize{
+      .jobs = static_cast<std::size_t>(jobs.size()),
+      .vehicles = static_cast<std::size_t>(vehicles.size()),
+  };
+}
+
 [[nodiscard]] Json::Value BuildLocation(const double lon, const double lat) {
   Json::Value location{Json::arrayValue};
   location.append(lon);
@@ -758,6 +780,18 @@ void RegisterDeliveriesOptimizeEndpoint(drogon::HttpAppFramework& app,
               .outcome = SolveRequestOutcome::kInvalidJson,
           });
           return;
+        }
+
+        const auto early_request_size = TryParseRequestSizeForAdmission(*parsed_json);
+        if (early_request_size.has_value()) {
+          lifecycle->jobs = early_request_size->jobs;
+          lifecycle->vehicles = early_request_size->vehicles;
+          const SolveAdmissionStatus admission_status =
+              coordinator->CheckAdmission(*early_request_size, lifecycle);
+          if (admission_status != SolveAdmissionStatus::kAccepted) {
+            respond_with_completion(BuildAdmissionRejectionResponse(admission_status));
+            return;
+          }
         }
 
         Json::Value issues{Json::arrayValue};
