@@ -24,6 +24,7 @@ import {
   ADDRESS_DESKTOP_SELECT_BASE,
   ADDRESS_INPUT_DESKTOP_BASE,
   ADDRESS_LOCKED_SURFACE_MD,
+  GEOCODE_ERROR_LOCKED,
   ADDRESS_NOTES_COLUMN,
   ADDRESS_NOTES_LOCKED_BOX,
   ADDRESS_TEXTAREA_EDIT,
@@ -54,6 +55,7 @@ type AddressCardProps = {
   unlockAddress: (id: number) => void;
   confirmAddress: (id: number) => void;
   addressTouched: boolean;
+  geocodeFailed: boolean;
 };
 
 export default function AddressCard({
@@ -64,16 +66,13 @@ export default function AddressCard({
   unlockAddress,
   confirmAddress,
   addressTouched,
+  geocodeFailed,
 }: AddressCardProps) {
-
+  
   const [manualExpanded, setManualExpanded] = useState(false);
   const expanded = !a.locked || manualExpanded;
   
-  const addrInvalid = addressTouched && !a.recipientAddress.trim();
-  const bufferInvalid = addressTouched && !a.timeBuffer;
-  const deliveryTimeInvalid =
-    addressTouched &&
-    (a.deliveryTimeMode === "by" ? !a.deliveryBy.trim() : !a.deliveryBetween.trim());
+  const addrInvalid = geocodeFailed || (addressTouched && !a.recipientAddress.trim());
   const qtyInvalid = addressTouched && a.deliveryQuantity <= 0;
 
   const mobileInputClass = (invalid: boolean) =>
@@ -104,11 +103,11 @@ export default function AddressCard({
           <span />
           {a.locked ? (
             <>
-              <div className={ADDRESS_LOCKED_SURFACE_MD}>
+              <div className={`${ADDRESS_LOCKED_SURFACE_MD}${geocodeFailed ? ` ${GEOCODE_ERROR_LOCKED}` : ""}`}>
                 <span className={`${ADDRESS_DESKTOP_FIELD} truncate`}>{a.recipientAddress}</span>
               </div>
               <div className={`${ADDRESS_LOCKED_SURFACE_MD} ${ADDRESS_COL_MIN_TIME_BUFFER}`}>
-                <span className={`${ADDRESS_DESKTOP_FIELD} truncate`}>{a.timeBuffer}</span>
+                <span className={`${ADDRESS_DESKTOP_FIELD} truncate`}>{a.timeBuffer || "—"}</span>
               </div>
               <div className={ADDRESS_DELIVERY_COLUMN}>
                 <div className={`${ADDRESS_LOCKED_SURFACE_MD} w-full`}>
@@ -118,7 +117,7 @@ export default function AddressCard({
                 </div>
                 <div className={`${ADDRESS_LOCKED_SURFACE_MD} w-full`}>
                   <span className={`${ADDRESS_DESKTOP_FIELD} truncate`}>
-                    {a.deliveryTimeMode === "by" ? a.deliveryBy : a.deliveryBetween}
+                    {(a.deliveryTimeMode === "by" ? a.deliveryBy : a.deliveryBetween) || "—"}
                   </span>
                 </div>
               </div>
@@ -170,11 +169,9 @@ export default function AddressCard({
                 value={a.timeBuffer}
                 onChange={(e) => updateAddress(a.id, "timeBuffer", e.target.value)}
                 aria-label="Time buffer"
-                className={`${ADDRESS_DESKTOP_SELECT_BASE} self-start bg-white ${ADDRESS_COL_MIN_TIME_BUFFER} ${fieldBorder(bufferInvalid)}`}
+                className={`${ADDRESS_DESKTOP_SELECT_BASE} self-start bg-white ${ADDRESS_COL_MIN_TIME_BUFFER} ${fieldBorder(false)}`}
               >
-                <option value="" disabled>
-                  Select
-                </option>
+                <option value="">None</option>
                 {TIME_BUFFER_OPTIONS.map((opt) => (
                   <option key={opt} value={opt}>
                     {opt}
@@ -197,12 +194,10 @@ export default function AddressCard({
                   <select
                     value={a.deliveryBy}
                     onChange={(e) => updateAddress(a.id, "deliveryBy", e.target.value)}
-                    className={`${ADDRESS_DESKTOP_SELECT_BASE} bg-white ${fieldBorder(deliveryTimeInvalid)}`}
+                    className={`${ADDRESS_DESKTOP_SELECT_BASE} bg-white ${fieldBorder(false)}`}
                     aria-label="Delivery by time"
                   >
-                    <option value="" disabled>
-                      Select
-                    </option>
+                    <option value="">None</option>
                     {TIME_OPTIONS.map((t) => (
                       <option key={t} value={t}>
                         {t}
@@ -213,12 +208,10 @@ export default function AddressCard({
                   <select
                     value={a.deliveryBetween}
                     onChange={(e) => updateAddress(a.id, "deliveryBetween", e.target.value)}
-                    className={`${ADDRESS_DESKTOP_SELECT_BASE} bg-white ${fieldBorder(deliveryTimeInvalid)}`}
+                    className={`${ADDRESS_DESKTOP_SELECT_BASE} bg-white ${fieldBorder(false)}`}
                     aria-label="Delivery between window"
                   >
-                    <option value="" disabled>
-                      Select
-                    </option>
+                    <option value="">None</option>
                     {DELIVERY_BETWEEN_OPTIONS.map((opt) => (
                       <option key={opt} value={opt}>
                         {opt}
@@ -311,7 +304,7 @@ export default function AddressCard({
               <>
                 <div>
                   <span className={MOBILE_FIELD_LABEL}>Address</span>
-                  <div className={MOBILE_ADDRESS_LOCKED_ROW}>
+                  <div className={`${MOBILE_ADDRESS_LOCKED_ROW}${geocodeFailed ? ` ${GEOCODE_ERROR_LOCKED}` : ""}`}>
                     <span className="text-sm text-black truncate">{a.recipientAddress}</span>
                   </div>
                 </div>
@@ -319,7 +312,7 @@ export default function AddressCard({
                   <div>
                     <span className={MOBILE_FIELD_LABEL}>Time Buffer</span>
                     <div className={MOBILE_ADDRESS_LOCKED_ROW}>
-                      <span className="text-sm text-black truncate">{a.timeBuffer}</span>
+                      <span className="text-sm text-black truncate">{a.timeBuffer || "—"}</span>
                     </div>
                   </div>
                   <div className="flex min-w-0 flex-col gap-1">
@@ -330,7 +323,7 @@ export default function AddressCard({
                     </div>
                     <div className={MOBILE_ADDRESS_LOCKED_ROW}>
                       <span className="text-sm text-black truncate">
-                        {a.deliveryTimeMode === "by" ? a.deliveryBy : a.deliveryBetween}
+                        {(a.deliveryTimeMode === "by" ? a.deliveryBy : a.deliveryBetween) || "—"}
                       </span>
                     </div>
                   </div>
@@ -384,11 +377,9 @@ export default function AddressCard({
                       value={a.timeBuffer}
                       onChange={(e) => updateAddress(a.id, "timeBuffer", e.target.value)}
                       aria-label="Time buffer"
-                      className={mobileSelectClass(bufferInvalid)}
+                      className={mobileSelectClass(false)}
                     >
-                      <option value="" disabled>
-                        Select
-                      </option>
+                      <option value="">None</option>
                       {TIME_BUFFER_OPTIONS.map((opt) => (
                         <option key={opt} value={opt}>
                           {opt}
@@ -412,12 +403,10 @@ export default function AddressCard({
                       <select
                         value={a.deliveryBy}
                         onChange={(e) => updateAddress(a.id, "deliveryBy", e.target.value)}
-                        className={mobileSelectClass(deliveryTimeInvalid)}
+                        className={mobileSelectClass(false)}
                         aria-label="Delivery by time"
                       >
-                        <option value="" disabled>
-                          Select
-                        </option>
+                        <option value="">None</option>
                         {TIME_OPTIONS.map((t) => (
                           <option key={t} value={t}>
                             {t}
@@ -428,12 +417,10 @@ export default function AddressCard({
                       <select
                         value={a.deliveryBetween}
                         onChange={(e) => updateAddress(a.id, "deliveryBetween", e.target.value)}
-                        className={mobileSelectClass(deliveryTimeInvalid)}
+                        className={mobileSelectClass(false)}
                         aria-label="Delivery between window"
                       >
-                        <option value="" disabled>
-                          Select
-                        </option>
+                        <option value="">None</option>
                         {DELIVERY_BETWEEN_OPTIONS.map((opt) => (
                           <option key={opt} value={opt}>
                             {opt}
