@@ -6,6 +6,7 @@ import { useState, useCallback } from "react";
 import { geocodeAddress } from "@/app/components/AddressGeocoder/utils/nominatim";
 import { vehicleRowToVehicleInput, addressCardToDeliveryInput } from "../utils/optimizeMapper";
 import type { VehicleRow, AddressCard, LockedVehicleRow } from "../types/delivery";
+import type { CapacityUnit } from "../types/delivery";
 
 // ensure that vehicleType and capacityUnit are not empty
 function isLocked(v: VehicleRow): v is LockedVehicleRow {
@@ -45,6 +46,14 @@ export function useOptimize(vehicles: VehicleRow[], addresses: AddressCard[]) {
       setOptimizeError("At least one delivery address is required.");
       return;
     }
+
+    // 4. Validate that all active vehicles share the same capacity unit
+    const units = [...new Set(availableVehicles.map((v) => v.capacityUnit))];
+    if (units.length > 1) {
+      setOptimizeError("All vehicles must use the same capacity unit to optimize.");
+      return;
+    }
+    const demandType = units[0] as CapacityUnit;
 
     setIsOptimizing(true);
     try {
@@ -100,7 +109,7 @@ export function useOptimize(vehicles: VehicleRow[], addresses: AddressCard[]) {
       );
 
       const deliveryInputs = addresses.map((a) =>
-        addressCardToDeliveryInput(a, addressLocations.get(a.id)!)
+        addressCardToDeliveryInput(a, addressLocations.get(a.id)!, demandType)
       ).filter((d) => d !== undefined);
 
       // 7. POST to /api/optimize.

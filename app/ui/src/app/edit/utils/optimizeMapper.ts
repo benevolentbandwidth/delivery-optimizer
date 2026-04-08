@@ -4,7 +4,7 @@
  */
 
 import { timeToSeconds } from "@/app/components/AddressGeocoder/utils/timeConversion";
-import type { VehicleRow, LockedVehicleRow } from "../types/delivery";
+import type { VehicleRow, LockedVehicleRow, CapacityUnit } from "../types/delivery";
 import type { AddressCard } from "../types/delivery";
 import type { VehicleInput } from "@/lib/types/vehicle.types";
 import type { DeliveryInput } from "@/lib/types/delivery.types";
@@ -80,7 +80,8 @@ export function vehicleRowToVehicleInput(
  */
 export function addressCardToDeliveryInput(
   a: AddressCard,
-  location: Location
+  location: Location,
+  demandType: CapacityUnit
 ): DeliveryInput {
   const rawTime = a.deliveryTimeMode === "by" ? a.deliveryBy : a.deliveryBetween;
   const timeWindow: [number, number] | undefined = rawTime
@@ -94,6 +95,6 @@ export function addressCardToDeliveryInput(
     address: a.recipientAddress,
     location,
     bufferTime: a.timeBuffer ? timeBufferToSeconds(a.timeBuffer) : 0,
-    demand: { type: "units", value: a.deliveryQuantity },
+    demand: { type: demandType, value: a.deliveryQuantity },
     ...(timeWindow && { timeWindows: [timeWindow] }),  };
 }
