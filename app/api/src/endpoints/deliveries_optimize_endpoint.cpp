@@ -29,7 +29,6 @@ constexpr double kMinLatitude = -90.0;
 constexpr double kMaxLatitude = 90.0;
 constexpr std::string_view kCoordinateValidationMessage =
     "must be an array [lon, lat] with longitude in [-180, 180] and latitude in [-90, 90].";
-constexpr auto k422UnprocessableEntity = static_cast<drogon::HttpStatusCode>(422);
 constexpr Json::ArrayIndex kMaxOptimizeVehicles =
     static_cast<Json::ArrayIndex>(deliveryoptimizer::api::kMaxDeliveriesOptimizeVehicles);
 constexpr Json::ArrayIndex kMaxOptimizeJobs =
