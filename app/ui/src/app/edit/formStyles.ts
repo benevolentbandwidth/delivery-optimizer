@@ -187,11 +187,11 @@ export const ADDRESS_DESKTOP_MODE_SELECT =
   "w-full min-w-0 rounded-lg border border-zinc-200 bg-white h-8 min-h-[2rem] xl:h-9 px-2 xl:px-3 text-xs text-black lg:text-sm font-medium focus:outline-none cursor-pointer select-chevron-tight pl-2 pr-10 xl:pl-3 xl:pr-10";
 
 export const MOBILE_ADDRESS_INPUT_BASE =
-  "h-9 w-full rounded-lg px-3 text-sm text-black focus:outline-none border border-zinc-200 bg-zinc-200";
+  "h-9 w-full rounded-lg px-3 text-sm text-black focus:outline-none border border-zinc-200 bg-white";
 
 /** Delivery by/between mode select on mobile (no validation). */
 export const MOBILE_ADDRESS_SELECT_MODE =
-  "h-9 w-full rounded-lg px-3 text-sm font-medium text-black focus:outline-none border border-zinc-200 bg-zinc-200 cursor-pointer select-chevron";
+  "h-9 w-full rounded-lg px-3 text-sm font-medium text-black focus:outline-none border border-zinc-200 bg-white cursor-pointer select-chevron";
 
 /** Floor widths so time-buffer / delivery / qty columns resist clipping at md/xl. */
 export const ADDRESS_COL_MIN_TIME_BUFFER = "min-w-[6rem]";
@@ -225,7 +225,7 @@ export const MOBILE_ADDRESS_LOCKED_ROW = "h-9 bg-zinc-300 rounded-lg flex items-
 export const MOBILE_ADDRESS_NOTES_AREA = "min-h-[6rem] bg-zinc-300 rounded-lg flex items-start px-3 py-2 overflow-hidden";
 
 export const MOBILE_ADDRESS_NOTES_TEXTAREA =
-  "w-full min-h-[6.5rem] rounded-lg px-3 py-2 text-sm text-black focus:outline-none border border-zinc-300 bg-zinc-200 focus:border-zinc-400 resize-none leading-6";
+  "w-full min-h-[6.5rem] rounded-lg px-3 py-2 text-sm text-black focus:outline-none border border-zinc-300 bg-white focus:border-zinc-400 resize-none leading-6";
 
 export const PILL_ROW_HALF_NEUTRAL = "flex-1 h-10 rounded-full border border-zinc-300 text-black text-sm font-medium hover:bg-zinc-50 cursor-pointer";
 
