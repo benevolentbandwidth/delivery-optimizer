@@ -31,10 +31,12 @@ struct CoordinatedSolveResult {
 
 struct SolveCoordinatorOptions {
   bool enable_queue_timer{true};
+  std::optional<std::size_t> completion_worker_count;
 };
 
 class SolveCoordinator {
 public:
+  // Completion callbacks run on the coordinator's completion workers, not on solver workers.
   using CompletionCallback = std::function<void(CoordinatedSolveResult)>;
   using PayloadFactory = std::function<Json::Value()>;
 
@@ -52,6 +54,8 @@ public:
                                             CompletionCallback callback);
 
 private:
+  using CompletionTask = std::function<void()>;
+
   struct QueuedSolveRequest {
     std::uint64_t sequence_number;
     PayloadFactory payload_factory;
@@ -59,8 +63,10 @@ private:
     std::chrono::steady_clock::time_point deadline;
   };
 
+  void EnqueueCompletion(CompletionTask task);
   void WorkerLoop();
   void QueueTimerLoop();
+  void CompletionLoop();
 
   SolveAdmissionConfig config_;
   SolveCoordinatorOptions options_;
@@ -70,9 +76,14 @@ private:
   std::deque<QueuedSolveRequest> queue_;
   std::vector<std::jthread> workers_;
   std::jthread queue_timer_;
+  std::mutex completion_mutex_;
+  std::condition_variable completion_condition_;
+  std::deque<CompletionTask> completion_queue_;
+  std::vector<std::jthread> completion_workers_;
   std::size_t active_solves_{0U};
   std::uint64_t next_sequence_number_{1U};
   bool shutting_down_{false};
+  bool completion_shutting_down_{false};
 };
 
 } // namespace deliveryoptimizer::api

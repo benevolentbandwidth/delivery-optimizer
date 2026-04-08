@@ -251,3 +251,111 @@ TEST(SolveCoordinatorTest, AcceptedSolveWithMaximumQueueWaitDoesNotTimeOutImmedi
   EXPECT_TRUE(payload_factory_called.load());
   EXPECT_EQ(runner->run_count(), 1U);
 }
+
+TEST(SolveCoordinatorTest, ReleasesActiveSolveSlotBeforeRunningCompletionCallback) {
+  auto runner = std::make_shared<ImmediateRunner>();
+  deliveryoptimizer::api::SolveCoordinator coordinator(
+      BuildConfig(), runner,
+      deliveryoptimizer::api::SolveCoordinatorOptions{.enable_queue_timer = false});
+  std::promise<void> first_callback_started_promise;
+  auto first_callback_started_future = first_callback_started_promise.get_future();
+  std::promise<void> release_first_callback_promise;
+  auto release_first_callback_future = release_first_callback_promise.get_future().share();
+  std::promise<deliveryoptimizer::api::CoordinatedSolveResult> first_result_promise;
+  std::promise<deliveryoptimizer::api::CoordinatedSolveResult> second_result_promise;
+  auto first_result_future = first_result_promise.get_future();
+  auto second_result_future = second_result_promise.get_future();
+
+  ASSERT_EQ(
+      coordinator.Submit(
+          deliveryoptimizer::api::SolveRequestSize{
+              .jobs = 1U,
+              .vehicles = 1U,
+          },
+          [] { return Json::Value{Json::objectValue}; },
+          [&first_callback_started_promise, &release_first_callback_future,
+           &first_result_promise](const deliveryoptimizer::api::CoordinatedSolveResult& result) {
+            first_callback_started_promise.set_value();
+            release_first_callback_future.wait();
+            first_result_promise.set_value(result);
+          }),
+      deliveryoptimizer::api::SolveAdmissionStatus::kAccepted);
+
+  ASSERT_EQ(first_callback_started_future.wait_for(std::chrono::seconds{1}),
+            std::future_status::ready);
+
+  const auto second_status = coordinator.Submit(
+      deliveryoptimizer::api::SolveRequestSize{
+          .jobs = 1U,
+          .vehicles = 1U,
+      },
+      [] { return Json::Value{Json::objectValue}; },
+      [&second_result_promise](const deliveryoptimizer::api::CoordinatedSolveResult& result) {
+        second_result_promise.set_value(result);
+      });
+
+  release_first_callback_promise.set_value();
+
+  EXPECT_EQ(second_status, deliveryoptimizer::api::SolveAdmissionStatus::kAccepted);
+  EXPECT_EQ(first_result_future.get().status,
+            deliveryoptimizer::api::CoordinatedSolveStatus::kSucceeded);
+  if (second_status == deliveryoptimizer::api::SolveAdmissionStatus::kAccepted) {
+    EXPECT_EQ(second_result_future.get().status,
+              deliveryoptimizer::api::CoordinatedSolveStatus::kSucceeded);
+  }
+  EXPECT_EQ(runner->run_count(), 2U);
+}
+
+TEST(SolveCoordinatorTest, ContinuesRunningQueuedSolvesWhileCompletionCallbackIsBlocked) {
+  auto runner = std::make_shared<ImmediateRunner>();
+  deliveryoptimizer::api::SolveCoordinator coordinator(
+      BuildConfig(), runner,
+      deliveryoptimizer::api::SolveCoordinatorOptions{.enable_queue_timer = false});
+  std::promise<void> first_callback_started_promise;
+  auto first_callback_started_future = first_callback_started_promise.get_future();
+  std::promise<void> release_first_callback_promise;
+  auto release_first_callback_future = release_first_callback_promise.get_future().share();
+  std::promise<deliveryoptimizer::api::CoordinatedSolveResult> first_result_promise;
+  std::promise<deliveryoptimizer::api::CoordinatedSolveResult> second_result_promise;
+  auto first_result_future = first_result_promise.get_future();
+  auto second_result_future = second_result_promise.get_future();
+
+  ASSERT_EQ(
+      coordinator.Submit(
+          deliveryoptimizer::api::SolveRequestSize{
+              .jobs = 1U,
+              .vehicles = 1U,
+          },
+          [] { return Json::Value{Json::objectValue}; },
+          [&first_callback_started_promise, &release_first_callback_future,
+           &first_result_promise](const deliveryoptimizer::api::CoordinatedSolveResult& result) {
+            first_callback_started_promise.set_value();
+            release_first_callback_future.wait();
+            first_result_promise.set_value(result);
+          }),
+      deliveryoptimizer::api::SolveAdmissionStatus::kAccepted);
+
+  ASSERT_EQ(first_callback_started_future.wait_for(std::chrono::seconds{1}),
+            std::future_status::ready);
+
+  ASSERT_EQ(
+      coordinator.Submit(
+          deliveryoptimizer::api::SolveRequestSize{
+              .jobs = 1U,
+              .vehicles = 1U,
+          },
+          [] { return Json::Value{Json::objectValue}; },
+          [&second_result_promise](const deliveryoptimizer::api::CoordinatedSolveResult& result) {
+            second_result_promise.set_value(result);
+          }),
+      deliveryoptimizer::api::SolveAdmissionStatus::kAccepted);
+
+  EXPECT_TRUE(runner->WaitForRunCount(2U, std::chrono::seconds{1}));
+
+  release_first_callback_promise.set_value();
+
+  EXPECT_EQ(first_result_future.get().status,
+            deliveryoptimizer::api::CoordinatedSolveStatus::kSucceeded);
+  EXPECT_EQ(second_result_future.get().status,
+            deliveryoptimizer::api::CoordinatedSolveStatus::kSucceeded);
+}

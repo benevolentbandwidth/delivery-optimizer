@@ -1,5 +1,6 @@
 #include "deliveryoptimizer/api/solve_coordinator.hpp"
 
+#include <algorithm>
 #include <chrono>
 #include <utility>
 
@@ -45,6 +46,13 @@ BuildQueueDeadline(const std::chrono::milliseconds queue_wait) {
   return now + queue_wait;
 }
 
+[[nodiscard]] std::size_t
+ResolveCompletionWorkerCount(const deliveryoptimizer::api::SolveAdmissionConfig& config,
+                             const deliveryoptimizer::api::SolveCoordinatorOptions& options) {
+  return std::max<std::size_t>(1U,
+                               options.completion_worker_count.value_or(config.max_concurrency));
+}
+
 } // namespace
 
 namespace deliveryoptimizer::api {
@@ -53,6 +61,12 @@ SolveCoordinator::SolveCoordinator(SolveAdmissionConfig config,
                                    std::shared_ptr<const VroomRunner> runner,
                                    SolveCoordinatorOptions options)
     : config_(config), options_(options), runner_(std::move(runner)) {
+  const std::size_t completion_worker_count = ResolveCompletionWorkerCount(config_, options_);
+  completion_workers_.reserve(completion_worker_count);
+  for (std::size_t index = 0U; index < completion_worker_count; ++index) {
+    completion_workers_.emplace_back([this] { CompletionLoop(); });
+  }
+
   workers_.reserve(config_.max_concurrency);
   for (std::size_t index = 0U; index < config_.max_concurrency; ++index) {
     workers_.emplace_back([this] { WorkerLoop(); });
@@ -71,12 +85,24 @@ SolveCoordinator::~SolveCoordinator() {
   }
   condition_.notify_all();
 
+  queue_timer_ = std::jthread{};
+  workers_.clear();
+
   for (auto& queued_request : drained_queue) {
-    queued_request.callback(CoordinatedSolveResult{
-        .status = CoordinatedSolveStatus::kFailed,
-        .output = std::nullopt,
+    EnqueueCompletion([callback = std::move(queued_request.callback)]() mutable {
+      callback(CoordinatedSolveResult{
+          .status = CoordinatedSolveStatus::kFailed,
+          .output = std::nullopt,
+      });
     });
   }
+
+  {
+    std::lock_guard<std::mutex> lock(completion_mutex_);
+    completion_shutting_down_ = true;
+  }
+  completion_condition_.notify_all();
+  completion_workers_.clear();
 }
 
 SolveAdmissionStatus SolveCoordinator::Submit(const SolveRequestSize& request_size,
@@ -103,6 +129,14 @@ SolveAdmissionStatus SolveCoordinator::Submit(const SolveRequestSize& request_si
   return SolveAdmissionStatus::kAccepted;
 }
 
+void SolveCoordinator::EnqueueCompletion(CompletionTask task) {
+  {
+    std::lock_guard<std::mutex> lock(completion_mutex_);
+    completion_queue_.push_back(std::move(task));
+  }
+  completion_condition_.notify_one();
+}
+
 void SolveCoordinator::WorkerLoop() {
   while (true) {
     std::optional<QueuedSolveRequest> queued_request;
@@ -124,20 +158,26 @@ void SolveCoordinator::WorkerLoop() {
     condition_.notify_all();
 
     if (queue_wait_expired) {
-      queued_request->callback(CoordinatedSolveResult{
-          .status = CoordinatedSolveStatus::kQueueWaitTimedOut,
-          .output = std::nullopt,
+      EnqueueCompletion([callback = std::move(queued_request->callback)]() mutable {
+        callback(CoordinatedSolveResult{
+            .status = CoordinatedSolveStatus::kQueueWaitTimedOut,
+            .output = std::nullopt,
+        });
       });
       continue;
     }
 
     const VroomRunResult solve_result = runner_->Run(queued_request->payload_factory());
-    queued_request->callback(ToCoordinatedSolveResult(solve_result));
     {
       std::lock_guard<std::mutex> lock(mutex_);
       --active_solves_;
     }
     condition_.notify_all();
+
+    CoordinatedSolveResult coordinated_result = ToCoordinatedSolveResult(solve_result);
+    EnqueueCompletion(
+        [callback = std::move(queued_request->callback),
+         result = std::move(coordinated_result)]() mutable { callback(std::move(result)); });
   }
 }
 
@@ -174,10 +214,31 @@ void SolveCoordinator::QueueTimerLoop() {
     }
     condition_.notify_all();
 
-    expired_request->callback(CoordinatedSolveResult{
-        .status = CoordinatedSolveStatus::kQueueWaitTimedOut,
-        .output = std::nullopt,
+    EnqueueCompletion([callback = std::move(expired_request->callback)]() mutable {
+      callback(CoordinatedSolveResult{
+          .status = CoordinatedSolveStatus::kQueueWaitTimedOut,
+          .output = std::nullopt,
+      });
     });
+  }
+}
+
+void SolveCoordinator::CompletionLoop() {
+  while (true) {
+    CompletionTask task;
+    {
+      std::unique_lock<std::mutex> lock(completion_mutex_);
+      completion_condition_.wait(
+          lock, [this] { return completion_shutting_down_ || !completion_queue_.empty(); });
+      if (completion_shutting_down_ && completion_queue_.empty()) {
+        return;
+      }
+
+      task = std::move(completion_queue_.front());
+      completion_queue_.pop_front();
+    }
+
+    task();
   }
 }
 
