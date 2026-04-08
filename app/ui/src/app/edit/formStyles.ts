@@ -285,6 +285,9 @@ export const PAGINATION_PAGE_ACTIVE =
 export const PAGINATION_PAGE_IDLE =
   "min-w-[2.75rem] h-11 rounded-3xl flex items-center justify-center text-base font-manrope text-black cursor-pointer transition-colors hover:bg-zinc-100 hover:underline";
 
+export const PAGINATION_ICON_COLOR = "black";
+export const PAGINATION_ICON_DISABLED_COLOR = "#a1a1aa";
+
 /**
  * Desktop-only header row for the address list rendered once in AddressSection above the
  * address cards. Horizontal padding matches ADDRESS_CARD_ROOT_BASE (md:px-2.5 lg:px-3 xl:px-5).
