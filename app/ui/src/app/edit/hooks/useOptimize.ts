@@ -46,8 +46,16 @@ export function useOptimize(vehicles: VehicleRow[], addresses: AddressCard[]) {
       setOptimizeError("At least one delivery address is required.");
       return;
     }
+    
+    // 4. Check that all vehicles are locked and have a type and capacity unit.
+    const lockedVehicles = availableVehicles.filter(isLocked);
 
-    // 4. Validate that all active vehicles share the same capacity unit
+    if (lockedVehicles.length !== availableVehicles.length) {
+      setOptimizeError("One or more vehicles are missing type or capacity unit.");
+      return;
+    }
+
+    // 5. Validate that all active vehicles share the same capacity unit
     const units = [...new Set(availableVehicles.map((v) => v.capacityUnit))];
     if (units.length > 1) {
       setOptimizeError("All vehicles must use the same capacity unit to optimize.");
@@ -55,9 +63,9 @@ export function useOptimize(vehicles: VehicleRow[], addresses: AddressCard[]) {
     }
     const demandType = units[0] as CapacityUnit;
 
+    // 6. Geocode all vehicle start locations and delivery addresses, collecting every failure.
     setIsOptimizing(true);
     try {
-      // 4. Geocode all vehicle start locations and delivery addresses, collecting every failure.
       const vehicleLocations: Map<number, { lat: number; lng: number }> = new Map();
       const failedVehicles: { id: number; location: string }[] = [];
       for (const v of availableVehicles) {
@@ -94,16 +102,8 @@ export function useOptimize(vehicles: VehicleRow[], addresses: AddressCard[]) {
         setOptimizeError(`Could not geocode: ${list}${suffix}. Try more specific addresses.`);
         return;
       }
-      
-      // 5. Check that all vehicles are locked and have a type and capacity unit.
-      const lockedVehicles = availableVehicles.filter(isLocked);
 
-      if (lockedVehicles.length !== availableVehicles.length) {
-        setOptimizeError("One or more vehicles are missing type or capacity unit.");
-        return;
-      }
-
-      // 6. Map form data to API types.
+      // 7. Map form data to API types.
       const vehicleInputs = lockedVehicles.map((v) =>
         vehicleRowToVehicleInput(v, vehicleLocations.get(v.id)!)
       );
@@ -112,7 +112,7 @@ export function useOptimize(vehicles: VehicleRow[], addresses: AddressCard[]) {
         addressCardToDeliveryInput(a, addressLocations.get(a.id)!, demandType)
       ).filter((d) => d !== undefined);
 
-      // 7. POST to /api/optimize.
+      // 8. POST to /api/optimize.
       const response = await fetch("/api/optimize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -136,7 +136,7 @@ export function useOptimize(vehicles: VehicleRow[], addresses: AddressCard[]) {
         return;
       }
 
-      // 8. Store result for the caller to consume.
+      // 9. Store result for the caller to consume.
       setResult(data);
     } catch {
       setOptimizeError("Network error. Please check your connection and try again.");
