@@ -271,6 +271,9 @@ export const ADDRESS_ADD_PILL_MOBILE_DISABLED =
 export const ADDRESS_SEARCH_INPUT_MOBILE =
   "w-full h-11 px-5 rounded-full bg-zinc-100 border border-zinc-300 text-black text-base font-normal placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-400";
 
+export const ADDRESS_EMPTY_STATE =
+  "flex items-center justify-center py-16 text-sm text-zinc-400 xl:text-base";
+
 export const ADDRESS_LIST_WRAP =
   "space-y-4 lg:space-y-0 lg:divide-y lg:divide-zinc-300 lg:border lg:border-zinc-300 lg:rounded-xl lg:overflow-hidden";
 

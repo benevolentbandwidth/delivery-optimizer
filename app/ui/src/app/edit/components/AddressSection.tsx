@@ -13,6 +13,7 @@ import {
   ADDRESS_ADD_PILL_MOBILE_ENABLED,
   ADDRESS_SEARCH_INPUT_DESKTOP,
   ADDRESS_SEARCH_INPUT_MOBILE,
+  ADDRESS_EMPTY_STATE,
   ADDRESS_LIST_WRAP,
   ADDRESS_SECTION_TITLE,
   ADDRESS_TOOLBAR_DESKTOP,
@@ -99,7 +100,7 @@ export default function AddressSection({
 
       {/* Mobile: spaced cards; desktop: single divided panel */}
       {searchQuery.trim() !== "" && addressesOnCurrentPage.length === 0 ? (
-        <div className="flex items-center justify-center py-16 text-sm text-zinc-400 xl:text-base">
+        <div className={ADDRESS_EMPTY_STATE}>
           No Addresses Found
         </div>
       ) : (
