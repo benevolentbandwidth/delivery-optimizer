@@ -72,8 +72,7 @@ export default function AddressEntryPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#f5f4f2', fontFamily: "'DM Sans', sans-serif" }}>
-      <Navbar/>
-
+      <Navbar {...({} as any)} />
       <main style={{
         display: 'flex',
         alignItems: 'center',
