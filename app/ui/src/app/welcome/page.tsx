@@ -45,12 +45,12 @@ function WelcomeContent() {
           marginBottom: '40px',
           textAlign: 'center',
         }}>
-          Lorem ipsum dolor sit amet consectetur.
+          Choose your role to get started.
         </p>
 
         <div style={{
           display: 'flex',
-          gap: '16px',
+          gap: '20px',
           flexWrap: 'wrap',
           justifyContent: 'center',
           width: '100%',
@@ -63,13 +63,13 @@ function WelcomeContent() {
               maxWidth: '340px',
               padding: '40px 28px',
               border: '1.5px solid #d4d2d0',
-              borderRadius: '14px',
+              borderRadius: '16px',
               background: '#fff',
               cursor: 'pointer',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              gap: '12px',
+              gap: '16px',
               transition: 'border-color 0.15s, box-shadow 0.15s',
               textAlign: 'center',
             }}
@@ -90,7 +90,7 @@ function WelcomeContent() {
             </svg>
             <div>
               <p style={{ fontSize: '17px', fontWeight: 700, color: '#111', marginBottom: '8px' }}>Route Manager</p>
-              <p style={{ fontSize: '14px', color: '#999', lineHeight: 1.5 }}>Lorem ipsum dolor sit amet consectetur.</p>
+              <p style={{ fontSize: '14px', color: '#888', lineHeight: 1.5 }}>Create and manage delivery routes for your team.</p>
             </div>
           </button>
 
@@ -101,13 +101,13 @@ function WelcomeContent() {
               maxWidth: '340px',
               padding: '40px 28px',
               border: '1.5px solid #d4d2d0',
-              borderRadius: '14px',
+              borderRadius: '16px',
               background: '#fff',
               cursor: 'pointer',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              gap: '12px',
+              gap: '16px',
               transition: 'border-color 0.15s, box-shadow 0.15s',
               textAlign: 'center',
             }}
@@ -129,7 +129,7 @@ function WelcomeContent() {
             </svg>
             <div>
               <p style={{ fontSize: '17px', fontWeight: 700, color: '#111', marginBottom: '8px' }}>Driver</p>
-              <p style={{ fontSize: '14px', color: '#999', lineHeight: 1.5 }}>Lorem ipsum dolor sit amet consectetur.</p>
+              <p style={{ fontSize: '14px', color: '#888', lineHeight: 1.5 }}>Upload your assigned route and start your deliveries.</p>
             </div>
           </button>
         </div>

@@ -2,18 +2,21 @@
 'use client';
 import { useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { v4 as uuidv4 } from 'uuid';
 import Navbar from '@/app/edit/components/Navbar';
 
 interface UploadedFile {
   id: string;
   name: string;
   size: string;
+  content: string;
 }
 
 export default function AddressEntryPage() {
   const router = useRouter();
   const [isDragging, setIsDragging] = useState(false);
   const [uploads, setUploads] = useState<UploadedFile[]>([]);
+  const dragDepth = useRef(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const formatSize = (bytes: number) => {
@@ -21,25 +24,50 @@ export default function AddressEntryPage() {
     return `${(bytes / 1024).toFixed(0)} KB`;
   };
 
-  const handleFiles = useCallback((files: FileList) => {
-    const newFiles: UploadedFile[] = Array.from(files)
-      .filter(f => f.name.endsWith('.csv') || f.name.endsWith('.json'))
-      .map(f => ({
-        id: Math.random().toString(36).slice(2),
+  const handleFiles = useCallback(async (files: FileList) => {
+    const incoming = Array.from(files).filter(
+      f => f.name.endsWith('.csv') || f.name.endsWith('.json')
+    );
+    const read = await Promise.all(
+      incoming.map(async f => ({
+        id: uuidv4(),
         name: f.name,
         size: formatSize(f.size),
-      }));
-    setUploads(prev => [...prev, ...newFiles]);
+        content: await f.text(),
+      }))
+    );
+    setUploads(prev => [...prev, ...read]);
   }, []);
+
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    dragDepth.current += 1;
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    dragDepth.current -= 1;
+    if (dragDepth.current === 0) setIsDragging(false);
+  };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
+    dragDepth.current = 0;
     setIsDragging(false);
     handleFiles(e.dataTransfer.files);
   };
 
   const removeFile = (id: string) => {
     setUploads(prev => prev.filter(f => f.id !== id));
+  };
+
+  const handleContinue = () => {
+    // Forward all uploaded file contents to the editor via sessionStorage.
+    sessionStorage.setItem('addressFiles', JSON.stringify(
+      uploads.map(f => ({ name: f.name, content: f.content }))
+    ));
+    router.push('/edit');
   };
 
   return (
@@ -65,14 +93,14 @@ export default function AddressEntryPage() {
             Enter Addresses
           </h2>
           <p style={{ fontSize: '14px', color: '#999', marginBottom: '24px' }}>
-            Upload your file or enter addresses manually.
+            Upload a file containing your delivery addresses, or enter them manually.
           </p>
 
-          {/* Drop zone */}
           <div
             onClick={() => inputRef.current?.click()}
-            onDragOver={e => { e.preventDefault(); setIsDragging(true); }}
-            onDragLeave={() => setIsDragging(false)}
+            onDragEnter={handleDragEnter}
+            onDragOver={e => e.preventDefault()}
+            onDragLeave={handleDragLeave}
             onDrop={handleDrop}
             style={{
               border: `2px dashed ${isDragging ? '#111' : '#ccc'}`,
@@ -96,7 +124,7 @@ export default function AddressEntryPage() {
               Click to upload file
             </p>
             <p style={{ fontSize: '12px', color: '#bbb', textAlign: 'center' }}>
-              Accepts .json files or .csv/image files
+              Accepts .csv and .json files
             </p>
             <input
               ref={inputRef}
@@ -108,7 +136,6 @@ export default function AddressEntryPage() {
             />
           </div>
 
-          {/* Uploaded files list */}
           {uploads.length > 0 && (
             <div style={{ marginBottom: '20px' }}>
               <p style={{ fontSize: '13px', fontWeight: 600, color: '#333', marginBottom: '10px' }}>
@@ -151,9 +178,8 @@ export default function AddressEntryPage() {
             </div>
           )}
 
-          {/* Continue button */}
           <button
-            onClick={() => router.push('/edit')}
+            onClick={handleContinue}
             disabled={uploads.length === 0}
             style={{
               width: '100%',
@@ -173,14 +199,12 @@ export default function AddressEntryPage() {
             Continue
           </button>
 
-          {/* Divider */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
             <div style={{ flex: 1, height: '1px', background: '#e8e7e5' }}/>
             <span style={{ fontSize: '13px', color: '#bbb' }}>or</span>
             <div style={{ flex: 1, height: '1px', background: '#e8e7e5' }}/>
           </div>
 
-          {/* Manual entry — goes directly to /edit */}
           <button
             onClick={() => router.push('/edit')}
             style={{

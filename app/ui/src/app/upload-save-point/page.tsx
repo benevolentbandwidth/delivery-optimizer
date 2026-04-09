@@ -8,17 +8,42 @@ export default function UploadSavePointPage() {
   const router = useRouter();
   const [isDragging, setIsDragging] = useState(false);
   const [file, setFile] = useState<File | null>(null);
+  // Tracks drag enter/leave depth to prevent flicker when cursor
+  // moves over child elements inside the drop zone.
+  const dragDepth = useRef(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFile = (f: File) => {
     if (f.name.endsWith('.json')) setFile(f);
   };
 
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    dragDepth.current += 1;
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    dragDepth.current -= 1;
+    if (dragDepth.current === 0) setIsDragging(false);
+  };
+
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
+    dragDepth.current = 0;
     setIsDragging(false);
     const f = e.dataTransfer.files[0];
     if (f) handleFile(f);
+  };
+
+  const handleContinue = async () => {
+    if (!file) return;
+    // Serialise the file into sessionStorage so the editor can read it
+    // after navigation — local state is dropped on router.push().
+    const text = await file.text();
+    sessionStorage.setItem('savePointFile', JSON.stringify({ name: file.name, content: text }));
+    router.push('/edit');
   };
 
   return (
@@ -44,18 +69,18 @@ export default function UploadSavePointPage() {
             Upload Save Point
           </h2>
           <p style={{ fontSize: '14px', color: '#999', marginBottom: '24px' }}>
-            Lorem ipsum dolor sit amet consectetur.
+            Upload your previously exported save file to continue editing your route.
           </p>
 
           <p style={{ fontSize: '13px', fontWeight: 600, color: '#333', marginBottom: '10px' }}>
             Save file in .json
           </p>
 
-          {/* Drop zone */}
           <div
             onClick={() => inputRef.current?.click()}
-            onDragOver={e => { e.preventDefault(); setIsDragging(true); }}
-            onDragLeave={() => setIsDragging(false)}
+            onDragEnter={handleDragEnter}
+            onDragOver={e => e.preventDefault()}
+            onDragLeave={handleDragLeave}
             onDrop={handleDrop}
             style={{
               border: `2px dashed ${isDragging ? '#111' : '#ccc'}`,
@@ -71,7 +96,6 @@ export default function UploadSavePointPage() {
               marginBottom: '24px',
             }}
           >
-            {/* JSON icon */}
             <div style={{
               width: '48px',
               height: '48px',
@@ -91,7 +115,7 @@ export default function UploadSavePointPage() {
               {file ? file.name : 'Click to upload save file'}
             </p>
             <p style={{ fontSize: '12px', color: '#bbb', textAlign: 'center' }}>
-              Accepts .json files containing save point
+              Accepts .json files containing a save point
             </p>
             <input
               ref={inputRef}
@@ -102,9 +126,8 @@ export default function UploadSavePointPage() {
             />
           </div>
 
-          {/* Continue button */}
           <button
-            onClick={() => file && router.push('/address-entry')}
+            onClick={handleContinue}
             disabled={!file}
             style={{
               width: '100%',

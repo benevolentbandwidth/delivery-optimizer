@@ -34,7 +34,7 @@ export default function LandingPage() {
           marginBottom: '48px',
           textAlign: 'center',
         }}>
-          Lorem ipsum dolor sit amet consectetur.
+          Select how you'd like to get started.
         </p>
 
         <div style={{
@@ -45,7 +45,6 @@ export default function LandingPage() {
           width: '100%',
           maxWidth: '720px',
         }}>
-          {/* New User Card */}
           <button
             onClick={() => router.push('/welcome?type=new')}
             style={{
@@ -81,11 +80,10 @@ export default function LandingPage() {
             </svg>
             <div>
               <p style={{ fontSize: '17px', fontWeight: 700, color: '#111', marginBottom: '8px' }}>New</p>
-              <p style={{ fontSize: '14px', color: '#888', lineHeight: 1.5 }}>Lorem ipsum dolor sit amet consectetur.</p>
+              <p style={{ fontSize: '14px', color: '#888', lineHeight: 1.5 }}>First time here? Start by entering your delivery addresses.</p>
             </div>
           </button>
 
-          {/* Returning User Card */}
           <button
             onClick={() => router.push('/welcome?type=returning')}
             style={{
@@ -119,31 +117,10 @@ export default function LandingPage() {
             </svg>
             <div>
               <p style={{ fontSize: '17px', fontWeight: 700, color: '#111', marginBottom: '8px' }}>Returning</p>
-              <p style={{ fontSize: '14px', color: '#888', lineHeight: 1.5 }}>Lorem ipsum dolor sit amet consectetur.</p>
+              <p style={{ fontSize: '14px', color: '#888', lineHeight: 1.5 }}>Welcome back. Upload your save file to continue where you left off.</p>
             </div>
           </button>
         </div>
-
-        <button
-          onClick={() => router.back()}
-          style={{
-            marginTop: '40px',
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            fontSize: '14px',
-            color: '#555',
-            fontFamily: 'inherit',
-          }}
-        >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M10 3L5 8L10 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-          Back
-        </button>
       </main>
     </div>
   );
