@@ -8,7 +8,12 @@ export default function LandingPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#fff', fontFamily: "'DM Sans', sans-serif" }}>
-      <Navbar />
+      <Navbar
+        onOptimize={() => {}}
+        isOptimizing={false}
+        optimizeError={null}
+        onClearOptimizeError={() => {}}
+      />
 
       <main style={{
         display: 'flex',
