@@ -122,7 +122,7 @@ for expected in \
   'deliveryoptimizer_solver_request_duration_seconds_count 1' \
   'deliveryoptimizer_solver_requests_accepted_total 0' \
   'deliveryoptimizer_solver_requests_succeeded_total 0' \
-  'deliveryoptimizer_solver_requests_rejected_total 0' \
+  'deliveryoptimizer_solver_requests_rejected_total 1' \
   'deliveryoptimizer_solver_requests_timed_out_total 0' \
   'deliveryoptimizer_solver_requests_failed_total 0'; do
   if ! grep -Fq "${expected}" "${metrics_file}"; then

@@ -271,6 +271,7 @@ void FinalizeSolveRequest(const std::shared_ptr<ObservabilityRegistry>& observab
   case SolveRequestOutcome::kInvalidJson:
   case SolveRequestOutcome::kValidationFailed:
   case SolveRequestOutcome::kRequestTooLarge:
+    observability->RecordRejected();
     break;
   }
 

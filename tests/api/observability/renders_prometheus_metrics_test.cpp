@@ -1,5 +1,6 @@
 #include "deliveryoptimizer/api/observability.hpp"
 
+#include <array>
 #include <chrono>
 #include <gtest/gtest.h>
 #include <string>
@@ -97,5 +98,26 @@ TEST(ObservabilityRegistryTest, FinalizeSuccessfulAcceptedRequestIncrementsSucce
   const std::string rendered = observability->RenderPrometheusText();
 
   EXPECT_NE(rendered.find("deliveryoptimizer_solver_requests_succeeded_total 1"),
+            std::string::npos);
+}
+
+TEST(ObservabilityRegistryTest, FinalizeClientErrorsIncrementRejectedCounter) {
+  constexpr std::array client_error_outcomes{
+      deliveryoptimizer::api::SolveRequestOutcome::kInvalidJson,
+      deliveryoptimizer::api::SolveRequestOutcome::kValidationFailed,
+      deliveryoptimizer::api::SolveRequestOutcome::kRequestTooLarge,
+  };
+
+  auto observability = std::make_shared<deliveryoptimizer::api::ObservabilityRegistry>();
+  for (std::size_t index = 0; index < client_error_outcomes.size(); ++index) {
+    auto lifecycle = std::make_shared<deliveryoptimizer::api::SolveLifecycle>(
+        BuildLifecycle("request-client-error-" + std::to_string(index)));
+    deliveryoptimizer::api::FinalizeSolveRequest(observability, lifecycle,
+                                                 client_error_outcomes[index], 400);
+  }
+
+  const std::string rendered = observability->RenderPrometheusText();
+
+  EXPECT_NE(rendered.find("deliveryoptimizer_solver_requests_rejected_total 3"),
             std::string::npos);
 }
