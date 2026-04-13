@@ -30,14 +30,16 @@ export default function DriverViewPage() {
   // prerendering — so sessionStorage is always available here.
   useEffect(() => {
     const raw = sessionStorage.getItem('routeFile');
+    let parsed: RouteFile | null = null;
     if (raw) {
       try {
+        parsed = JSON.parse(raw) as RouteFile;
         sessionStorage.removeItem('routeFile');
-        setRouteFile(JSON.parse(raw) as RouteFile);
       } catch {
         console.error('Failed to parse route file from sessionStorage');
       }
     }
+    setRouteFile(parsed);
     setReady(true);
   }, []);
 
