@@ -1,6 +1,13 @@
 // app/driver-view/page.tsx
 'use client';
-import { useState } from 'react';
+
+// This page reads from sessionStorage on mount and cannot be statically
+// prerendered — its content depends on runtime browser state passed from
+// the upload-route page. Marking as dynamic opts it out of build-time
+// prerendering entirely.
+export const dynamic = 'force-dynamic';
+
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import ShellNavbar from '@/app/edit/components/ShellNavbar';
 
@@ -16,20 +23,27 @@ interface RouteFile {
  */
 export default function DriverViewPage() {
   const router = useRouter();
+  const [routeFile, setRouteFile] = useState<RouteFile | null>(null);
+  const [ready, setReady] = useState(false);
 
-  // Lazy useState initialiser: reads sessionStorage once on mount without
-  // needing a useEffect + setState pair, which triggers cascading renders.
-  const [routeFile] = useState<RouteFile | null>(() => {
+  // useEffect only runs in the browser — never during SSR or static
+  // prerendering — so sessionStorage is always available here.
+  useEffect(() => {
     const raw = sessionStorage.getItem('routeFile');
-    if (!raw) return null;
-    try {
-      sessionStorage.removeItem('routeFile');
-      return JSON.parse(raw) as RouteFile;
-    } catch {
-      console.error('Failed to parse route file from sessionStorage');
-      return null;
+    if (raw) {
+      try {
+        sessionStorage.removeItem('routeFile');
+        setRouteFile(JSON.parse(raw) as RouteFile);
+      } catch {
+        console.error('Failed to parse route file from sessionStorage');
+      }
     }
-  });
+    setReady(true);
+  }, []);
+
+  // Render nothing until the client-side effect has run to avoid
+  // a flash of the "no route file" message during hydration.
+  if (!ready) return null;
 
   return (
     <div style={{ minHeight: '100vh', background: '#f5f4f2', fontFamily: "'DM Sans', sans-serif" }}>
