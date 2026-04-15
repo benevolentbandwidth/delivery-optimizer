@@ -10,6 +10,8 @@ export type VehicleInput = {
   endLocation?: Location
   capacity: Load
   timeWindow?: [number, number]
+  departureTime?: number
+  returnTime?: number
 }
 
 export type Vehicle = {
