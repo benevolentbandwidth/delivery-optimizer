@@ -29,7 +29,7 @@ if (Platform.OS === 'android') {
 }
 
 export default function HomeScreen() {
-  const { route, setRoute, clearRoute, storageAvailable } = useRoutePersistence();
+  const { route, setRoute, clearRoute, isRestored, storageAvailable } = useRoutePersistence();
   const [openId, setOpenId] = useState<string | null>(null);
   const [reportingStopId, setReportingStopId] = useState<string | null>(null);
   const [isEndShiftModalVisible, setIsEndShiftModalVisible] = useState(false);
@@ -235,6 +235,17 @@ export default function HomeScreen() {
   const completedCount = stops.filter((stop) => stop.status === 'completed').length;
   const failedCount = stops.filter((stop) => stop.status === 'failed').length;
   const progress = stops.length > 0 ? completedCount / stops.length : 0;
+
+  if (!isRestored) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.uploadScreen}>
+          <Text style={styles.appHeader}>Driver Assist</Text>
+          <Text style={styles.uploadHint}>Restoring saved route...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   if (!route) {
     return (
