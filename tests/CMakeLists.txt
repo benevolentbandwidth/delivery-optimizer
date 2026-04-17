@@ -183,14 +183,31 @@ deliveryoptimizer_set_local_http_test_port(
   29100
 )
 
+add_test(
+  NAME DeliveryOptimizerApiContractTest.OsrmProxyForwardsAllowedServiceWithQuery
+  COMMAND "${BASH_PROGRAM}"
+          "${CMAKE_CURRENT_SOURCE_DIR}/integration/http_server/osrm_proxy_forwards_allowed_service_with_query_test.sh"
+          "$<TARGET_FILE:deliveryoptimizer_api>" "${PYTHON3_PROGRAM}" "${CURL_PROGRAM}"
+)
+set_tests_properties(
+  DeliveryOptimizerApiContractTest.OsrmProxyForwardsAllowedServiceWithQuery
+  PROPERTIES
+    TIMEOUT 30
+    LABELS "${DELIVERYOPTIMIZER_LOCAL_API_LABELS}"
+)
+deliveryoptimizer_set_local_http_test_environment(
+  DeliveryOptimizerApiContractTest.OsrmProxyForwardsAllowedServiceWithQuery
+  "DELIVERYOPTIMIZER_TEST_PORT=36000;DELIVERYOPTIMIZER_OSRM_STUB_PORT=52000"
+)
+
 deliveryoptimizer_add_local_http_test(
-  DeliveryOptimizerApiContractTest.OsrmEndpointNotRegistered
-  osrm_endpoint_not_registered_test.sh
+  DeliveryOptimizerApiContractTest.OsrmProxyRejectsDisallowedService
+  osrm_proxy_rejects_disallowed_service_test.sh
   30
   "${DELIVERYOPTIMIZER_LOCAL_API_LABELS}"
 )
 deliveryoptimizer_set_local_http_test_port(
-  DeliveryOptimizerApiContractTest.OsrmEndpointNotRegistered
+  DeliveryOptimizerApiContractTest.OsrmProxyRejectsDisallowedService
   34000
 )
 
@@ -513,6 +530,16 @@ if(DOCKER_PROGRAM)
   deliveryoptimizer_add_docker_api_e2e_test(
     DeliveryOptimizerE2ETest.DeliveriesOptimizeMalformedJsonReturnsParseError
     deliveries_optimize_malformed_json_returns_parse_error_e2e_test.sh
+    2400
+  )
+  deliveryoptimizer_add_docker_api_e2e_test(
+    DeliveryOptimizerE2ETest.OsrmProxyNearestReturnsOk
+    osrm_proxy_nearest_returns_ok_e2e_test.sh
+    2400
+  )
+  deliveryoptimizer_add_docker_api_e2e_test(
+    DeliveryOptimizerE2ETest.OsrmProxyBlocksTileService
+    osrm_proxy_blocks_tile_service_e2e_test.sh
     2400
   )
 endif()

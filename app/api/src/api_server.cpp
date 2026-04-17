@@ -4,6 +4,7 @@
 #include "deliveryoptimizer/api/endpoints/health_endpoint.hpp"
 #include "deliveryoptimizer/api/endpoints/metrics_endpoint.hpp"
 #include "deliveryoptimizer/api/endpoints/optimize_endpoint.hpp"
+#include "deliveryoptimizer/api/endpoints/osrm_proxy_endpoint.hpp"
 #include "deliveryoptimizer/api/observability.hpp"
 #include "deliveryoptimizer/api/server_options.hpp"
 
@@ -98,6 +99,7 @@ int RunApiServer() {
   }
   RegisterOptimizeEndpoint(app);
   RegisterDeliveriesOptimizeEndpoint(app, options.solve_admission, observability);
+  RegisterOsrmProxyEndpoint(app);
 
   app.addListener("0.0.0.0", options.listen_port);
   // Parser-generated 413 responses bypass request/response advices, so we keep a
