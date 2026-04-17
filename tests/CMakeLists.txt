@@ -390,6 +390,16 @@ deliveryoptimizer_set_local_http_test_port(
   38100
 )
 deliveryoptimizer_add_local_http_test(
+  DeliveryOptimizerApiRegressionTest.DeliveriesOptimizeIgnoresMalformedVroomRouteEntries
+  deliveries_optimize_ignores_malformed_vroom_route_entries_test.sh
+  30
+  "${DELIVERYOPTIMIZER_LOCAL_API_REGRESSION_LABELS}"
+)
+deliveryoptimizer_set_local_http_test_port(
+  DeliveryOptimizerApiRegressionTest.DeliveriesOptimizeIgnoresMalformedVroomRouteEntries
+  38300
+)
+deliveryoptimizer_add_local_http_test(
   DeliveryOptimizerApiRegressionTest.DeliveriesOptimizeAcceptsSmallSyncSolve
   deliveries_optimize_accepts_small_sync_solve_test.sh
   30
