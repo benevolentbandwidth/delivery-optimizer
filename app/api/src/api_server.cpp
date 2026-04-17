@@ -123,13 +123,20 @@ int RunApiServer() {
             job_runtime == nullptr ? 0U : job_runtime->ExpectedWorkerCount();
         const std::size_t healthy_workers =
             job_runtime == nullptr ? 0U : job_runtime->HealthyWorkerCount();
+        const bool schema_ready = job_runtime != nullptr && job_runtime->IsSchemaReady();
+        const std::string schema_detail =
+            job_runtime == nullptr ? "missing optimization job runtime"
+                                   : job_runtime->SchemaStatusDetail();
         checks["optimization_jobs_db"] = db_ready ? "ok" : "down";
         checks["optimization_jobs_db_detail"] = detail;
+        checks["optimization_jobs_schema"] = schema_ready ? "ok" : "down";
+        checks["optimization_jobs_schema_detail"] = schema_detail;
         checks["optimization_job_workers_expected"] = static_cast<Json::UInt64>(expected_workers);
         checks["optimization_job_workers_healthy"] = static_cast<Json::UInt64>(healthy_workers);
         checks["optimization_job_queue_depth"] = static_cast<Json::UInt64>(stats.queued_jobs);
         checks["optimization_job_running"] = static_cast<Json::UInt64>(stats.running_jobs);
-        if (!db_ready || (expected_workers > 0U && healthy_workers < expected_workers)) {
+        if (!db_ready || !schema_ready ||
+            (expected_workers > 0U && healthy_workers < expected_workers)) {
           overall_ready = false;
         }
       });

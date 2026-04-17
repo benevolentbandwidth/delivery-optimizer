@@ -39,7 +39,7 @@ OptimizationJobRuntime::OptimizationJobRuntime(std::shared_ptr<OptimizationJobSt
       observability_(std::move(observability)),
       options_(options) {
   if (store_ != nullptr && store_->IsConfigured()) {
-    schema_ready_ = store_->EnsureSchema();
+    schema_ready_ = store_->EnsureSchema(&schema_status_detail_);
   }
 
   if (store_ == nullptr || runner_ == nullptr || !schema_ready_) {
@@ -78,6 +78,10 @@ bool OptimizationJobRuntime::IsConfigured() const {
 
 bool OptimizationJobRuntime::IsSchemaReady() const {
   return schema_ready_;
+}
+
+std::string OptimizationJobRuntime::SchemaStatusDetail() const {
+  return schema_status_detail_;
 }
 
 std::size_t OptimizationJobRuntime::ExpectedWorkerCount() const {

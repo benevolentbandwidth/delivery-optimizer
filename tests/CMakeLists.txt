@@ -74,12 +74,16 @@ endif()
 if(DEFINED PG_CTL_PROGRAM AND NOT EXISTS "${PG_CTL_PROGRAM}")
   unset(PG_CTL_PROGRAM CACHE)
 endif()
+if(DEFINED PSQL_PROGRAM AND NOT EXISTS "${PSQL_PROGRAM}")
+  unset(PSQL_PROGRAM CACHE)
+endif()
 
 find_program(BASH_PROGRAM bash REQUIRED)
 find_program(CURL_PROGRAM curl REQUIRED)
 find_program(PYTHON3_PROGRAM python3 REQUIRED)
 find_program(INITDB_PROGRAM initdb)
 find_program(PG_CTL_PROGRAM pg_ctl)
+find_program(PSQL_PROGRAM psql)
 find_program(DOCKER_PROGRAM docker)
 
 set(DELIVERYOPTIMIZER_LOCAL_API_LABELS "integration;api;local")
@@ -512,6 +516,28 @@ if(INITDB_PROGRAM AND PG_CTL_PROGRAM)
     DeliveryOptimizerApiAsyncTest.RetriedJobKeepsLatestWorkerResult
     54000
   )
+
+  if(PSQL_PROGRAM)
+    add_test(
+      NAME DeliveryOptimizerApiContractTest.HealthReportsSchemaBootstrapFailure
+      COMMAND "${BASH_PROGRAM}"
+              "${CMAKE_CURRENT_SOURCE_DIR}/integration/http_server/health_reports_schema_bootstrap_failure_test.sh"
+              "$<TARGET_FILE:deliveryoptimizer_api>" "${CURL_PROGRAM}" "${PYTHON3_PROGRAM}"
+              "${INITDB_PROGRAM}" "${PG_CTL_PROGRAM}" "${PSQL_PROGRAM}"
+    )
+    set_tests_properties(
+      DeliveryOptimizerApiContractTest.HealthReportsSchemaBootstrapFailure
+      PROPERTIES
+        TIMEOUT 60
+        LABELS "${DELIVERYOPTIMIZER_LOCAL_API_REGRESSION_LABELS}"
+    )
+    deliveryoptimizer_set_local_http_test_port(
+      DeliveryOptimizerApiContractTest.HealthReportsSchemaBootstrapFailure
+      55000
+    )
+  else()
+    message(STATUS "Skipping schema bootstrap health test because psql was not found.")
+  endif()
 else()
   message(STATUS "Skipping local PostgreSQL-backed HTTP tests because initdb or pg_ctl was not found.")
 endif()

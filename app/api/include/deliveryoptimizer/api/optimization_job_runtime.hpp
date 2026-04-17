@@ -39,6 +39,7 @@ public:
 
   [[nodiscard]] bool IsConfigured() const;
   [[nodiscard]] bool IsSchemaReady() const;
+  [[nodiscard]] std::string SchemaStatusDetail() const;
   [[nodiscard]] std::size_t ExpectedWorkerCount() const;
   [[nodiscard]] std::size_t HealthyWorkerCount() const;
   [[nodiscard]] OptimizationJobStoreStats CurrentStats() const;
@@ -67,6 +68,7 @@ private:
   OptimizationJobStoreStats last_stats_{};
   std::size_t healthy_workers_{0U};
   bool schema_ready_{false};
+  std::string schema_status_detail_{"missing database connection string"};
 };
 
 } // namespace deliveryoptimizer::api
