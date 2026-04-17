@@ -105,22 +105,53 @@ OptimizationJobStoreStats OptimizationJobRuntime::CurrentStats() const {
   return last_stats_;
 }
 
+void OptimizationJobRuntime::SetCurrentJobId(WorkerState& worker_state,
+                                             std::optional<std::string> current_job_id) {
+  std::lock_guard<std::mutex> lock(worker_state.mutex);
+  worker_state.current_job_id = std::move(current_job_id);
+}
+
+std::optional<std::string> OptimizationJobRuntime::CurrentJobId(const WorkerState& worker_state) const {
+  std::lock_guard<std::mutex> lock(worker_state.mutex);
+  return worker_state.current_job_id;
+}
+
+void OptimizationJobRuntime::MarkWorkerHeartbeat(WorkerState& worker_state) {
+  std::lock_guard<std::mutex> lock(worker_state.mutex);
+  worker_state.last_heartbeat_at = std::chrono::steady_clock::now();
+}
+
+std::size_t OptimizationJobRuntime::CountHealthyWorkers() const {
+  const auto now = std::chrono::steady_clock::now();
+  std::size_t healthy_workers = 0U;
+  for (const auto& worker_state : worker_states_) {
+    std::lock_guard<std::mutex> lock(worker_state.mutex);
+    if (worker_state.last_heartbeat_at.has_value() &&
+        now - *worker_state.last_heartbeat_at <= options_.worker_health_timeout) {
+      ++healthy_workers;
+    }
+  }
+  return healthy_workers;
+}
+
 void OptimizationJobRuntime::WorkerLoop(const std::stop_token stop_token, const std::size_t worker_index) {
   WorkerState& worker_state = worker_states_[worker_index];
   while (!stop_token.stop_requested()) {
     const auto claimed_job = store_->ClaimNextJob(worker_state.worker_id);
     if (!claimed_job.has_value()) {
-      (void)store_->TouchWorker(worker_state.worker_id, std::nullopt);
+      SetCurrentJobId(worker_state, std::nullopt);
+      if (store_->TouchWorker(worker_state.worker_id, std::nullopt)) {
+        MarkWorkerHeartbeat(worker_state);
+      }
       RefreshObservability();
       std::this_thread::sleep_for(options_.poll_interval);
       continue;
     }
 
-    {
-      std::lock_guard<std::mutex> lock(worker_state.mutex);
-      worker_state.current_job_id = claimed_job->record.job_id;
+    SetCurrentJobId(worker_state, claimed_job->record.job_id);
+    if (store_->TouchWorker(worker_state.worker_id, claimed_job->record.job_id)) {
+      MarkWorkerHeartbeat(worker_state);
     }
-    (void)store_->TouchWorker(worker_state.worker_id, worker_state.current_job_id);
     RefreshObservability();
 
     const auto parsed_json = ParseJsonText(claimed_job->request_json);
@@ -163,11 +194,10 @@ void OptimizationJobRuntime::WorkerLoop(const std::stop_token stop_token, const 
       }
     }
 
-    {
-      std::lock_guard<std::mutex> lock(worker_state.mutex);
-      worker_state.current_job_id.reset();
+    SetCurrentJobId(worker_state, std::nullopt);
+    if (store_->TouchWorker(worker_state.worker_id, std::nullopt)) {
+      MarkWorkerHeartbeat(worker_state);
     }
-    (void)store_->TouchWorker(worker_state.worker_id, std::nullopt);
     RefreshObservability();
   }
 }
@@ -175,13 +205,10 @@ void OptimizationJobRuntime::WorkerLoop(const std::stop_token stop_token, const 
 void OptimizationJobRuntime::HeartbeatLoop(const std::stop_token stop_token) {
   while (!stop_token.stop_requested()) {
     for (auto& worker_state : worker_states_) {
-      std::optional<std::string> current_job_id;
-      {
-        std::lock_guard<std::mutex> lock(worker_state.mutex);
-        current_job_id = worker_state.current_job_id;
+      const auto current_job_id = CurrentJobId(worker_state);
+      if (store_->TouchWorker(worker_state.worker_id, current_job_id)) {
+        MarkWorkerHeartbeat(worker_state);
       }
-
-      (void)store_->TouchWorker(worker_state.worker_id, current_job_id);
       if (current_job_id.has_value()) {
         (void)store_->ExtendJobLease(*current_job_id, worker_state.worker_id);
       }
@@ -206,7 +233,7 @@ void OptimizationJobRuntime::RefreshObservability() {
   }
 
   const auto stats = store_->GetStats();
-  const auto healthy_workers = store_->CountHealthyWorkers(options_.worker_health_timeout);
+  const auto healthy_workers = CountHealthyWorkers();
   {
     std::lock_guard<std::mutex> lock(stats_mutex_);
     last_stats_ = stats;

@@ -571,6 +571,24 @@ if(INITDB_PROGRAM AND PG_CTL_PROGRAM)
         TIMEOUT 60
         LABELS "${DELIVERYOPTIMIZER_LOCAL_API_REGRESSION_LABELS}"
     )
+
+    add_test(
+      NAME DeliveryOptimizerApiContractTest.HealthIgnoresForeignWorkers
+      COMMAND "${BASH_PROGRAM}"
+              "${CMAKE_CURRENT_SOURCE_DIR}/integration/http_server/optimization_job_health_ignores_foreign_workers_test.sh"
+              "$<TARGET_FILE:deliveryoptimizer_api>" "${CURL_PROGRAM}" "${PYTHON3_PROGRAM}"
+              "${INITDB_PROGRAM}" "${PG_CTL_PROGRAM}" "${PSQL_PROGRAM}"
+    )
+    set_tests_properties(
+      DeliveryOptimizerApiContractTest.HealthIgnoresForeignWorkers
+      PROPERTIES
+        TIMEOUT 60
+        LABELS "${DELIVERYOPTIMIZER_LOCAL_API_REGRESSION_LABELS}"
+    )
+    deliveryoptimizer_set_local_http_test_port(
+      DeliveryOptimizerApiContractTest.HealthIgnoresForeignWorkers
+      59000
+    )
   else()
     message(STATUS "Skipping schema bootstrap health test because psql was not found.")
   endif()

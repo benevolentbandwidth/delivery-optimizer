@@ -49,8 +49,13 @@ private:
     std::string worker_id;
     mutable std::mutex mutex;
     std::optional<std::string> current_job_id;
+    std::optional<std::chrono::steady_clock::time_point> last_heartbeat_at;
   };
 
+  void SetCurrentJobId(WorkerState& worker_state, std::optional<std::string> current_job_id);
+  [[nodiscard]] std::optional<std::string> CurrentJobId(const WorkerState& worker_state) const;
+  void MarkWorkerHeartbeat(WorkerState& worker_state);
+  [[nodiscard]] std::size_t CountHealthyWorkers() const;
   void WorkerLoop(std::stop_token stop_token, std::size_t worker_index);
   void HeartbeatLoop(std::stop_token stop_token);
   void SweepLoop(std::stop_token stop_token);
