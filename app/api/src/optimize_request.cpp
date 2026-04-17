@@ -408,6 +408,9 @@ void ApplyExternalIdsToRoutes(Json::Value& routes,
                               const std::map<std::uint64_t, std::string>& job_map) {
   for (Json::ArrayIndex route_index = 0U; route_index < routes.size(); ++route_index) {
     Json::Value& route = routes[route_index];
+    if (!route.isObject()) {
+      continue;
+    }
     const auto vehicle_id = route["vehicle"];
     if (vehicle_id.isUInt64()) {
       const auto vehicle_it = vehicle_map.find(vehicle_id.asUInt64());
@@ -423,6 +426,9 @@ void ApplyExternalIdsToRoutes(Json::Value& routes,
 
     for (Json::ArrayIndex step_index = 0U; step_index < steps.size(); ++step_index) {
       Json::Value& step = steps[step_index];
+      if (!step.isObject()) {
+        continue;
+      }
       const auto job_id = step["job"];
       if (!job_id.isUInt64()) {
         continue;
@@ -440,6 +446,9 @@ void ApplyExternalIdsToUnassigned(Json::Value& unassigned,
                                   const std::map<std::uint64_t, std::string>& job_map) {
   for (Json::ArrayIndex index = 0U; index < unassigned.size(); ++index) {
     Json::Value& job = unassigned[index];
+    if (!job.isObject()) {
+      continue;
+    }
     const auto job_id = job["id"];
     if (!job_id.isUInt64()) {
       continue;
