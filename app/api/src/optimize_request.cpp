@@ -412,7 +412,7 @@ void ApplyExternalIdsToRoutes(Json::Value& routes,
     if (vehicle_id.isUInt64()) {
       const auto vehicle_it = vehicle_map.find(vehicle_id.asUInt64());
       if (vehicle_it != vehicle_map.end()) {
-        route["vehicle_id"] = vehicle_it->second;
+        route["vehicle_external_id"] = vehicle_it->second;
       }
     }
 
@@ -430,7 +430,7 @@ void ApplyExternalIdsToRoutes(Json::Value& routes,
 
       const auto job_it = job_map.find(job_id.asUInt64());
       if (job_it != job_map.end()) {
-        step["job_id"] = job_it->second;
+        step["job_external_id"] = job_it->second;
       }
     }
   }
@@ -447,7 +447,7 @@ void ApplyExternalIdsToUnassigned(Json::Value& unassigned,
 
     const auto job_it = job_map.find(job_id.asUInt64());
     if (job_it != job_map.end()) {
-      job["job_id"] = job_it->second;
+      job["job_external_id"] = job_it->second;
     }
   }
 }
