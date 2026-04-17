@@ -206,6 +206,7 @@ TEST(ServerOptionsTest, ReadsOptimizationJobOptionsFromEnv) {
   ScopedEnvVar pg_dsn("DELIVERYOPTIMIZER_PG_DSN");
   ScopedEnvVar job_db_connections("DELIVERYOPTIMIZER_JOB_DB_CONNECTIONS");
   ScopedEnvVar job_workers("DELIVERYOPTIMIZER_JOB_WORKERS");
+  ScopedEnvVar job_max_queue_size("DELIVERYOPTIMIZER_JOB_MAX_QUEUE_SIZE");
   ScopedEnvVar job_poll_ms("DELIVERYOPTIMIZER_JOB_POLL_MS");
   ScopedEnvVar job_heartbeat_ms("DELIVERYOPTIMIZER_JOB_HEARTBEAT_MS");
   ScopedEnvVar job_sweep_ms("DELIVERYOPTIMIZER_JOB_SWEEP_MS");
@@ -216,6 +217,7 @@ TEST(ServerOptionsTest, ReadsOptimizationJobOptionsFromEnv) {
   pg_dsn.Set("host=postgres port=5432 dbname=deliveryoptimizer user=deliveryoptimizer");
   job_db_connections.Set("7");
   job_workers.Set("5");
+  job_max_queue_size.Set("21");
   job_poll_ms.Set("125");
   job_heartbeat_ms.Set("750");
   job_sweep_ms.Set("2000");
@@ -229,6 +231,7 @@ TEST(ServerOptionsTest, ReadsOptimizationJobOptionsFromEnv) {
   EXPECT_EQ(options.optimization_jobs.connection_string,
             "host=postgres port=5432 dbname=deliveryoptimizer user=deliveryoptimizer");
   EXPECT_EQ(options.optimization_jobs.connection_count, 7U);
+  EXPECT_EQ(options.optimization_jobs.max_queue_size, 21U);
   EXPECT_EQ(options.optimization_jobs.lease_duration, std::chrono::milliseconds{9000});
   EXPECT_EQ(options.optimization_jobs.result_ttl, std::chrono::seconds{120});
   EXPECT_EQ(options.optimization_job_runtime.worker_count, 5U);

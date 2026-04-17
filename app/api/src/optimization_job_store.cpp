@@ -12,6 +12,8 @@
 
 namespace {
 
+constexpr long long kCreateJobAdmissionLockId = 1684234842LL;
+
 [[nodiscard]] std::optional<Json::Value> ParseJsonText(const std::string& text) {
   Json::CharReaderBuilder builder;
   builder["collectComments"] = false;
@@ -288,28 +290,52 @@ bool OptimizationJobStore::EnsureSchema(std::string* detail) {
   }
 }
 
-std::optional<OptimizationJobRecord> OptimizationJobStore::CreateJob(const std::string& request_id,
-                                                                     const std::string& request_json,
-                                                                     const std::size_t jobs,
-                                                                     const std::size_t vehicles) {
+CreateOptimizationJobResult OptimizationJobStore::CreateJob(const std::string& request_id,
+                                                            const std::string& request_json,
+                                                            const std::size_t jobs,
+                                                            const std::size_t vehicles) {
   if (!IsConfigured()) {
-    return std::nullopt;
+    return {.status = CreateOptimizationJobStatus::kError};
   }
 
   const std::string job_id = drogon::utils::getUuid();
   try {
     const auto result = client_->execSqlSync(
+        "with admission_lock as ("
+        "  select pg_advisory_xact_lock($6::bigint)"
+        "), queued_job_count as ("
+        "  select count(*) as queued_jobs "
+        "  from optimization_jobs "
+        "  where status = 'queued'"
+        ") "
         "insert into optimization_jobs("
         "id, request_id, request_json, status, jobs_count, vehicles_count"
-        ") values($1, $2, $3::jsonb, 'queued', $4, $5) "
+        ") "
+        "select $1, $2, $3::jsonb, 'queued', $4, $5 "
+        "from admission_lock, queued_job_count "
+        "where (select queued_jobs from queued_job_count) < $7 "
         "returning id, request_id, status, jobs_count, vehicles_count, "
         "queued_at::text as queued_at, started_at::text as started_at, "
         "completed_at::text as completed_at, expires_at::text as expires_at, "
         "outcome, http_status, error_message, result_json::text as result_json",
-        job_id, request_id, request_json, static_cast<long long>(jobs), static_cast<long long>(vehicles));
-    return ReadJobRecord(result);
+        job_id, request_id, request_json, static_cast<long long>(jobs),
+        static_cast<long long>(vehicles), kCreateJobAdmissionLockId,
+        static_cast<long long>(config_.max_queue_size));
+    if (result.empty()) {
+      return {.status = CreateOptimizationJobStatus::kQueueFull};
+    }
+
+    auto record = ReadJobRecord(result);
+    if (!record.has_value()) {
+      return {.status = CreateOptimizationJobStatus::kError};
+    }
+
+    return {
+        .status = CreateOptimizationJobStatus::kCreated,
+        .record = std::move(record),
+    };
   } catch (...) {
-    return std::nullopt;
+    return {.status = CreateOptimizationJobStatus::kError};
   }
 }
 

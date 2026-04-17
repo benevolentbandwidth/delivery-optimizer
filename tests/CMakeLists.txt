@@ -517,6 +517,17 @@ if(INITDB_PROGRAM AND PG_CTL_PROGRAM)
     54000
   )
 
+  deliveryoptimizer_add_local_http_pg_test(
+    DeliveryOptimizerApiAsyncTest.RejectsWhenAsyncQueueIsFull
+    optimization_jobs_reject_when_queue_is_full_test.sh
+    60
+    "${DELIVERYOPTIMIZER_LOCAL_API_REGRESSION_LABELS}"
+  )
+  deliveryoptimizer_set_local_http_test_port(
+    DeliveryOptimizerApiAsyncTest.RejectsWhenAsyncQueueIsFull
+    57000
+  )
+
   if(PSQL_PROGRAM)
     add_test(
       NAME DeliveryOptimizerApiContractTest.HealthReportsSchemaBootstrapFailure

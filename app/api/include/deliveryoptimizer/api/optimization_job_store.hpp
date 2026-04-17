@@ -57,9 +57,21 @@ struct OptimizationJobStoreStats {
   std::size_t running_jobs{0U};
 };
 
+enum class CreateOptimizationJobStatus : std::uint8_t {
+  kCreated,
+  kQueueFull,
+  kError,
+};
+
+struct CreateOptimizationJobResult {
+  CreateOptimizationJobStatus status{CreateOptimizationJobStatus::kError};
+  std::optional<OptimizationJobRecord> record;
+};
+
 struct OptimizationJobStoreConfig {
   std::string connection_string;
   std::size_t connection_count{4U};
+  std::size_t max_queue_size{8U};
   std::chrono::milliseconds lease_duration{std::chrono::milliseconds{90000}};
   std::chrono::seconds result_ttl{std::chrono::hours{24}};
 };
@@ -74,10 +86,10 @@ public:
   [[nodiscard]] bool Ping(std::string* detail = nullptr);
   [[nodiscard]] bool EnsureSchema(std::string* detail = nullptr);
 
-  [[nodiscard]] std::optional<OptimizationJobRecord> CreateJob(const std::string& request_id,
-                                                               const std::string& request_json,
-                                                               std::size_t jobs,
-                                                               std::size_t vehicles);
+  [[nodiscard]] CreateOptimizationJobResult CreateJob(const std::string& request_id,
+                                                      const std::string& request_json,
+                                                      std::size_t jobs,
+                                                      std::size_t vehicles);
 
   [[nodiscard]] std::optional<ClaimedOptimizationJob> ClaimNextJob(const std::string& worker_id);
 

@@ -128,7 +128,16 @@ void RegisterOptimizationJobsEndpoints(drogon::HttpAppFramework& app,
         const auto created_job = store->CreateJob(context.request_id, RenderJson(*parsed_json),
                                                   parsed_request->size.jobs,
                                                   parsed_request->size.vehicles);
-        if (!created_job.has_value()) {
+        if (created_job.status == CreateOptimizationJobStatus::kQueueFull) {
+          FinalizeSolveRequest(observability, lifecycle, SolveRequestOutcome::kRejectedQueueFull,
+                               503U);
+          std::move(callback)(BuildErrorResponse(drogon::k503ServiceUnavailable,
+                                                 "Optimization job queue is full."));
+          return;
+        }
+
+        if (created_job.status != CreateOptimizationJobStatus::kCreated ||
+            !created_job.record.has_value()) {
           FinalizeSolveRequest(observability, lifecycle, SolveRequestOutcome::kFailed, 503U);
           std::move(callback)(BuildErrorResponse(
               drogon::k503ServiceUnavailable, "Optimization job submission failed."));
@@ -136,9 +145,9 @@ void RegisterOptimizationJobsEndpoints(drogon::HttpAppFramework& app,
         }
 
         FinalizeSolveRequest(observability, lifecycle, SolveRequestOutcome::kAcceptedAsync, 202U);
-        Json::Value body = BuildJobStatusBody(*created_job);
+        Json::Value body = BuildJobStatusBody(*created_job.record);
         auto response = BuildJsonResponse(body, drogon::k202Accepted);
-        response->addHeader("Location", "/api/v1/optimization-jobs/" + created_job->job_id);
+        response->addHeader("Location", "/api/v1/optimization-jobs/" + created_job.record->job_id);
         std::move(callback)(response);
       },
       {drogon::Post});
