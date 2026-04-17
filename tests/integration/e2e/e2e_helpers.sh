@@ -83,3 +83,24 @@ e2e_wait_for_api_health() {
     e2e_dump_logs_and_fail "http-server did not become ready on port ${api_port}"
   fi
 }
+
+e2e_wait_for_osrm_nearest_ok() {
+  local output_file="$1"
+  local osrm_port
+  local ready=false
+  osrm_port="$(e2e_resolve_env_value OSRM_INTERNAL_PORT 5001)"
+
+  for _ in $(seq 1 60); do
+    if e2e_compose exec -T osrm curl -fsS \
+      "http://127.0.0.1:${osrm_port}/nearest/v1/driving/-122.4194,37.7749?number=1&generate_hints=false" \
+      >"${output_file}" 2>/dev/null; then
+      ready=true
+      break
+    fi
+    sleep 2
+  done
+
+  if [[ "${ready}" != "true" ]]; then
+    e2e_dump_logs_and_fail "osrm nearest probe did not succeed"
+  fi
+}
