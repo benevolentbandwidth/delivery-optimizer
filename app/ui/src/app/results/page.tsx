@@ -29,12 +29,12 @@ export default function ResultsPage() {
     );
   }, [setRoutes]);
 
-  const updateStopCoordinates = useCallback( // Created a callback function updateStopCoordinates that the map can call when a pin is dragged to a new location. (New spot is this lat/lng)
-    (routeId: string, stopId: string, lat: number, lng: number) => { // Has 3 parameters: routeId, stopId, and lat/lng (new coordinates)
-      setRoutes((prev) => // Loop through all routes, if the route's id is not the one we're looking for, leave unchanged.
+  const updateStopCoordinates = useCallback(
+    (routeId: string, stopId: string, lat: number, lng: number) => {
+      setRoutes((prev) =>
         prev.map((route) => {
           if (route.vehicleId !== routeId) return route;
-          return { // Otherwise, create a new copy of that route to avoid editing it in place, and replace stops with a new list where each stop is the same except for the one that matches our stopId. This specific stop is updated with the new lat/lng
+          return {
             ...route,
             stops: route.stops.map((s) =>
               s.id === stopId ? { ...s, lat, lng } : s
