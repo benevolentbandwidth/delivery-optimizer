@@ -146,6 +146,9 @@ std::optional<OptimizationJobState> ParseOptimizationJobState(const std::string_
 }
 
 std::optional<SolveRequestOutcome> ParseSolveRequestOutcome(const std::string_view outcome) {
+  if (outcome == ToOutcomeString(SolveRequestOutcome::kAcceptedAsync)) {
+    return SolveRequestOutcome::kAcceptedAsync;
+  }
   if (outcome == ToOutcomeString(SolveRequestOutcome::kSucceeded)) {
     return SolveRequestOutcome::kSucceeded;
   }

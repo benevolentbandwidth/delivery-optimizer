@@ -148,7 +148,8 @@ fi
 for expected in \
   'deliveryoptimizer_async_job_queue_depth 0' \
   'deliveryoptimizer_async_job_running 0' \
-  'deliveryoptimizer_async_job_workers_healthy 1'; do
+  'deliveryoptimizer_async_job_workers_healthy 1' \
+  'deliveryoptimizer_solver_requests_succeeded_total 0'; do
   if ! grep -Fq "${expected}" "${metrics_file}"; then
     echo "expected metrics output to contain '${expected}'" >&2
     cat "${metrics_file}" >&2 || true

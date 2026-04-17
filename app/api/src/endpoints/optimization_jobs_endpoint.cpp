@@ -135,7 +135,7 @@ void RegisterOptimizationJobsEndpoints(drogon::HttpAppFramework& app,
           return;
         }
 
-        FinalizeSolveRequest(observability, lifecycle, SolveRequestOutcome::kSucceeded, 202U);
+        FinalizeSolveRequest(observability, lifecycle, SolveRequestOutcome::kAcceptedAsync, 202U);
         Json::Value body = BuildJobStatusBody(*created_job);
         auto response = BuildJsonResponse(body, drogon::k202Accepted);
         response->addHeader("Location", "/api/v1/optimization-jobs/" + created_job->job_id);

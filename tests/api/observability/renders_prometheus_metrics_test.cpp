@@ -107,6 +107,24 @@ TEST(ObservabilityRegistryTest, FinalizeSuccessfulAcceptedRequestIncrementsSucce
             std::string::npos);
 }
 
+TEST(ObservabilityRegistryTest, FinalizeAsyncAcceptanceDoesNotIncrementSucceededCounter) {
+  auto observability = std::make_shared<deliveryoptimizer::api::ObservabilityRegistry>();
+  auto lifecycle =
+      std::make_shared<deliveryoptimizer::api::SolveLifecycle>(BuildLifecycle("request-async"));
+
+  deliveryoptimizer::api::FinalizeSolveRequest(
+      observability, lifecycle, deliveryoptimizer::api::SolveRequestOutcome::kAcceptedAsync, 202);
+
+  const std::string rendered = observability->RenderPrometheusText();
+
+  EXPECT_NE(rendered.find("deliveryoptimizer_solver_requests_succeeded_total 0"),
+            std::string::npos);
+  EXPECT_NE(rendered.find("deliveryoptimizer_solver_requests_rejected_total 0"),
+            std::string::npos);
+  EXPECT_NE(rendered.find("deliveryoptimizer_solver_requests_failed_total 0"),
+            std::string::npos);
+}
+
 TEST(ObservabilityRegistryTest, FinalizeClientErrorsIncrementRejectedCounter) {
   constexpr std::array client_error_outcomes{
       deliveryoptimizer::api::SolveRequestOutcome::kInvalidJson,

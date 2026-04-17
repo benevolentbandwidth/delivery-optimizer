@@ -47,6 +47,7 @@ struct SolveLifecycle {
 class ObservabilityRegistry;
 
 enum class SolveRequestOutcome : std::uint8_t {
+  kAcceptedAsync,
   kSucceeded,
   kRejectedTooManyJobs,
   kRejectedTooManyVehicles,

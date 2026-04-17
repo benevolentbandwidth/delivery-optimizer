@@ -133,6 +133,8 @@ struct ObservabilityRegistry::Histogram {
 
 std::string_view ToOutcomeString(const SolveRequestOutcome outcome) {
   switch (outcome) {
+  case SolveRequestOutcome::kAcceptedAsync:
+    return "accepted_async";
   case SolveRequestOutcome::kSucceeded:
     return "succeeded";
   case SolveRequestOutcome::kRejectedTooManyJobs:
@@ -257,6 +259,8 @@ void FinalizeSolveRequest(const std::shared_ptr<ObservabilityRegistry>& observab
   }
 
   switch (outcome) {
+  case SolveRequestOutcome::kAcceptedAsync:
+    break;
   case SolveRequestOutcome::kSucceeded:
     observability->RecordSucceeded();
     break;
