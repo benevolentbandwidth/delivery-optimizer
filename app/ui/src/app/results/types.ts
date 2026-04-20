@@ -35,6 +35,10 @@ export interface Route {
   estimatedTimeMinutes?: number; // total estimated time in minutes
 }
 
+<<<<<<< HEAD
+=======
+// Unsaved pin drag in edit mode (single pending draft move)
+>>>>>>> 6d54429c (rebased and fixed merge conflicts)
 export interface PendingPinMove {
   vehicleId: string;
   stopId: string;
