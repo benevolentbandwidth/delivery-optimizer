@@ -17,6 +17,8 @@ pg_ctl_bin="$5"
 psql_bin="$6"
 health_file="${work_dir}/health.json"
 submit_file="${work_dir}/submit.json"
+status_file="${work_dir}/status.json"
+result_file="${work_dir}/result.json"
 stub_bin="${work_dir}/vroom-stub.sh"
 osrm_stub="${work_dir}/osrm_stub.py"
 osrm_log_file="${work_dir}/osrm.log"
@@ -118,5 +120,23 @@ submit_http_code="$("${curl_bin}" -sS -o "${submit_file}" -w "%{http_code}" \
 if [[ "${submit_http_code}" != "503" ]]; then
   echo "expected optimization job submission to return HTTP 503 when schema is unavailable, got ${submit_http_code}" >&2
   cat "${submit_file}" >&2 || true
+  exit 1
+fi
+
+status_http_code="$("${curl_bin}" -sS -o "${status_file}" -w "%{http_code}" \
+  "$(http_server_url /api/v1/optimization-jobs/example-job)")"
+
+if [[ "${status_http_code}" != "503" ]]; then
+  echo "expected optimization job status to return HTTP 503 when schema is unavailable, got ${status_http_code}" >&2
+  cat "${status_file}" >&2 || true
+  exit 1
+fi
+
+result_http_code="$("${curl_bin}" -sS -o "${result_file}" -w "%{http_code}" \
+  "$(http_server_url /api/v1/optimization-jobs/example-job/result)")"
+
+if [[ "${result_http_code}" != "503" ]]; then
+  echo "expected optimization job result to return HTTP 503 when schema is unavailable, got ${result_http_code}" >&2
+  cat "${result_file}" >&2 || true
   exit 1
 fi

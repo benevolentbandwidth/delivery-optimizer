@@ -35,6 +35,30 @@ namespace {
   return BuildJsonResponse(body, drogon::k400BadRequest);
 }
 
+[[nodiscard]] drogon::HttpResponsePtr BuildOptimizationJobsUnavailableResponse(
+    const std::shared_ptr<deliveryoptimizer::api::OptimizationJobStore>& store,
+    const std::shared_ptr<deliveryoptimizer::api::OptimizationJobRuntime>& runtime) {
+  if (store == nullptr || !store->IsConfigured()) {
+    return BuildErrorResponse(drogon::k503ServiceUnavailable,
+                              "Optimization jobs are not configured.");
+  }
+
+  if (runtime == nullptr || !runtime->IsSchemaReady()) {
+    Json::Value body{Json::objectValue};
+    body["error"] = "Optimization jobs are unavailable.";
+    if (runtime != nullptr) {
+      const auto detail = runtime->SchemaStatusDetail();
+      if (!detail.empty()) {
+        body["detail"] = detail;
+      }
+    }
+    return BuildJsonResponse(body, drogon::k503ServiceUnavailable);
+  }
+
+  return BuildErrorResponse(drogon::k503ServiceUnavailable,
+                            "Optimization jobs are unavailable.");
+}
+
 [[nodiscard]] Json::Value BuildJobUrls(const std::string& job_id) {
   Json::Value urls{Json::objectValue};
   urls["status"] = "/api/v1/optimization-jobs/" + job_id;
@@ -97,8 +121,7 @@ void RegisterOptimizationJobsEndpoints(drogon::HttpAppFramework& app,
         if (store == nullptr || runtime == nullptr || !store->IsConfigured() ||
             !runtime->IsSchemaReady()) {
           FinalizeSolveRequest(observability, lifecycle, SolveRequestOutcome::kFailed, 503U);
-          std::move(callback)(BuildErrorResponse(drogon::k503ServiceUnavailable,
-                                                 "Optimization jobs are not configured."));
+          std::move(callback)(BuildOptimizationJobsUnavailableResponse(store, runtime));
           return;
         }
 
@@ -154,12 +177,13 @@ void RegisterOptimizationJobsEndpoints(drogon::HttpAppFramework& app,
 
   app.registerHandlerViaRegex(
       "^/api/v1/optimization-jobs/([A-Za-z0-9-]+)/result$",
-      [store = store](const drogon::HttpRequestPtr& /*request*/,
-                      std::function<void(const drogon::HttpResponsePtr&)>&& callback,
-                      const std::string& job_id) {
-        if (store == nullptr || !store->IsConfigured()) {
-          std::move(callback)(BuildErrorResponse(drogon::k503ServiceUnavailable,
-                                                 "Optimization jobs are not configured."));
+      [store = store, runtime = runtime](const drogon::HttpRequestPtr& /*request*/,
+                                         std::function<void(const drogon::HttpResponsePtr&)>&&
+                                             callback,
+                                         const std::string& job_id) {
+        if (store == nullptr || !store->IsConfigured() || runtime == nullptr ||
+            !runtime->IsSchemaReady()) {
+          std::move(callback)(BuildOptimizationJobsUnavailableResponse(store, runtime));
           return;
         }
 
@@ -182,12 +206,13 @@ void RegisterOptimizationJobsEndpoints(drogon::HttpAppFramework& app,
 
   app.registerHandlerViaRegex(
       "^/api/v1/optimization-jobs/([A-Za-z0-9-]+)$",
-      [store = store](const drogon::HttpRequestPtr& /*request*/,
-                      std::function<void(const drogon::HttpResponsePtr&)>&& callback,
-                      const std::string& job_id) {
-        if (store == nullptr || !store->IsConfigured()) {
-          std::move(callback)(BuildErrorResponse(drogon::k503ServiceUnavailable,
-                                                 "Optimization jobs are not configured."));
+      [store = store, runtime = runtime](const drogon::HttpRequestPtr& /*request*/,
+                                         std::function<void(const drogon::HttpResponsePtr&)>&&
+                                             callback,
+                                         const std::string& job_id) {
+        if (store == nullptr || !store->IsConfigured() || runtime == nullptr ||
+            !runtime->IsSchemaReady()) {
+          std::move(callback)(BuildOptimizationJobsUnavailableResponse(store, runtime));
           return;
         }
 
