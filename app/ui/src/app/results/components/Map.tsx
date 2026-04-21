@@ -6,18 +6,16 @@ import { useCallback, useEffect, useMemo, useRef, useState, Fragment } from "rea
 import { LoadScriptNext, GoogleMap, Marker, useGoogleMap } from "@react-google-maps/api";
 import type { PendingPinMove, Route } from "../types";
 
-const DAVIS_CENTER = { lat: 38.5449, lng: -121.7405 }; // Map center coordinates for Davis,CA (Google Maps needs as an initial center to position the initial view of the map)
-const POLYLINE_COLOR = "#2563eb"; // Blue path per route (single mock route)
+const DAVIS_CENTER = { lat: 38.5449, lng: -121.7405 };
+const POLYLINE_COLOR = "#2563eb";
 
-// Made a one shared style object for the polylines (color, weight, opacity) so we can reuse it when we call new google.maps.polyline() so a new style object isn't created each render
 const ROUTE_POLYLINE_OPTIONS: google.maps.PolylineOptions = {
   strokeColor: POLYLINE_COLOR,
   strokeWeight: 5,
   strokeOpacity: 0.9,
 };
 
-// Now that <Polyline> is no longer used, we created a function (buildRoutePath) that reapplies some of the same logic from the old <Polyline component
-function buildRoutePath( // This function builds the lists of points for line to draw by sorting stops by sequence (visit order) and checking each stop in order if it's the one with an unsaved drag draft (if so use that draft coords)
+function buildRoutePath(
   route: Route,
   pendingPinMove: PendingPinMove | null
 ): google.maps.LatLngLiteral[] {
@@ -29,13 +27,10 @@ function buildRoutePath( // This function builds the lists of points for line to
     ) {
       return { lat: pendingPinMove.lat, lng: pendingPinMove.lng };
     }
-    return { lat: s.lat, lng: s.lng }; // result is a array of coords for the polyline to follow
+    return { lat: s.lat, lng: s.lng };
   });
 }
 
-// The following function replaced the old <Polyline> component, here we perform the same task of drawing the polylines, but we talk to the Google maps objects directly (javascript api in browser: new google.maps.Polyline(), setMap(null))
-// setMap(null) removes the previous polyline from the map when pendingPinMove changes, routes change (after save), or the map unmounts
-// Build path with buildRoutePath and remember those objects in polylineRef so we can clear them next time
 function RoutePolylinesOverlay({
   routes,
   pendingPinMove,
@@ -76,8 +71,8 @@ function RoutePolylinesOverlay({
   return null;
 }
 
-function latLngFromMarkerPosition( // after a drag, google maps can provide the new lat/lng object in either LatLng (.lat(), .lng()) or plain object (.lat, .lng)
-  p: google.maps.marker.AdvancedMarkerElement["position"] // this function looks at the what type object we have and turns into the sample format of {lat: number, lng: number}, and if it doesn't understand the value still, it returns null again
+function latLngFromMarkerPosition(
+  p: google.maps.marker.AdvancedMarkerElement["position"]
 ): { lat: number; lng: number } | null {
   if (p == null) return null;
   if (typeof (p as google.maps.LatLng).lat === "function") {
@@ -93,19 +88,23 @@ function latLngFromMarkerPosition( // after a drag, google maps can provide the 
 
 type MapComponentProps = {
   routes: Route[];
-  isEditMode: boolean; // defining the props that map component receives from parent (page.tsx)
+  isEditMode: boolean;
   pendingPinMove?: PendingPinMove | null;
   onPendingPinMove?: (vehicleId: string, stopId: string, lat: number, lng: number) => void;
   onUpdateStopCoordinates?: (routeId: string, stopId: string, lat: number, lng: number) => void;
 };
 
-type AdvancedMarkersProps = { // Before AdvancedMarkers only needed map and routes, but now it needs five props, so we pulled the shape out instead of writing inline in the function
+type AdvancedMarkersProps = {
   map: google.maps.Map | null;
   routes: Route[];
   isEditMode: boolean;
   pendingPinMove: PendingPinMove | null;
   onPendingPinMove: (vehicleId: string, stopId: string, lat: number, lng: number) => void;
 };
+
+function stopKey(vehicleId: string, stopId: string): string {
+  return `${vehicleId}:${stopId}`;
+}
 
 function AdvancedMarkers({
   map,
@@ -115,31 +114,31 @@ function AdvancedMarkers({
   onPendingPinMove,
 }: AdvancedMarkersProps) {
   const markersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
+  const markerByStopKeyRef = useRef<Record<string, google.maps.marker.AdvancedMarkerElement>>({});
+  const pendingPinMoveRef = useRef(pendingPinMove);
 
+  useEffect(() => {
+    pendingPinMoveRef.current = pendingPinMove;
+  }, [pendingPinMove]);
+
+  // Rebuild markers only when map, routes, edit mode, or handler identity change — not on every draft coord update.
   useEffect(() => {
     if (!map || routes.length === 0) return;
 
     let cancelled = false;
     const markers: google.maps.marker.AdvancedMarkerElement[] = [];
+    markerByStopKeyRef.current = {};
 
     (async () => {
       try {
-        const { AdvancedMarkerElement } = (await google.maps.importLibrary( // We import the library that contains the Advanced Maker Element (class, where each pin on the map is an instance of that class)
-          "marker"
-        )) as google.maps.MarkerLibrary;
+        const { AdvancedMarkerElement } = (await google.maps.importLibrary("marker")) as google.maps.MarkerLibrary;
 
-        if (cancelled) return; // If cancelled is true, meaning the component might've unmounted, we stop and don't create any pins
+        if (cancelled) return;
 
-        routes.forEach((route) => { // For each route, we take its stops and sort them by sequence (visit order). We copy the array first so we don't mutate the original array
+        routes.forEach((route) => {
           const sorted = [...route.stops].sort((a, b) => a.sequence - b.sequence);
           sorted.forEach((stop) => {
-            const atPending = // creating a variable to check if the current stop is the one we dragged but unsaved yet
-              pendingPinMove != null &&
-              pendingPinMove.vehicleId === route.vehicleId &&
-              pendingPinMove.stopId === stop.id;
-            const position = atPending // creating a variable to determine the position of the pin, if atPending then use draft coords from pendingPinMove (unsaved dragged), otherwise use saved coords from stop obj
-              ? { lat: pendingPinMove.lat, lng: pendingPinMove.lng }
-              : { lat: stop.lat, lng: stop.lng };
+            const position = { lat: stop.lat, lng: stop.lng };
 
             const m = new AdvancedMarkerElement({
               map,
@@ -148,17 +147,18 @@ function AdvancedMarkers({
               gmpDraggable: isEditMode,
             });
 
-            m.addListener("dragend", () => { //
-              const ll = latLngFromMarkerPosition(m.position); // read where pin ended
+            m.addListener("dragend", () => {
+              const ll = latLngFromMarkerPosition(m.position);
               if (!ll) return;
-              onPendingPinMove(route.vehicleId, stop.id, ll.lat, ll.lng); // call onPendingPinMove so page updates draft only (advanced marker version of onDragEnd in <Marker>)
+              onPendingPinMove(route.vehicleId, stop.id, ll.lat, ll.lng);
             });
 
             markers.push(m);
+            markerByStopKeyRef.current[stopKey(route.vehicleId, stop.id)] = m;
           });
         });
 
-        if (cancelled) { // Setting cancelled to true in cleanup since react will re-run the effect while component is mounted, as it may create duplicate pins or stale drag handlers from an older effect
+        if (cancelled) {
           markers.forEach((m) => {
             google.maps.event.clearInstanceListeners(m);
             m.map = null;
@@ -167,8 +167,14 @@ function AdvancedMarkers({
         }
 
         markersRef.current = markers;
+
+        const p = pendingPinMoveRef.current;
+        if (p) {
+          const m = markerByStopKeyRef.current[stopKey(p.vehicleId, p.stopId)];
+          if (m) m.position = { lat: p.lat, lng: p.lng };
+        }
       } catch {
-        // In the event of library failed to load or no mapID, then we catch and the map just won't show any pins
+        // Advanced markers need mapId; missing library leaves map without pins.
       }
     })();
 
@@ -179,28 +185,45 @@ function AdvancedMarkers({
         m.map = null;
       });
       markersRef.current = [];
+      markerByStopKeyRef.current = {};
     };
-  }, [map, routes, pendingPinMove, isEditMode, onPendingPinMove]);
+  }, [map, routes, isEditMode, onPendingPinMove]);
+
+  // Move one pin for drafts, or snap all pins back to `routes` when draft clears — avoids rebuilding every marker on each drag.
+  useEffect(() => {
+    if (!map) return;
+    if (pendingPinMove) {
+      const m = markerByStopKeyRef.current[stopKey(pendingPinMove.vehicleId, pendingPinMove.stopId)];
+      if (m) m.position = { lat: pendingPinMove.lat, lng: pendingPinMove.lng };
+      return;
+    }
+    routes.forEach((route) => {
+      route.stops.forEach((stop) => {
+        const m = markerByStopKeyRef.current[stopKey(route.vehicleId, stop.id)];
+        if (m) m.position = { lat: stop.lat, lng: stop.lng };
+      });
+    });
+  }, [map, pendingPinMove, routes]);
 
   return null;
 }
 
-export default function MapComponent({ // Receiving props (routes, isEditMode, pendingPinMove, onPendingPinMove) from parent (page.tsx)
+export default function MapComponent({
   routes,
   isEditMode,
   pendingPinMove = null,
   onPendingPinMove,
   onUpdateStopCoordinates,
 }: MapComponentProps) {
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? ""; // API key for Google Maps API
-  const mapId = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID || undefined; // mapId is the ID of the map instance, Advanced Markers needs a map id
-  const [map, setMap] = useState<google.maps.Map | null>(null); // Creating a state variable to hold the map instance, initially null, but when Google calls the onMapLoad function, we'll call setMap(mapInstance) to save it
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? "";
+  const mapId = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID || undefined;
+  const [map, setMap] = useState<google.maps.Map | null>(null);
 
-  const onMapLoad = useCallback( // onMapLoad is called when maps finished loading and gives us the map instance
+  const onMapLoad = useCallback(
     (mapInstance: google.maps.Map) => {
-      setMap(mapInstance); // saving map instance in state so AdvancedMarkers can use it
+      setMap(mapInstance);
       if (routes.length === 0) return;
-      const bounds = new google.maps.LatLngBounds(); // Create an empty box (LatLngBounds), then for each stop in every route, we extend that box to include the stop's lat/lng coords
+      const bounds = new google.maps.LatLngBounds();
       routes.forEach((route) => {
         route.stops.forEach((s) => bounds.extend({ lat: s.lat, lng: s.lng }));
       });
@@ -221,7 +244,6 @@ export default function MapComponent({ // Receiving props (routes, isEditMode, p
     [onPendingPinMove, onUpdateStopCoordinates]
   );
 
-  // When the browser window is resized, tell the map to redraw so it fills the new container size
   useEffect(() => {
     if (!map || typeof google === "undefined") return;
     const handleResize = () => {
@@ -231,7 +253,7 @@ export default function MapComponent({ // Receiving props (routes, isEditMode, p
     return () => window.removeEventListener("resize", handleResize);
   }, [map]);
 
-  const mapOptions = useMemo( // mapOptions is the options for the map, including center and zoom level. useMemo builds that one object once and reuse it until mapId changes
+  const mapOptions = useMemo(
     (): google.maps.MapOptions => ({
       center: DAVIS_CENTER,
       zoom: 11,
@@ -250,15 +272,15 @@ export default function MapComponent({ // Receiving props (routes, isEditMode, p
 
   return (
     <div className="w-full h-full rounded-lg">
-      <LoadScriptNext // small component that loads google maps script, then renders map components inside it
-        googleMapsApiKey={apiKey} // script needs api key
-        mapIds={mapId ? [mapId] : undefined} // advanced markers needs map id
+      <LoadScriptNext
+        googleMapsApiKey={apiKey}
+        mapIds={mapId ? [mapId] : undefined}
         loadingElement={<div className="min-h-[70vh] bg-zinc-100 animate-pulse rounded-lg" />}
       >
-        <GoogleMap // component that draws the map
+        <GoogleMap
           mapContainerStyle={{ width: "100%", height: "100%" }}
           options={mapOptions}
-          onLoad={onMapLoad} // when maps finished loading, google calls this and passes the map instance
+          onLoad={onMapLoad}
           onUnmount={onUnmount}
         >
           <RoutePolylinesOverlay routes={routes} pendingPinMove={pendingPinMove} />
@@ -281,7 +303,7 @@ export default function MapComponent({ // Receiving props (routes, isEditMode, p
                       pendingPinMove != null &&
                       pendingPinMove.vehicleId === route.vehicleId &&
                       pendingPinMove.stopId === stop.id;
-                    const position = atPending // position uses the new lat/lng coordinates if the stop is the one that we dragged but haven't saved yet, otherwise uses the original lat/lng coordinates
+                    const position = atPending
                       ? { lat: pendingPinMove.lat, lng: pendingPinMove.lng }
                       : { lat: stop.lat, lng: stop.lng };
                     return (
@@ -290,7 +312,7 @@ export default function MapComponent({ // Receiving props (routes, isEditMode, p
                         position={position}
                         title={stop.address}
                         draggable={isEditMode}
-                        onDragEnd={(e) => { // onDragEnd calls onPendingPinMove to update the temporary data in pendingPinMove state, not routes until user saves
+                        onDragEnd={(e) => {
                           const latLng = e.latLng;
                           if (!latLng) return;
                           notifyPinMove(
