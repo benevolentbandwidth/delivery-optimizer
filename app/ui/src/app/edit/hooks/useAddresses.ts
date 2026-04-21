@@ -17,9 +17,8 @@ export function useAddresses() {
       editingExisting: false,
       recipientAddress: "",
       timeBuffer: "",
-      deliveryTimeMode: "by",
-      deliveryBy: "",
-      deliveryBetween: "",
+      deliveryTimeStart: "",
+      deliveryTimeEnd: "",
       deliveryQuantity: 0,
       notes: "",
     },
@@ -58,8 +57,8 @@ export function useAddresses() {
     setAddressPage(1);
   }, []);
 
-  // After submit attempts, drive inline error styling until the user fixes fields.
-  const [addressTouched, setAddressTouched] = useState(false);
+  // Set of address IDs whose fields should show validation errors.
+  const [touchedIds, setTouchedIds] = useState<Set<number>>(new Set());
 
   // The single unlocked row must be complete before another "Add" is allowed.
   const activeAddress = addresses.find((a) => !a.locked);
@@ -94,11 +93,11 @@ export function useAddresses() {
         active.deliveryQuantity > 0;
 
       if (!allLocked && !isValid) {
-        setAddressTouched(true);
+        if (active) setTouchedIds((t) => new Set([...t, active.id]));
         return prev;
       }
 
-      setAddressTouched(false);
+      setTouchedIds(new Set());
       _setSearchQuery("");
       const newId = prev.reduce((max, a) => Math.max(max, a.id), 0) + 1;
       setAddressPage(Math.ceil((prev.length + 1) / ADDRESSES_PER_PAGE));
@@ -111,9 +110,8 @@ export function useAddresses() {
           editingExisting: false,
           recipientAddress: "",
           timeBuffer: "",
-          deliveryTimeMode: "by",
-          deliveryBy: "",
-          deliveryBetween: "",
+          deliveryTimeStart: "",
+          deliveryTimeEnd: "",
           deliveryQuantity: 0,
           notes: "",
         },
@@ -131,6 +129,11 @@ export function useAddresses() {
       setAddressPage((p) => Math.min(p, maxPage));
       return next;
     });
+    setTouchedIds((t) => {
+      const next = new Set(t);
+      next.delete(id);
+      return next;
+    });
   }, []);
 
   // Re-open a saved row for editing (shows Confirm in the card).
@@ -138,6 +141,11 @@ export function useAddresses() {
     setAddresses((prev) =>
       prev.map((a) => (a.id === id ? { ...a, locked: false, editingExisting: true } : a))
     );
+    setTouchedIds((t) => {
+      const next = new Set(t);
+      next.delete(id);
+      return next;
+    });
   }, []);
 
   // Validate required fields, then lock the row back to read-only gray cells.
@@ -149,15 +157,25 @@ export function useAddresses() {
         a.recipientAddress.trim() !== "" &&
         a.deliveryQuantity > 0;
       if (!valid) {
-        setAddressTouched(true);
+        setTouchedIds((t) => new Set([...t, id]));
         return prev;
       }
-      setAddressTouched(false);
+      setTouchedIds((t) => {
+        const next = new Set(t);
+        next.delete(id);
+        return next;
+      });
       return prev.map((x) => (x.id === id ? { ...x, locked: true, editingExisting: false } : x));
     });
   }, []);
 
-  // Public API for the address section + pagination.
+  const importAddresses = useCallback((incoming: AddressCard[]) => {
+    if (incoming.length === 0) return;
+    setAddresses(incoming);
+    setAddressPage(1);
+    setTouchedIds(new Set());
+    _setSearchQuery("");
+  }, []);
   return {
     addresses,
     updateAddress,
@@ -165,7 +183,8 @@ export function useAddresses() {
     deleteAddress,
     unlockAddress,
     confirmAddress,
-    addressTouched,
+    importAddresses,
+    touchedIds,
     addressPage,
     setAddressPage,
     totalAddressPages,
