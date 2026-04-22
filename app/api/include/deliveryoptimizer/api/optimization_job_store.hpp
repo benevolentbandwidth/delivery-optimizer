@@ -26,7 +26,13 @@ enum class OptimizationJobState : std::uint8_t {
   kExpired,
 };
 
+enum class OptimizationJobFailureState : std::uint8_t {
+  kFailed,
+  kTimedOut,
+};
+
 [[nodiscard]] std::string_view ToOptimizationJobStateString(OptimizationJobState state);
+[[nodiscard]] std::string_view ToOptimizationJobStateString(OptimizationJobFailureState state);
 [[nodiscard]] std::optional<OptimizationJobState> ParseOptimizationJobState(std::string_view state);
 [[nodiscard]] std::optional<SolveRequestOutcome> ParseSolveRequestOutcome(std::string_view outcome);
 
@@ -102,7 +108,7 @@ public:
 
   [[nodiscard]] bool CompleteJobFailure(const std::string& job_id,
                                         const std::string& worker_id,
-                                        OptimizationJobState state,
+                                        OptimizationJobFailureState state,
                                         SolveRequestOutcome outcome, std::uint16_t http_status,
                                         const std::string& error_message);
 

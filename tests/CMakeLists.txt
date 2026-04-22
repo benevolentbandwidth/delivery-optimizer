@@ -496,13 +496,13 @@ if(INITDB_PROGRAM AND PG_CTL_PROGRAM)
   )
 
   deliveryoptimizer_add_local_http_pg_test(
-    DeliveryOptimizerApiAsyncTest.OptimizationJobResultReturnsConflictWhileRunning
+    DeliveryOptimizerApiAsyncTest.OptimizationJobResultReturnsAcceptedWhileRunning
     optimization_job_result_conflict_while_running_test.sh
     60
     "${DELIVERYOPTIMIZER_LOCAL_API_REGRESSION_LABELS}"
   )
   deliveryoptimizer_set_local_http_test_port(
-    DeliveryOptimizerApiAsyncTest.OptimizationJobResultReturnsConflictWhileRunning
+    DeliveryOptimizerApiAsyncTest.OptimizationJobResultReturnsAcceptedWhileRunning
     53000
   )
 
@@ -537,6 +537,17 @@ if(INITDB_PROGRAM AND PG_CTL_PROGRAM)
   deliveryoptimizer_set_local_http_test_port(
     DeliveryOptimizerApiAsyncTest.ExpiredLeaseFailsAfterMaxAttempts
     58000
+  )
+
+  deliveryoptimizer_add_local_http_pg_test(
+    DeliveryOptimizerApiAsyncTest.ResultReturnsConflictAfterTerminalFailure
+    optimization_job_result_conflict_after_terminal_failure_test.sh
+    60
+    "${DELIVERYOPTIMIZER_LOCAL_API_REGRESSION_LABELS}"
+  )
+  deliveryoptimizer_set_local_http_test_port(
+    DeliveryOptimizerApiAsyncTest.ResultReturnsConflictAfterTerminalFailure
+    59000
   )
 
   if(PSQL_PROGRAM)

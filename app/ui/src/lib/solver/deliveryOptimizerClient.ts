@@ -39,6 +39,11 @@ type ErrorOptions = {
   body?: unknown
 }
 
+type JsonResponse<T> = {
+  status: number
+  body: T
+}
+
 function createError(
   message: string,
   options: ErrorOptions
@@ -97,6 +102,13 @@ async function requestJson<T>(
   path: string,
   options: RequestInit = {}
 ): Promise<T> {
+  return (await requestJsonResponse<T>(path, options)).body
+}
+
+async function requestJsonResponse<T>(
+  path: string,
+  options: RequestInit = {}
+): Promise<JsonResponse<T>> {
   const url = `${API_BASE}${path}`
 
   const response = await retry(async () => {
@@ -143,7 +155,10 @@ async function requestJson<T>(
   }
 
   try {
-    return (await response.json()) as T
+    return {
+      status: response.status,
+      body: (await response.json()) as T,
+    }
   } catch {
     throw createError("Optimizer returned invalid JSON", {
       retryable: false,
@@ -170,8 +185,10 @@ export async function getOptimizationJobStatus(
   )
 }
 
-export async function getOptimizationJobResult(jobId: string): Promise<unknown> {
-  return requestJson<unknown>(
+export async function getOptimizationJobResult(
+  jobId: string
+): Promise<JsonResponse<unknown>> {
+  return requestJsonResponse<unknown>(
     `${OPTIMIZATION_JOBS_PATH}/${encodeURIComponent(jobId)}/result`
   )
 }

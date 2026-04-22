@@ -33,6 +33,7 @@ target_sources(
       include/deliveryoptimizer/api/endpoints/optimization_jobs_endpoint.hpp
       include/deliveryoptimizer/api/endpoints/optimize_endpoint.hpp
       include/deliveryoptimizer/api/endpoints/osrm_proxy_endpoint.hpp
+      include/deliveryoptimizer/api/internal/json_utils.hpp
       include/deliveryoptimizer/api/optimization_job_runtime.hpp
       include/deliveryoptimizer/api/optimization_job_store.hpp
       include/deliveryoptimizer/api/observability.hpp

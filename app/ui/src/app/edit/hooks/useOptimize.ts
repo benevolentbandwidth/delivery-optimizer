@@ -4,11 +4,14 @@
  */
 
 import { useCallback, useState } from "react"
+import { useRouter } from "next/navigation"
 
 import { geocodeAddress } from "@/app/components/AddressGeocoder/utils/nominatim"
 
 import { addressCardToDeliveryInput, vehicleRowToVehicleInput } from "../utils/optimizeMapper"
+import { vroomToRoutes } from "../utils/vroomToRoutes"
 import type { AddressCard, CapacityUnit, LockedVehicleRow, VehicleRow } from "../types/delivery"
+import type { VroomResponse } from "../types/vroomResponse"
 
 const SUPPORTED_STATES = new Set(["California", "Texas", "Florida"])
 const POLL_INTERVAL_MS = 500
@@ -71,6 +74,7 @@ function sleep(ms: number): Promise<void> {
 }
 
 export function useOptimize(vehicles: VehicleRow[], addresses: AddressCard[]) {
+  const router = useRouter()
   const [isOptimizing, setIsOptimizing] = useState(false)
   const [optimizeError, setOptimizeError] = useState<string | null>(null)
   const [geocodeFailedAddressIds, setGeocodeFailedAddressIds] = useState<number[]>([])
@@ -256,6 +260,10 @@ export function useOptimize(vehicles: VehicleRow[], addresses: AddressCard[]) {
             { cache: "no-store" }
           )
           const resultBody = await readJsonResponse(resultResponse)
+          if (resultResponse.status === 202) {
+            await sleep(POLL_INTERVAL_MS)
+            continue
+          }
           if (!resultResponse.ok) {
             setOptimizeError(
               readErrorMessage(resultBody, "Failed to fetch optimization job result.")
@@ -264,6 +272,13 @@ export function useOptimize(vehicles: VehicleRow[], addresses: AddressCard[]) {
           }
 
           setResult(resultBody)
+          const routes = vroomToRoutes(
+            resultBody as VroomResponse,
+            lockedVehicles,
+            addresses
+          )
+          sessionStorage.setItem("optimizeResults", JSON.stringify(routes))
+          router.push("/results")
           return
         }
 
@@ -287,7 +302,7 @@ export function useOptimize(vehicles: VehicleRow[], addresses: AddressCard[]) {
     } finally {
       setIsOptimizing(false)
     }
-  }, [vehicles, addresses])
+  }, [vehicles, addresses, router])
 
   const clearOptimizeError = useCallback(() => {
     setOptimizeError(null)

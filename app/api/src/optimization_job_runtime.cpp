@@ -1,31 +1,15 @@
 #include "deliveryoptimizer/api/optimization_job_runtime.hpp"
 
+#include "deliveryoptimizer/api/internal/json_utils.hpp"
 #include "deliveryoptimizer/api/optimize_request.hpp"
 #include "deliveryoptimizer/api/solve_execution.hpp"
 
 #include <drogon/utils/Utilities.h>
-#include <json/json.h>
 
 #include <chrono>
 #include <thread>
 
 namespace {
-
-[[nodiscard]] std::optional<Json::Value> ParseJsonText(const std::string& text) {
-  Json::CharReaderBuilder builder;
-  builder["collectComments"] = false;
-
-  Json::Value root;
-  JSONCPP_STRING errors;
-  std::unique_ptr<Json::CharReader> reader{builder.newCharReader()};
-  const char* begin = text.data();
-  const char* end = begin + text.size();
-  if (!reader->parse(begin, end, &root, &errors)) {
-    return std::nullopt;
-  }
-
-  return root;
-}
 
 [[nodiscard]] std::string BuildWorkerIdPrefix() {
   return "opt-worker-" + drogon::utils::getUuid();
@@ -177,13 +161,13 @@ void OptimizationJobRuntime::WorkerLoop(const std::stop_token stop_token, const 
     }
     RefreshObservability();
 
-    const auto parsed_json = ParseJsonText(claimed_job->request_json);
+    const auto parsed_json = internal::ParseJsonText(claimed_job->request_json);
     Json::Value issues{Json::arrayValue};
     const auto parsed_request =
         parsed_json.has_value() ? ParseAndValidateOptimizeRequest(*parsed_json, issues) : std::nullopt;
     if (!parsed_request.has_value()) {
       if (store_->CompleteJobFailure(claimed_job->record.job_id, claimed_job->worker_id,
-                                     OptimizationJobState::kFailed,
+                                     OptimizationJobFailureState::kFailed,
                                      SolveRequestOutcome::kFailed, 500U,
                                      "Stored optimization request is invalid.")) {
         if (observability_ != nullptr) {
@@ -203,11 +187,11 @@ void OptimizationJobRuntime::WorkerLoop(const std::stop_token stop_token, const 
           }
         }
       } else {
-        const OptimizationJobState final_state =
+        const OptimizationJobFailureState final_state =
             (solve_result.outcome == SolveRequestOutcome::kSolveTimedOut ||
              solve_result.outcome == SolveRequestOutcome::kQueueWaitTimedOut)
-                ? OptimizationJobState::kTimedOut
-                : OptimizationJobState::kFailed;
+                ? OptimizationJobFailureState::kTimedOut
+                : OptimizationJobFailureState::kFailed;
         if (store_->CompleteJobFailure(claimed_job->record.job_id, claimed_job->worker_id,
                                        final_state,
                                        solve_result.outcome, solve_result.http_status,

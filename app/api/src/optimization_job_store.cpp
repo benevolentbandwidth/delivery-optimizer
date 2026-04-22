@@ -1,4 +1,5 @@
 #include "deliveryoptimizer/api/optimization_job_store.hpp"
+#include "deliveryoptimizer/api/internal/json_utils.hpp"
 
 #include <drogon/orm/DbClient.h>
 #include <drogon/orm/Exception.h>
@@ -13,22 +14,6 @@
 namespace {
 
 constexpr long long kCreateJobAdmissionLockId = 1684234842LL;
-
-[[nodiscard]] std::optional<Json::Value> ParseJsonText(const std::string& text) {
-  Json::CharReaderBuilder builder;
-  builder["collectComments"] = false;
-
-  Json::Value root;
-  JSONCPP_STRING errors;
-  std::unique_ptr<Json::CharReader> reader{builder.newCharReader()};
-  const char* begin = text.data();
-  const char* end = begin + text.size();
-  if (!reader->parse(begin, end, &root, &errors)) {
-    return std::nullopt;
-  }
-
-  return root;
-}
 
 [[nodiscard]] std::optional<std::string> ReadOptionalText(const drogon::orm::Row& row,
                                                           const char* column_name) {
@@ -62,7 +47,7 @@ ReadOptionalOutcome(const drogon::orm::Row& row) {
   if (field.isNull()) {
     return std::nullopt;
   }
-  return ParseJsonText(field.as<std::string>());
+  return deliveryoptimizer::api::internal::ParseJsonText(field.as<std::string>());
 }
 
 [[nodiscard]] std::optional<deliveryoptimizer::api::OptimizationJobRecord>
@@ -94,13 +79,6 @@ ReadJobRecord(const drogon::orm::Result& result) {
   };
 }
 
-[[nodiscard]] std::string RenderJson(const Json::Value& value) {
-  Json::StreamWriterBuilder writer_builder;
-  writer_builder["indentation"] = "";
-  writer_builder["commentStyle"] = "None";
-  return Json::writeString(writer_builder, value);
-}
-
 } // namespace
 
 namespace deliveryoptimizer::api {
@@ -119,6 +97,17 @@ std::string_view ToOptimizationJobStateString(const OptimizationJobState state) 
     return "timed_out";
   case OptimizationJobState::kExpired:
     return "expired";
+  }
+
+  return "failed";
+}
+
+std::string_view ToOptimizationJobStateString(const OptimizationJobFailureState state) {
+  switch (state) {
+  case OptimizationJobFailureState::kFailed:
+    return "failed";
+  case OptimizationJobFailureState::kTimedOut:
+    return "timed_out";
   }
 
   return "failed";
@@ -410,7 +399,7 @@ bool OptimizationJobStore::CompleteJobSuccess(const std::string& job_id, const s
   }
 
   try {
-    const auto result_json = RenderJson(result_body);
+    const auto result_json = internal::RenderJson(result_body);
     const auto result = client_->execSqlSync(
         "update optimization_jobs "
         "set status = 'succeeded', "
@@ -435,7 +424,7 @@ bool OptimizationJobStore::CompleteJobSuccess(const std::string& job_id, const s
 
 bool OptimizationJobStore::CompleteJobFailure(const std::string& job_id,
                                               const std::string& worker_id,
-                                              const OptimizationJobState state,
+                                              const OptimizationJobFailureState state,
                                               const SolveRequestOutcome outcome,
                                               const std::uint16_t http_status,
                                               const std::string& error_message) {

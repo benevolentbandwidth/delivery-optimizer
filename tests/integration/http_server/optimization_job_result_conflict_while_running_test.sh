@@ -85,8 +85,8 @@ job_id="$("${python3_bin}" -c 'import json,sys; print(json.load(open(sys.argv[1]
 result_http_code="$("${curl_bin}" -sS -o "${result_file}" -w "%{http_code}" \
   "$(http_server_url "/api/v1/optimization-jobs/${job_id}/result")")"
 
-if [[ "${result_http_code}" != "409" ]]; then
-  echo "expected HTTP 409 while optimization job result is still unavailable, got ${result_http_code}" >&2
+if [[ "${result_http_code}" != "202" ]]; then
+  echo "expected HTTP 202 while optimization job result is still pending, got ${result_http_code}" >&2
   cat "${result_file}" >&2 || true
   exit 1
 fi

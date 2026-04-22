@@ -1,5 +1,6 @@
 #include "deliveryoptimizer/api/endpoints/optimization_jobs_endpoint.hpp"
 
+#include "deliveryoptimizer/api/internal/json_utils.hpp"
 #include "deliveryoptimizer/api/observability.hpp"
 #include "deliveryoptimizer/api/optimization_job_runtime.hpp"
 #include "deliveryoptimizer/api/optimization_job_store.hpp"
@@ -96,13 +97,6 @@ namespace {
   return body;
 }
 
-[[nodiscard]] std::string RenderJson(const Json::Value& value) {
-  Json::StreamWriterBuilder writer_builder;
-  writer_builder["indentation"] = "";
-  writer_builder["commentStyle"] = "None";
-  return Json::writeString(writer_builder, value);
-}
-
 } // namespace
 
 namespace deliveryoptimizer::api {
@@ -148,9 +142,9 @@ void RegisterOptimizationJobsEndpoints(drogon::HttpAppFramework& app,
             .request_id = lifecycle->request_id,
             .started_at = lifecycle->request_started_at,
         });
-        const auto created_job = store->CreateJob(context.request_id, RenderJson(*parsed_json),
-                                                  parsed_request->size.jobs,
-                                                  parsed_request->size.vehicles);
+        const auto created_job =
+            store->CreateJob(context.request_id, internal::RenderJson(*parsed_json),
+                             parsed_request->size.jobs, parsed_request->size.vehicles);
         if (created_job.status == CreateOptimizationJobStatus::kQueueFull) {
           FinalizeSolveRequest(observability, lifecycle, SolveRequestOutcome::kRejectedQueueFull,
                                503U);
@@ -200,7 +194,12 @@ void RegisterOptimizationJobsEndpoints(drogon::HttpAppFramework& app,
         }
 
         Json::Value body = BuildJobStatusBody(*job);
-        std::move(callback)(BuildJsonResponse(body, drogon::k409Conflict));
+        const auto code =
+            (job->state == OptimizationJobState::kQueued ||
+             job->state == OptimizationJobState::kRunning)
+                ? drogon::k202Accepted
+                : drogon::k409Conflict;
+        std::move(callback)(BuildJsonResponse(body, code));
       },
       {drogon::Get});
 
