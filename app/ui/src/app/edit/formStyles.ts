@@ -275,7 +275,7 @@ export const ADDRESS_EMPTY_STATE =
   "flex items-center justify-center py-16 text-sm text-zinc-400 xl:text-base";
 
 export const ADDRESS_LIST_WRAP =
-  "space-y-4 lg:space-y-0 lg:divide-y lg:divide-zinc-300 lg:border lg:border-zinc-300 lg:rounded-xl lg:overflow-hidden";
+  "space-y-4 lg:space-y-0 lg:divide-y lg:divide-zinc-300 lg:border lg:border-zinc-300 lg:rounded-xl lg:overflow-visible";
 
 export const PAGINATION_ROW = "flex items-center justify-center gap-2 sm:gap-4 pb-4 md:pb-8 px-2";
 
@@ -301,19 +301,19 @@ export const PAGINATION_ICON_DISABLED_COLOR = "#a1a1aa";
 export const ADDRESS_DESKTOP_HDR_ROW =
   "hidden lg:grid lg:px-3 xl:px-5 mb-1 xl:mb-2";
 
-/** Error popup overlay: fixed full-screen backdrop. */
-export const ERROR_POPUP_OVERLAY =
+/** Modal overlay: fixed full-screen backdrop. */
+export const MODAL_OVERLAY =
   "fixed inset-0 z-50 flex items-center justify-center bg-black/40";
 
-/** Error popup panel: centered white card. */
-export const ERROR_POPUP_PANEL =
+/** Modal panel: centered white card. */
+export const MODAL_PANEL =
   "relative bg-white rounded-xl border border-zinc-200 shadow-lg p-6 max-w-sm w-full mx-4";
 
-/** Error popup title. */
-export const ERROR_POPUP_TITLE = "text-base font-semibold text-black mb-2";
+/** Modal title. */
+export const MODAL_TITLE = "text-base font-semibold text-black mb-2";
 
-/** Error popup body text. */
-export const ERROR_POPUP_MESSAGE = "text-sm text-black mb-5";
+/** Modal body text. */
+export const MODAL_MESSAGE = "text-sm text-black mb-5";
 
 /** Error popup dismiss button (full-width outline pill). */
 export const ERROR_POPUP_DISMISS_BUTTON =
@@ -322,3 +322,7 @@ export const ERROR_POPUP_DISMISS_BUTTON =
 /** Error popup top-right close icon button. */
 export const ERROR_POPUP_CLOSE_ICON =
   "absolute top-4 right-4 w-8 h-8 rounded-md border border-zinc-300 flex items-center justify-center text-black hover:bg-zinc-100 transition-colors cursor-pointer";
+
+/** Spinner shown inside the optimizing modal. */
+export const OPTIMIZING_SPINNER =
+  "inline-block h-8 w-8 rounded-full border-4 border-zinc-300 border-t-zinc-700 animate-spin";
