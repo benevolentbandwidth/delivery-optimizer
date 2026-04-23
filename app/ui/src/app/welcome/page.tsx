@@ -1,265 +1,238 @@
 // app/welcome/page.tsx
 "use client";
 import { useRouter } from "next/navigation";
+import ShellNavbar from "@/app/components/ShellNavbar";
+import { GradientBlobs, PageFooter } from "@/app/utils/routeUtils";
 
-// Route manager session type selector — no ShellNavbar, uses same
-// full-bleed gradient layout as the landing page.
 export default function WelcomePage() {
   const router = useRouter();
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: `
-        radial-gradient(ellipse 80% 60% at 100% 100%, rgba(74, 157, 127, 0.55) 0%, rgba(74, 157, 127, 0) 60%),
-        radial-gradient(ellipse 70% 50% at 0% 100%, rgba(120, 180, 155, 0.35) 0%, rgba(120, 180, 155, 0) 55%),
-        radial-gradient(ellipse 60% 50% at 100% 0%, rgba(168, 210, 192, 0.28) 0%, rgba(168, 210, 192, 0) 60%),
-        linear-gradient(135deg, #f7fbf9 0%, #eaf3ee 45%, #a8d2c0 100%)
-      `,
-        fontFamily: "'DM Sans', sans-serif",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      {/* Minimal top bar — brand name only, no border */}
-      <header
-        style={{
-          background: "#ffffff",
-          padding: "16px 24px",
-          fontSize: "12px",
-          fontWeight: 700,
-          letterSpacing: "0.08em",
-          color: "#111",
-          textTransform: "uppercase",
-        }}
-      >
-        Delivery Optimizer
-      </header>
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&display=swap');
 
-      <main
-        style={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "40px 24px",
-        }}
-      >
-        <h1
-          style={{
-            fontSize: "2.5rem",
-            fontWeight: 700,
-            color: "#111",
-            marginBottom: "16px",
-            textAlign: "center",
-            letterSpacing: "-0.02em",
-            lineHeight: 1.15,
-          }}
-        >
-          New or returning user?
-        </h1>
-        <p
-          style={{
-            fontSize: "15px",
-            color: "#555",
-            marginBottom: "48px",
-            textAlign: "center",
-            maxWidth: "480px",
-            lineHeight: 1.6,
-          }}
-        >
-          Transform your address lists into efficient, ordered routes to lower
-          operational costs and reduce your fleet&apos;s carbon emissions.
-        </p>
+        .welcome-root {
+          min-height: 100vh;
+          background: #f7f7f5;
+          display: flex;
+          flex-direction: column;
+          font-family: 'DM Sans', sans-serif;
+          position: relative;
+          overflow: hidden;
+        }
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-            gap: "16px",
-            width: "100%",
-            maxWidth: "780px",
-          }}
-        >
-          {/* New user → /edit directly */}
-          <div
-            style={{
-              background: "#ffffff",
-              borderRadius: "16px",
-              padding: "28px",
-              display: "flex",
-              flexDirection: "column",
-              gap: "12px",
-              boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-            }}
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <circle
-                cx="9"
-                cy="7"
-                r="4"
-                stroke="#4a9d7f"
-                strokeWidth="1.8"
-                fill="none"
-              />
-              <path
-                d="M2 21c0-4 3.1-7 7-7h1"
-                stroke="#4a9d7f"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                fill="none"
-              />
-              <path
-                d="M16 11v6M13 14h6"
-                stroke="#4a9d7f"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-              />
-            </svg>
-            <div style={{ flex: 1 }}>
-              <p
-                style={{
-                  fontSize: "17px",
-                  fontWeight: 700,
-                  color: "#111",
-                  marginBottom: "8px",
-                }}
-              >
-                New user
+        .welcome-content {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 48px 24px;
+          position: relative;
+          z-index: 1;
+        }
+
+        .welcome-title {
+          font-family: 'DM Serif Display', serif;
+          font-size: 2.4rem;
+          font-weight: 400;
+          color: #111;
+          margin-bottom: 12px;
+          text-align: center;
+          letter-spacing: -0.01em;
+        }
+
+        .welcome-subtitle {
+          font-size: 14px;
+          color: #555;
+          margin-bottom: 48px;
+          text-align: center;
+          max-width: 480px;
+          line-height: 1.6;
+        }
+
+        .welcome-cards {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 24px;
+          justify-content: center;
+          width: 100%;
+          max-width: 860px;
+        }
+
+        /*
+         * Accessibility fix: the entire card is the interactive element.
+         * role="button" + tabIndex={0} + onKeyDown are on the outer div.
+         */
+        .welcome-card {
+          background: #ffffff;
+          border-radius: 16px;
+          border: 1px solid rgba(0,0,0,0.08);
+          padding: 32px 28px 28px;
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 12px;
+          width: 340px;
+          box-sizing: border-box;
+          box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+          transition: box-shadow 0.2s, border-color 0.2s;
+          cursor: pointer;
+        }
+
+        .welcome-card:hover,
+        .welcome-card:focus-visible {
+          box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+          border-color: rgba(0,0,0,0.14);
+        }
+
+        .welcome-card:focus-visible {
+          outline: 2px solid #4a8c7a;
+          outline-offset: 2px;
+        }
+
+        .welcome-card-icon {
+          color: #4a8c7a;
+          margin-bottom: 4px;
+        }
+
+        .welcome-card-title {
+          font-size: 18px;
+          font-weight: 600;
+          color: #111;
+          margin: 0;
+        }
+
+        .welcome-card-desc {
+          font-size: 13px;
+          color: #666;
+          line-height: 1.55;
+          margin: 0;
+          flex: 1;
+        }
+
+        /* Presentational pill — aria-hidden, pointer-events:none */
+        .welcome-card-cta {
+          margin-top: 16px;
+          align-self: flex-end;
+          background: #4a8c7a;
+          color: #fff;
+          border-radius: 999px;
+          padding: 10px 24px;
+          font-size: 14px;
+          font-weight: 500;
+          font-family: 'DM Sans', sans-serif;
+          pointer-events: none;
+          transition: background 0.15s;
+        }
+
+        .welcome-card:hover .welcome-card-cta,
+        .welcome-card:focus-visible .welcome-card-cta {
+          background: #3d7a6a;
+        }
+
+        /* Back link restored below the cards */
+        .welcome-back {
+          margin-top: 32px;
+          background: none;
+          border: none;
+          cursor: pointer;
+          font-size: 13px;
+          color: #555;
+          font-family: 'DM Sans', sans-serif;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          padding: 0;
+        }
+
+        .welcome-back:hover {
+          color: #111;
+        }
+      `}</style>
+
+      <div className="welcome-root">
+        <GradientBlobs />
+        <ShellNavbar />
+
+        <div className="welcome-content">
+          <h1 className="welcome-title">New or returning user?</h1>
+          <p className="welcome-subtitle">
+            Transform your address lists into efficient, ordered routes to lower operational costs and reduce your fleet's carbon emissions.
+          </p>
+
+          <div className="welcome-cards">
+            {/* New user — full card is the interactive target */}
+            <div
+              className="welcome-card"
+              role="button"
+              tabIndex={0}
+              aria-label="New user — continue"
+              onClick={() => router.push("/edit")}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  router.push("/edit");
+                }
+              }}
+            >
+              <div className="welcome-card-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <circle cx="10" cy="7" r="4" stroke="currentColor" strokeWidth="1.75" />
+                  <path d="M2 21c0-4 3.582-7 8-7" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+                  <path d="M16 19l2 2 4-4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <p className="welcome-card-title">New user</p>
+              <p className="welcome-card-desc">
+                Import routes, edit addresses, assign deliveries, monitor fleet routes, and export delivery operations.
               </p>
-              <p style={{ fontSize: "13px", color: "#777", lineHeight: 1.6 }}>
-                Import routes, edit addresses, assign deliveries, monitor fleet
-                routes, and export delivery operations.
-              </p>
+              <span className="welcome-card-cta" aria-hidden="true">Continue</span>
             </div>
-            <div style={{ display: "flex", justifyContent: "flex-end" }}>
-              <button
-                onClick={() => router.push("/edit")}
-                style={{
-                  background: "#4a9d7f",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: "999px",
-                  padding: "10px 24px",
-                  fontSize: "14px",
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  fontFamily: "inherit",
-                  transition: "background 0.15s",
-                }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.background = "#3d8a6d")
+
+            {/* Returning user — full card is the interactive target */}
+            <div
+              className="welcome-card"
+              role="button"
+              tabIndex={0}
+              aria-label="Returning user — continue"
+              onClick={() => router.push("/upload-save-point")}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  router.push("/upload-save-point");
                 }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.background = "#4a9d7f")
-                }
-              >
-                Continue
-              </button>
+              }}
+            >
+              <div className="welcome-card-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <circle cx="10" cy="7" r="4" stroke="currentColor" strokeWidth="1.75" />
+                  <path d="M2 21c0-4 3.582-7 8-7" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+                  <path d="M19 14v6M16 17h6" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+                </svg>
+              </div>
+              <p className="welcome-card-title">Returning user</p>
+              {/* Fixed: was copy-pasted Driver copy. Now correctly describes resuming from a save point. */}
+              <p className="welcome-card-desc">
+                Pick up where you left off! Upload your save point to resume editing addresses and continue your delivery operations.
+              </p>
+              <span className="welcome-card-cta" aria-hidden="true">Continue</span>
             </div>
           </div>
-
-          {/* Returning user → /upload-save-point */}
-          <div
-            style={{
-              background: "#ffffff",
-              borderRadius: "16px",
-              padding: "28px",
-              display: "flex",
-              flexDirection: "column",
-              gap: "12px",
-              boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-            }}
+          <button
+            className="welcome-back"
+            onClick={() => router.back()}
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <circle
-                cx="9"
-                cy="7"
-                r="4"
-                stroke="#4a9d7f"
-                strokeWidth="1.8"
-                fill="none"
-              />
-              <path
-                d="M2 21c0-4 3.1-7 7-7h4"
-                stroke="#4a9d7f"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                fill="none"
-              />
-              <path
-                d="M16 14l2 2 4-4"
-                stroke="#4a9d7f"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+              <path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            <div style={{ flex: 1 }}>
-              <p
-                style={{
-                  fontSize: "17px",
-                  fontWeight: 700,
-                  color: "#111",
-                  marginBottom: "8px",
-                }}
-              >
-                Returning user
-              </p>
-              <p style={{ fontSize: "13px", color: "#777", lineHeight: 1.6 }}>
-                View your assigned route, navigate through addresses, update
-                delivery status, and import file from route manager.
-              </p>
-            </div>
-            <div style={{ display: "flex", justifyContent: "flex-end" }}>
-              <button
-                onClick={() => router.push("/upload-save-point")}
-                style={{
-                  background: "#4a9d7f",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: "999px",
-                  padding: "10px 24px",
-                  fontSize: "14px",
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  fontFamily: "inherit",
-                  transition: "background 0.15s",
-                }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.background = "#3d8a6d")
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.background = "#4a9d7f")
-                }
-              >
-                Continue
-              </button>
-            </div>
-          </div>
+            Back
+          </button>
         </div>
-      </main>
 
-      <footer
-        style={{
-          background: "#ffffff",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "20px 24px",
-        }}
-      >
-        <img
-          src="/logo.png"
-          alt="b²"
-          style={{ height: "32px", width: "auto", display: "block" }}
-        />
-        <span style={{ fontSize: "12px", color: "#000" }}>
-          Built with ❤️ for Humanity. The Benevolent Bandwidth Foundation
-        </span>
-      </footer>
-    </div>
+        <PageFooter />
+      </div>
+    </>
   );
 }
