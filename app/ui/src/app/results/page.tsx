@@ -64,6 +64,13 @@ export default function ResultsPage() {
     setPendingPinMove(null);
   }, [pendingPinMove]);
 
+  const handlePendingPinMove = useCallback(
+    (vehicleId: string, stopId: string, lat: number, lng: number) => {
+      setPendingPinMove({ vehicleId, stopId, lat, lng });
+    },
+    []
+  );
+
   const cancelPendingPinMove = useCallback(() => setPendingPinMove(null), []);
 
   return (
@@ -129,9 +136,7 @@ export default function ResultsPage() {
               routes={routes}
               isEditMode={isEditMode}
               pendingPinMove={pendingPinMove}
-              onPendingPinMove={(vehicleId, stopId, lat, lng) =>
-                setPendingPinMove({ vehicleId, stopId, lat, lng })
-              }
+              onPendingPinMove={handlePendingPinMove}
             />
           </div>
         </div>
