@@ -34,9 +34,11 @@ function buildRoutePath(
 function RoutePolylinesOverlay({
   routes,
   pendingPinMove,
+  onRouteDistanceUpdate,
 }: {
   routes: Route[];
   pendingPinMove: PendingPinMove | null;
+  onRouteDistanceUpdate?: (vehicleId: string, distanceMi: number) => void;
 }) {
   const map = useGoogleMap();
   const polylinesRef = useRef<google.maps.Polyline[]>([]);
@@ -50,7 +52,7 @@ function RoutePolylinesOverlay({
     polylinesRef.current = [];
 
     let cancelled = false;
-    const directionsService = new google.maps.DirectionsService();
+    const directionsService = new google.maps.DirectionsService(); // DirectionsService is used to get the route data from Google Maps Directions API (no need for API key, since we're calling the API from the browser)
 
     const drawFallback = (route: Route) => {
       const fallbackPath = buildRoutePath(route, pendingPinMove);
@@ -89,6 +91,15 @@ function RoutePolylinesOverlay({
             continue;
           }
 
+          const totalMeters = (result.routes[0]?.legs ?? []).reduce(
+            (sum, leg) => sum + (leg.distance?.value ?? 0),
+            0
+          );
+          if (totalMeters > 0 && onRouteDistanceUpdate) {
+            const distanceMi = Number((totalMeters / 1609.344).toFixed(1));
+            onRouteDistanceUpdate(route.vehicleId, distanceMi);
+          }
+
           const roadPoly = new google.maps.Polyline({
             map,
             path: roadPath,
@@ -109,7 +120,7 @@ function RoutePolylinesOverlay({
       });
       polylinesRef.current = [];
     };
-  }, [map, routes, pendingPinMove]);
+  }, [map, routes, pendingPinMove, onRouteDistanceUpdate]);
 
   return null;
 }
@@ -134,6 +145,7 @@ type MapComponentProps = {
   isEditMode: boolean;
   pendingPinMove: PendingPinMove | null;
   onPendingPinMove: (vehicleId: string, stopId: string, lat: number, lng: number) => void;
+  onRouteDistanceUpdate?: (vehicleId: string, distanceMi: number) => void;
 };
 
 type AdvancedMarkersProps = {
@@ -255,6 +267,7 @@ export default function MapComponent({
   isEditMode,
   pendingPinMove,
   onPendingPinMove,
+  onRouteDistanceUpdate,
 }: MapComponentProps) {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? "";
   const mapId = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID || undefined;
@@ -313,7 +326,11 @@ export default function MapComponent({
           onLoad={onMapLoad}
           onUnmount={onUnmount}
         >
-          <RoutePolylinesOverlay routes={routes} pendingPinMove={pendingPinMove} />
+          <RoutePolylinesOverlay
+            routes={routes}
+            pendingPinMove={pendingPinMove}
+            onRouteDistanceUpdate={onRouteDistanceUpdate}
+          />
           {mapId && (
             <AdvancedMarkers
               map={map}
