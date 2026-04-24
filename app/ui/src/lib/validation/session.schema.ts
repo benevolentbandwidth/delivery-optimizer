@@ -24,7 +24,3 @@ export function migrateSessionSaveFile(input: unknown): SessionSaveFile {
       return parsed;
   }
 }
-
-export function parseSessionSaveFile(input: unknown): SessionSaveFile {
-  return sessionSaveSchema.parse(input);
-}
