@@ -73,6 +73,14 @@ export default function ResultsPage() {
     [],
   );
 
+  const handleRouteDistanceUpdate = useCallback((vehicleId: string, distanceMi: number) => {
+    setRoutes((prev) =>
+      prev.map((route) =>
+        route.vehicleId === vehicleId ? { ...route, distanceMi } : route
+      )
+    );
+  }, []);
+
   const handleEditModeChange = useCallback((value: boolean) => {
     setIsEditMode(value);
     if (!value) setPendingPinMove(null);
