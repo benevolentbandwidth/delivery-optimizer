@@ -16,7 +16,6 @@ function filenameTimestamp(date: Date) {
   const min = String(date.getUTCMinutes()).padStart(2, "0");
   const ss = String(date.getUTCSeconds()).padStart(2, "0");
 
-  // Validate the serialized payload before downloading it.
   return `date_${yyyy}-${mm}-${dd}_time_${hh}-${min}-${ss}`;
 }
 
@@ -54,7 +53,7 @@ export function downloadSessionSave(
     link.click();
     link.remove();
 
-    setTimeout(() => URL.revokeObjectURL(objectUrl), 100);
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
 
     return { ok: true, filename };
   } catch (e) {
