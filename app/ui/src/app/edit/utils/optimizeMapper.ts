@@ -42,6 +42,7 @@ export function vehicleRowToVehicleInput(
   return {
     id: v.id,
     vehicleType: v.type,
+    driverName: v.name,
     startLocation: location,
     capacity: {
       type: v.capacityUnit,
