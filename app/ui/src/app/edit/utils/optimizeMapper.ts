@@ -75,6 +75,7 @@ export function addressCardToDeliveryInput(
   return {
     id: a.id,
     address: a.recipientAddress,
+    notes: a.notes.trim() ? a.notes : undefined,
     location,
     bufferTime: a.timeBuffer ? timeBufferToSeconds(a.timeBuffer) : 0,
     demand: { type: demandType, value: a.deliveryQuantity },

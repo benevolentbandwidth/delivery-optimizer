@@ -71,4 +71,14 @@ describe("addressCardToDeliveryInput", () => {
   it("location passed through", () => {
     expect(addressCardToDeliveryInput(makeAddress(), LOC, "units").location).toEqual(LOC);
   });
+
+  it("notes are preserved when present", () => {
+    expect(
+      addressCardToDeliveryInput(makeAddress({ notes: "Leave at side door" }), LOC, "units").notes
+    ).toBe("Leave at side door");
+  });
+
+  it("blank notes are omitted", () => {
+    expect(addressCardToDeliveryInput(makeAddress({ notes: "   " }), LOC, "units").notes).toBeUndefined();
+  });
 });
