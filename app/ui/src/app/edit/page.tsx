@@ -35,7 +35,12 @@ export default function Page() {
     geocodeFailedVehicleIds,
     outOfRegionAddressIds,
     outOfRegionVehicleIds,
-  } = useOptimize(vehicleState.vehicles, addressState.addresses);
+  } = useOptimize(
+    vehicleState.vehicles,
+    addressState.addresses,
+    vehicleState.cacheVehicleLocation,
+    addressState.cacheAddressLocation
+  );
 
   const { handleCSVUpload, csvError, clearCsvError } = useCSVUpload({
     importAddresses: addressState.importAddresses,

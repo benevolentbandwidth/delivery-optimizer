@@ -17,7 +17,12 @@ const SUPPORTED_STATES = new Set(["California", "Texas", "Florida"]);
 function isLocked(v: VehicleRow): v is LockedVehicleRow {
   return v.locked && v.type !== "" && v.capacityUnit !== "";
 }
-export function useOptimize(vehicles: VehicleRow[], addresses: AddressCard[]) {
+export function useOptimize(
+  vehicles: VehicleRow[],
+  addresses: AddressCard[],
+  cacheVehicleLocation: (id: number, lat: number, lng: number, state?: string | null) => void,
+  cacheAddressLocation: (id: number, lat: number, lng: number, state?: string | null) => void
+) {
   const router = useRouter();
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [optimizeError, setOptimizeError] = useState<string | null>(null);
@@ -89,22 +94,28 @@ export function useOptimize(vehicles: VehicleRow[], addresses: AddressCard[]) {
       const vehicleLocations: Map<number, { lat: number; lng: number; state: string | null }> = new Map();
       const failedVehicles: { id: number; location: string }[] = [];
       for (const v of availableVehicles) {
-        const loc = await geocodeAddress(v.startLocation);
+        const loc = v.cachedLocation?.state !== undefined
+          ? { lat: v.cachedLocation.lat, lng: v.cachedLocation.lng, state: v.cachedLocation.state ?? null }
+          : await geocodeAddress(v.startLocation);
         if (!loc) {
           failedVehicles.push({ id: v.id, location: v.startLocation });
         } else {
           vehicleLocations.set(v.id, loc);
+          cacheVehicleLocation(v.id, loc.lat, loc.lng, loc.state);
         }
       }
 
       const addressLocations: Map<number, { lat: number; lng: number; state: string | null }> = new Map();
       const failedAddresses: { id: number; address: string }[] = [];
       for (const a of addresses) {
-        const loc = await geocodeAddress(a.recipientAddress);
+        const loc = a.cachedLocation?.state !== undefined
+          ? { lat: a.cachedLocation.lat, lng: a.cachedLocation.lng, state: a.cachedLocation.state ?? null }
+          : await geocodeAddress(a.recipientAddress);
         if (!loc) {
           failedAddresses.push({ id: a.id, address: a.recipientAddress });
         } else {
           addressLocations.set(a.id, loc);
+          cacheAddressLocation(a.id, loc.lat, loc.lng, loc.state);
         }
       }
 
@@ -196,7 +207,7 @@ export function useOptimize(vehicles: VehicleRow[], addresses: AddressCard[]) {
     } finally {
       setIsOptimizing(false);
     }
-  }, [vehicles, addresses, router]);
+  }, [vehicles, addresses, router, cacheVehicleLocation, cacheAddressLocation]);
 
   // Only clears the error message; geocode failure highlights persist until the next optimize run.
   const clearOptimizeError = useCallback(() => {

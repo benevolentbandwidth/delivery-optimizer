@@ -53,7 +53,7 @@ export async function mapEditStateToOptimizeRequest(
   const vehicleInputs: VehicleInput[] = [];
 
   for (const vehicle of lockedVehicles) {
-    const location = await geocodeAddress(vehicle.startLocation);
+    const location = vehicle.cachedLocation ?? await geocodeAddress(vehicle.startLocation);
 
     if (!location) {
       throw new Error(`Could not geocode vehicle start location "${vehicle.startLocation}".`);
@@ -65,7 +65,7 @@ export async function mapEditStateToOptimizeRequest(
   const deliveryInputs: DeliveryInput[] = [];
 
   for (const address of addresses) {
-    const location = await geocodeAddress(address.recipientAddress);
+    const location = address.cachedLocation ?? await geocodeAddress(address.recipientAddress);
 
     if (!location) {
       throw new Error(`Could not geocode delivery address "${address.recipientAddress}".`);
@@ -105,6 +105,10 @@ function mapVehicleInputToRow(vehicle: VehicleInput): VehicleRow {
     editingExisting: false,
     name: vehicle.driverName ?? "",
     startLocation: formatLocation(vehicle.startLocation.lat, vehicle.startLocation.lng),
+    cachedLocation: {
+      lat: vehicle.startLocation.lat,
+      lng: vehicle.startLocation.lng,
+    },
     type: vehicle.vehicleType,
     capacityUnit: vehicle.capacity.type,
     capacity: vehicle.capacity.value,
@@ -127,6 +131,10 @@ function mapDeliveryInputToCard(delivery: DeliveryInput): AddressCard {
     editingExisting: false,
     recipientAddress:
       delivery.address ?? formatLocation(delivery.location.lat, delivery.location.lng),
+    cachedLocation: {
+      lat: delivery.location.lat,
+      lng: delivery.location.lng,
+    },
     timeBuffer: bufferSecondsToLabel(String(delivery.bufferTime ?? 0)),
     deliveryTimeStart: start,
     deliveryTimeEnd: end,
