@@ -4,8 +4,6 @@
  * Top bar: branding placeholder and primary delivery actions (save, export, optimize).
  */
 
-import { useRef } from "react";
-
 import {
   NAVBAR_ACTIONS_WRAP,
   NAVBAR_HEADER,
@@ -16,8 +14,8 @@ import {
 import ErrorPopup from "./ErrorPopup";
 
 type NavbarProps = {
-  onImportSession: (file: File) => void | Promise<void>;
-  onExportSession: () => void | Promise<void>;
+  onImportSession: () => void;
+  onExportSession: () => void;
   onOptimize: () => void;
   isOptimizing: boolean;
   error: string | null;
@@ -32,30 +30,15 @@ export default function Navbar({
   error,
   onClearError,
 }: NavbarProps) {
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-
   return (
     <>
       <ErrorPopup message={error} onClose={onClearError} />
       <header className={NAVBAR_HEADER}>
         <div className={NAVBAR_LOGO_PLACEHOLDER}>logo</div>
         <div className={NAVBAR_ACTIONS_WRAP}>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="application/json,.json"
-            className="hidden"
-            onChange={(event) => {
-              const file = event.target.files?.[0];
-              if (file) {
-                void onImportSession(file);
-              }
-              event.target.value = "";
-            }}
-          />
           <button
             className={NAVBAR_OUTLINE_PILL}
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => void onImportSession()}
           >
             Import Session
           </button>
