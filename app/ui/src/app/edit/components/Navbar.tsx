@@ -4,6 +4,8 @@
  * Top bar: branding placeholder and primary delivery actions (save, export, optimize).
  */
 
+import { useRef } from "react";
+
 import {
   NAVBAR_ACTIONS_WRAP,
   NAVBAR_HEADER,
@@ -30,6 +32,8 @@ export default function Navbar({
   error,
   onClearError,
 }: NavbarProps) {
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
   return (
     <>
       <ErrorPopup message={error} onClose={onClearError} />
