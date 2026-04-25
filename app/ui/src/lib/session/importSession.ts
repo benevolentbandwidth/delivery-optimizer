@@ -19,7 +19,7 @@ export async function loadSessionFromFile(file: File): Promise<OptimizeRequest> 
 
   const text = await file.text();
 
-  if (typeof text !== "string" || text.length === 0) {
+  if (text.length === 0) {
     throw new Error("Invalid file contents.");
   }
 

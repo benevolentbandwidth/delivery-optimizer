@@ -14,7 +14,7 @@ import { useVehicles } from "./hooks/useVehicles";
 import { useAddresses } from "./hooks/useAddresses";
 import { useOptimize } from "./hooks/useOptimize";
 import { useCSVUpload } from "./hooks/useCSVUpload";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { loadSessionFromFile } from "@/lib/session/importSession";
 import { downloadSessionSave } from "@/lib/session/exportSession";
 import {
@@ -46,7 +46,7 @@ export default function Page() {
     importAddresses: addressState.importAddresses,
   });
 
-  const handleImportSession = async (file: File) => {
+  const handleImportSession = useCallback(async (file: File) => {
     setSessionError(null);
 
     try {
@@ -61,9 +61,9 @@ export default function Page() {
           : "Failed to import the session file."
       );
     }
-  };
+  }, [addressState, vehicleState]);
 
-  const handleExportSession = async () => {
+  const handleExportSession = useCallback(async () => {
     setSessionError(null);
 
     try {
@@ -83,11 +83,11 @@ export default function Page() {
           : "Failed to export the session state."
       );
     }
-  };
+  }, [addressState.addresses, vehicleState.vehicles]);
 
-  const clearSessionError = () => {
+  const clearSessionError = useCallback(() => {
     setSessionError(null);
-  };
+  }, []);
 
   return (
     <div className="min-h-screen bg-white font-sans-manrope">

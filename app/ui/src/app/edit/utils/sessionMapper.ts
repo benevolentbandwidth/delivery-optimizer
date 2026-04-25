@@ -108,6 +108,7 @@ function mapVehicleInputToRow(vehicle: VehicleInput): VehicleRow {
     cachedLocation: {
       lat: vehicle.startLocation.lat,
       lng: vehicle.startLocation.lng,
+      state: null,
     },
     type: vehicle.vehicleType,
     capacityUnit: vehicle.capacity.type,
@@ -134,6 +135,7 @@ function mapDeliveryInputToCard(delivery: DeliveryInput): AddressCard {
     cachedLocation: {
       lat: delivery.location.lat,
       lng: delivery.location.lng,
+      state: null,
     },
     timeBuffer: bufferSecondsToLabel(String(delivery.bufferTime ?? 0)),
     deliveryTimeStart: start,

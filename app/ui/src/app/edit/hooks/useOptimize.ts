@@ -143,14 +143,14 @@ export function useOptimize(
         new Map()
       const failedVehicles: { id: number; location: string }[] = []
       for (const v of availableVehicles) {
-        const loc = v.cachedLocation?.state !== undefined
+        const loc = v.cachedLocation
           ? { lat: v.cachedLocation.lat, lng: v.cachedLocation.lng, state: v.cachedLocation.state ?? null }
-          : await geocodeAddress(v.startLocation);
+          : await geocodeAddress(v.startLocation)
         if (!loc) {
           failedVehicles.push({ id: v.id, location: v.startLocation })
         } else {
-          vehicleLocations.set(v.id, loc);
-          cacheVehicleLocation(v.id, loc.lat, loc.lng, loc.state);
+          vehicleLocations.set(v.id, loc)
+          cacheVehicleLocation(v.id, loc.lat, loc.lng, loc.state)
         }
       }
 
@@ -158,14 +158,14 @@ export function useOptimize(
         new Map()
       const failedAddresses: { id: number; address: string }[] = []
       for (const a of addresses) {
-        const loc = a.cachedLocation?.state !== undefined
+        const loc = a.cachedLocation
           ? { lat: a.cachedLocation.lat, lng: a.cachedLocation.lng, state: a.cachedLocation.state ?? null }
-          : await geocodeAddress(a.recipientAddress);
+          : await geocodeAddress(a.recipientAddress)
         if (!loc) {
           failedAddresses.push({ id: a.id, address: a.recipientAddress })
         } else {
-          addressLocations.set(a.id, loc);
-          cacheAddressLocation(a.id, loc.lat, loc.lng, loc.state);
+          addressLocations.set(a.id, loc)
+          cacheAddressLocation(a.id, loc.lat, loc.lng, loc.state)
         }
       }
 
@@ -313,7 +313,7 @@ export function useOptimize(
     } finally {
       setIsOptimizing(false)
     }
-  }, [vehicles, addresses, router, cacheVehicleLocation, cacheAddressLocation]);
+  }, [vehicles, addresses, router, cacheVehicleLocation, cacheAddressLocation])
 
   const clearOptimizeError = useCallback(() => {
     setOptimizeError(null)
