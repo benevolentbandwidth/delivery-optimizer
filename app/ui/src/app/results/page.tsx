@@ -8,6 +8,8 @@ import Sidebar from "./components/Sidebar";
 import type { PendingPinMove, Route } from "./types";
 
 function readInitialRoutes(): { routes: Route[]; error: string | null } {
+  if (typeof window === "undefined") return { routes: [], error: null };
+
   const stored = sessionStorage.getItem("optimizeResults");
   if (!stored) return { routes: [], error: null };
 
