@@ -21,6 +21,7 @@
  .root {
     /* ── Teal brand ──────────────────────────────────────────────── */
     --edit-teal-300:    #C3E1D8;              /* Figma: Teal/teal-300 ✓ confirmed  */
+    --edit-teal-500:    #4B987F;             /* Figma: Optimize button fill        */
     --edit-teal-700:    #2D6A4F;             /* ⚠️  replace with exact Figma hex  */
     --edit-teal-alpha:  rgba(75,152,127,0.16); /* Figma: #4B987F · 16%            */
   

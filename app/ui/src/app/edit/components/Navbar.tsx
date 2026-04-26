@@ -1,18 +1,13 @@
 "use client";
 
-/**
- * Top bar: branding placeholder and primary delivery actions (save, export, optimize).
- */
-
 import { useRef } from "react";
-
 import {
-  NAVBAR_ACTIONS_WRAP,
-  NAVBAR_HEADER,
-  NAVBAR_LOGO_PLACEHOLDER,
-  NAVBAR_OUTLINE_PILL,
-  NAVBAR_SOLID_PILL,
-} from "../formStyles";
+  NAVBAR_V2_ACTIONS,
+  NAVBAR_V2_BTN_FILLED,
+  NAVBAR_V2_BTN_OUTLINE,
+  NAVBAR_V2_LOGO,
+  NAVBAR_V2_ROOT,
+} from "../formStyles.v2";
 import ErrorPopup from "./ErrorPopup";
 
 type NavbarProps = {
@@ -37,20 +32,17 @@ export default function Navbar({
   return (
     <>
       <ErrorPopup message={error} onClose={onClearError} />
-      <header className={NAVBAR_HEADER}>
-        <div className={NAVBAR_LOGO_PLACEHOLDER}>logo</div>
-        <div className={NAVBAR_ACTIONS_WRAP}>
-          <button
-            className={NAVBAR_OUTLINE_PILL}
-            onClick={() => void onImportSession()}
-          >
-            Import Session
+      <header className={NAVBAR_V2_ROOT}>
+        <span className={NAVBAR_V2_LOGO}>DELIVERY OPTIMIZER</span>
+        <div className={NAVBAR_V2_ACTIONS}>
+          <button className={NAVBAR_V2_BTN_OUTLINE} onClick={() => void onImportSession()}>
+            Save
           </button>
-          <button className={NAVBAR_OUTLINE_PILL} onClick={() => void onExportSession()}>
-            Export Session State
+          <button className={NAVBAR_V2_BTN_OUTLINE} onClick={() => void onExportSession()}>
+            Export
           </button>
           <button
-            className={NAVBAR_SOLID_PILL}
+            className={NAVBAR_V2_BTN_FILLED}
             onClick={onOptimize}
             disabled={isOptimizing}
           >

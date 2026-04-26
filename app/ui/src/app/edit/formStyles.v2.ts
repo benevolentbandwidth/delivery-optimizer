@@ -5,7 +5,7 @@
  */
 
 export const SIDEBAR_ROOT =
-  "w-[68px] shrink-0 self-stretch bg-[var(--edit-sidebar-bg)] overflow-hidden";
+  "hidden lg:block w-[68px] shrink-0 self-stretch bg-[var(--edit-sidebar-bg)] overflow-hidden";
 
 export const SIDEBAR_NAV = "flex flex-col gap-4 pt-4 px-2";
 
@@ -23,3 +23,22 @@ export const SIDEBAR_NAV_LABEL_ACTIVE =
 
 export const SIDEBAR_NAV_LABEL_INACTIVE =
   "text-[14px] leading-5 font-medium text-[var(--edit-foreground)] text-center whitespace-nowrap";
+
+export const PAGE_V2_BODY = "flex flex-1 min-h-0";
+
+export const PAGE_V2_MAIN =
+  "flex-1 min-w-0 px-6 lg:px-8 py-6 lg:py-8 space-y-8 lg:space-y-10";
+
+export const NAVBAR_V2_ROOT =
+  "bg-[var(--edit-sidebar-bg)] flex items-center justify-between p-4";
+
+export const NAVBAR_V2_LOGO =
+  "font-semibold text-[20px] leading-none text-[var(--edit-foreground)] whitespace-nowrap";
+
+export const NAVBAR_V2_ACTIONS = "flex items-center gap-2";
+
+export const NAVBAR_V2_BTN_OUTLINE =
+  "h-9 px-4 rounded-[80px] border border-[var(--edit-foreground)] font-semibold text-[14px] leading-5 text-[var(--edit-foreground)] whitespace-nowrap hover:bg-black/5 transition-colors cursor-pointer";
+
+export const NAVBAR_V2_BTN_FILLED =
+  "h-9 px-4 rounded-[80px] bg-[var(--edit-teal-500)] font-semibold text-[14px] leading-5 text-[var(--edit-foreground)] whitespace-nowrap hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed";
