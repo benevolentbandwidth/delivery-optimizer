@@ -4,6 +4,13 @@ import type { Route, Stop } from "@/app/results/types";
 
 const METERS_TO_MILES = 0.000621371;
 
+function inferTimeWindowKind(start?: string, end?: string): "at" | "by" | "from" {
+  if (start && end) return "at";
+  if (end) return "by";
+  if (start) return "from";
+  return "by";
+}
+
 /** Converts seconds-from-midnight to a "H:MM AM/PM" string (e.g. 32400 → "9:00 AM"). */
 export function secondsToTimeString(seconds: number): string {
   const totalMinutes = Math.floor(seconds / 60);
@@ -51,14 +58,7 @@ export function vroomToRoutes(
         sequence: idx + 1,
         capacityUsed: step.load?.[0] ?? 0,
         timeWindow: {
-          kind: (() => {
-            const start = address?.deliveryTimeStart;
-            const end = address?.deliveryTimeEnd;
-            if (start && end) return "at";
-            if (end) return "by";
-            if (start) return "from";
-            return "by";
-          })(),
+          kind: inferTimeWindowKind(address?.deliveryTimeStart, address?.deliveryTimeEnd),
           time: arrivalTimeStr,
         },
         note: address?.notes ?? "",

@@ -9,11 +9,11 @@ import { useRouter } from "next/navigation"
 import { geocodeAddress } from "@/app/components/AddressGeocoder/utils/nominatim"
 
 import { addressCardToDeliveryInput, vehicleRowToVehicleInput } from "../utils/optimizeMapper"
+import { SUPPORTED_STATES } from "../constants/supportedRegions"
 import { vroomToRoutes } from "../utils/vroomToRoutes"
 import type { AddressCard, CapacityUnit, LockedVehicleRow, VehicleRow } from "../types/delivery"
 import type { VroomResponse } from "../types/vroomResponse"
 
-const SUPPORTED_STATES = new Set(["California", "Texas", "Florida"])
 const POLL_INTERVAL_MS = 500
 const POLL_TIMEOUT_MS = 120000
 
