@@ -12,17 +12,13 @@
  *   text-[var(--edit-foreground)]
  *   border-[var(--edit-border)]
  *   etc.
- *
- * ⚠️  TODO before merging PR 1:
- *   Replace --edit-teal-700 placeholder with exact Figma hex for Teal/teal-700.
- *   Click the teal-700 swatch in Figma → Copy hex → paste below.
  */
 
  .root {
     /* ── Teal brand ──────────────────────────────────────────────── */
     --edit-teal-300:    #C3E1D8;              /* Figma: Teal/teal-300 ✓ confirmed  */
     --edit-teal-500:    #4B987F;             /* Figma: Optimize button fill        */
-    --edit-teal-700:    #2D6A4F;             /* ⚠️  replace with exact Figma hex  */
+    --edit-teal-700:    #2B5749;
     --edit-teal-alpha:  rgba(75,152,127,0.16); /* Figma: #4B987F · 16%            */
   
     /* ── Stone neutrals (Figma Stone scale) ─────────────────────── */
