@@ -26,7 +26,7 @@ export default function SidebarResultsButton() {
   const isActive = false;
 
   return (
-    <Link href="#" className={SIDEBAR_NAV_ITEM}>  // TODO: add results page link when at least one route exists
+    <Link href="#" className={SIDEBAR_NAV_ITEM}>  {/* TODO: add results page link when at least one route exists */}
       <span className={isActive ? SIDEBAR_NAV_PILL_ACTIVE : SIDEBAR_NAV_PILL_INACTIVE}>
         {SIDEBAR_RESULTS_ICON}
       </span>
