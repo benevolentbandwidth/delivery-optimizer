@@ -5,6 +5,7 @@
  * Delivery edit screen: wires vehicle and address state into sections and pagination.
  */
 
+import styles from "./edit.module.css";
 import Navbar from "./components/Navbar";
 import OptimizingModal from "./components/OptimizingModal";
 import VehicleSection from "./components/VehicleSection";
@@ -156,7 +157,7 @@ export default function Page() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white font-sans-manrope">
+    <div className={`min-h-screen bg-white font-sans-manrope ${styles.root}`}>
       <OptimizingModal isOpen={isOptimizing} />
       <Navbar
         onImportSession={handleImportSession}
