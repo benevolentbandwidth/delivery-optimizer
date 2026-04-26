@@ -7,21 +7,31 @@ import MapComponent from "./components/Map";
 import Sidebar from "./components/Sidebar";
 import type { PendingPinMove, Route } from "./types";
 
+function readInitialRoutes(): { routes: Route[]; error: string | null } {
+  const stored = sessionStorage.getItem("optimizeResults");
+  if (!stored) return { routes: [], error: null };
+
+  try {
+    const parsed = JSON.parse(stored) as Route[];
+    return { routes: parsed, error: null };
+  } catch {
+    return {
+      routes: [],
+      error: "Route data could not be loaded. Please go back and try again.",
+    };
+  }
+}
+
 export default function ResultsPage() {
-  const [routes, setRoutes] = useState<Route[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [{ routes: initialRoutes, error: initialError }] = useState(readInitialRoutes);
+  const [routes, setRoutes] = useState<Route[]>(initialRoutes);
+  const [error] = useState<string | null>(initialError);
 
   useEffect(() => {
-    const stored = sessionStorage.getItem("optimizeResults");
-    if (!stored) return;
-    try {
-      const parsed = JSON.parse(stored) as Route[];
-      setRoutes(parsed);
+    if (initialRoutes.length > 0) {
       sessionStorage.removeItem("optimizeResults"); // consume once after successful parse + state update
-    } catch {
-      setError("Route data could not be loaded. Please go back and try again.");
     }
-  }, []);
+  }, [initialRoutes.length]);
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isEditMode, setIsEditMode] = useState(false);
