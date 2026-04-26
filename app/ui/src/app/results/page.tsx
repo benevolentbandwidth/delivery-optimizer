@@ -16,9 +16,8 @@ export default function ResultsPage() {
     if (!stored) return;
     try {
       const parsed = JSON.parse(stored) as Route[];
-      sessionStorage.removeItem("optimizeResults"); // consume once — prevents stale data on refresh
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setRoutes(parsed);
+      sessionStorage.removeItem("optimizeResults"); // consume once after successful parse + state update
     } catch {
       setError("Route data could not be loaded. Please go back and try again.");
     }
