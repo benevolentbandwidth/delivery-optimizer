@@ -16,13 +16,13 @@ export const SIDEBAR_NAV_PILL_ACTIVE =
   "w-full flex items-center justify-center rounded-[80px] bg-[var(--edit-teal-300)] px-[9px] py-[4px]";
 
 export const SIDEBAR_NAV_PILL_INACTIVE =
-  "w-full flex items-center justify-center rounded-[80px] px-[9px] py-[4px] hover:bg-[var(--edit-teal-alpha)] transition-colors";
+  "w-full flex items-center justify-center rounded-[80px] opacity-20 px-[9px] py-[4px] hover:bg-[var(--edit-teal-alpha)] transition-colors";
 
 export const SIDEBAR_NAV_LABEL_ACTIVE =
   "text-[14px] leading-5 font-bold text-[var(--edit-foreground)] text-center whitespace-nowrap";
 
 export const SIDEBAR_NAV_LABEL_INACTIVE =
-  "text-[14px] leading-5 font-medium text-[var(--edit-foreground)] text-center whitespace-nowrap";
+  "text-[14px] leading-5 font-medium text-[var(--edit-muted)] text-center whitespace-nowrap";
 
 export const PAGE_V2_BODY = "flex flex-1 min-h-0";
 
