@@ -39,7 +39,7 @@ export default function Navbar({
             Import Session
           </button>
           <button className={NAVBAR_V2_BTN_OUTLINE} onClick={() => void onExportSession()}>
-            Export
+            Export Session
           </button>
           <button
             className={NAVBAR_V2_BTN_FILLED}
