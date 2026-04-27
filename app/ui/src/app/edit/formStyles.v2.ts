@@ -41,4 +41,4 @@ export const NAVBAR_V2_BTN_OUTLINE =
   "h-9 px-4 rounded-[80px] border border-[var(--edit-foreground)] font-semibold text-[14px] leading-5 text-[var(--edit-foreground)] whitespace-nowrap hover:bg-black/5 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed";
 
 export const NAVBAR_V2_BTN_FILLED =
-  "h-9 px-4 rounded-[80px] bg-[var(--edit-teal-500)] font-semibold text-[14px] leading-5 text-[var(--edit-foreground)] whitespace-nowrap hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed";
+  "h-9 px-4 rounded-[80px] bg-[var(--edit-teal-500)] font-semibold text-[14px] leading-5 text-[var(--edit-white)] whitespace-nowrap hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed";

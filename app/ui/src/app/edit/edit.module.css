@@ -36,7 +36,8 @@
     /* ── Text ────────────────────────────────────────────────────── */
     --edit-foreground:  #1C1B1F;             /* Figma: #1C1B1F — primary text      */
     --edit-muted:       #959595;             /* Figma: #959595 — labels/placeholders*/
-  
+    --edit-white:       #FFFFFF;             /* Figma: #FFFFFF — white text color   */
+    
     /* ── Borders ─────────────────────────────────────────────────── */
     --edit-border:      var(--edit-stone-200); /* default border color             */
     --edit-border-input: var(--edit-stone-200);
