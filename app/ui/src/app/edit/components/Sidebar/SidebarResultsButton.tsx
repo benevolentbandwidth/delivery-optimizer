@@ -17,14 +17,12 @@ const SIDEBAR_RESULTS_ICON = (
 )
 
 export default function SidebarResultsButton() {
-  const isActive = false;
-
   return (
     <Link href="#" className={SIDEBAR_NAV_ITEM}>  {/* TODO: add results page link when at least one route exists */}
-      <span className={isActive ? SIDEBAR_NAV_PILL_ACTIVE : SIDEBAR_NAV_PILL_INACTIVE}>
+      <span className={SIDEBAR_NAV_PILL_INACTIVE}>
         {SIDEBAR_RESULTS_ICON}
       </span>
-      <span className={isActive ? SIDEBAR_NAV_LABEL_ACTIVE : SIDEBAR_NAV_LABEL_INACTIVE}>
+      <span className={SIDEBAR_NAV_LABEL_INACTIVE}>
         Results
       </span>
     </Link>
