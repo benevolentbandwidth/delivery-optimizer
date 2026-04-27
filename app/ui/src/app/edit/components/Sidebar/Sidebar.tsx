@@ -1,5 +1,3 @@
-"use client";
-
 import { SIDEBAR_ROOT, SIDEBAR_NAV } from "../../formStyles.v2";
 
 type SidebarProps = {
