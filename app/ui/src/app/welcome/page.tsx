@@ -2,7 +2,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import ShellNavbar from "@/app/components/ShellNavbar";
-import { GradientBlobs, PageFooter } from "@/app/utils/routeUtils";
+import { PageFooter } from "@/app/utils/routeUtils";
 
 export default function WelcomePage() {
   const router = useRouter();
@@ -180,7 +180,6 @@ export default function WelcomePage() {
 
       <div className="welcome-root">
         <div className="welcome-bg" />
-        <GradientBlobs />
         <ShellNavbar />
 
         <div className="welcome-content">

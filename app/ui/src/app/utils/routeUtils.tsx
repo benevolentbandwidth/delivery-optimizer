@@ -1,4 +1,4 @@
-// app/lib/routeUtils.tsx
+// app/utils/routeUtils.tsx
 // Shared utilities extracted to avoid duplication across upload pages and gradient layouts.
 
 /** Human-readable file size string. */
