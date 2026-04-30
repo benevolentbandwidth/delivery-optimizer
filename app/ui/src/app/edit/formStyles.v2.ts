@@ -13,7 +13,7 @@ export const SIDEBAR_NAV_ITEM =
   "flex flex-col gap-1 items-center w-full";
 
 export const SIDEBAR_NAV_ITEM_INACTIVE =
-  "flex flex-col gap-1 items-center w-full opacity-[0.26]";
+  "flex flex-col gap-1 items-center w-full opacity-[0.26] cursor-not-allowed";
 
 export const SIDEBAR_NAV_PILL_ACTIVE =
   "w-full flex items-center justify-center rounded-[80px] bg-[var(--edit-container-active)] px-[9px] py-[4px]";
