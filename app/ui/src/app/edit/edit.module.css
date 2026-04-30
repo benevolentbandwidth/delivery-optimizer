@@ -15,37 +15,25 @@
  */
 
  .root {
-    /* ── Teal brand ──────────────────────────────────────────────── */
-    --edit-teal-300:    #C3E1D8;              /* Figma: Teal/teal-300 ✓ confirmed  */
-    --edit-teal-500:    #4B987F;             /* Figma: Optimize button fill        */
-    --edit-teal-700:    #2B5749;
-    --edit-teal-alpha:  rgba(75,152,127,0.16); /* Figma: #4B987F · 16%            */
+  /* ── Teal brand ──────────────────────────────────────────────── */
+  --edit-teal-300:    #57AC91;
+  --edit-teal-500:    #397461;
+  --edit-teal-600:    #267B67;
+  --edit-teal-700:    #265749;
+  --edit-teal-alpha:  #39746126;
+
+  /* ── Stone neutrals (Figma Stone scale) ─────────────────────── */
+  --edit-stone-50:    #F8F7F5;
+  --edit-stone-200:   #DCDBD8;
+  --edit-stone-500:   #908F8C;
+  --edit-stone-600:   #777673;
+  --edit-stone-700:   #5D5C59;
   
-    /* ── Stone neutrals (Figma Stone scale) ─────────────────────── */
-    --edit-stone-50:    #FAFAF8;             /* Stone/stone-50 — page + sidebar bg */
-    --edit-stone-200:   #E7E5E4;             /* Stone/stone-200 — borders          */
-    --edit-stone-500:   #78716C;             /* Stone/stone-500                    */
-    --edit-stone-600:   #57534E;             /* Stone/stone-600                    */
-    --edit-stone-700:   #44403C;             /* Stone/stone-700                    */
-  
-    /* ── Surfaces ────────────────────────────────────────────────── */
-    --edit-page-bg:     var(--edit-stone-50);  /* behind the content card          */
-    --edit-surface:     #FFFFFF;               /* main content area + inputs        */
-    --edit-sidebar-bg:  var(--edit-stone-50);  /* sidebar matches page bg           */
-  
-    /* ── Text ────────────────────────────────────────────────────── */
-    --edit-foreground:  #1C1B1F;             /* Figma: #1C1B1F — primary text      */
-    --edit-muted:       #959595;             /* Figma: #959595 — labels/placeholders*/
-    --edit-white:       #FFFFFF;             /* Figma: #FFFFFF — white text color   */
-    
-    /* ── Borders ─────────────────────────────────────────────────── */
-    --edit-border:      var(--edit-stone-200); /* default border color             */
-    --edit-border-input: var(--edit-stone-200);
-  
-    /* ── Status / danger ─────────────────────────────────────────── */
-    --edit-danger:      #EF4444;             /* Red/red-500                        */
-    --edit-danger-bg:   #FEF2F2;
-  
-    /* ── Shadows ─────────────────────────────────────────────────── */
-    --edit-shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03);
-  }
+  /* ── Nav ─────────────────────────────────────────────────────── */
+  --edit-container-active: #D5F2E8;
+  --edit-text-primary:     #272725;
+  --edit-btn-primary:      #39AC8F;
+
+  /* ── Text ────────────────────────────────────────────────────── */
+  --edit-foreground:  #1C1B1F;
+}
