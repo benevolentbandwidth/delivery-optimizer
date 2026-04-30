@@ -5,8 +5,13 @@
  * Delivery edit screen: wires vehicle and address state into sections and pagination.
  */
 
+import styles from "./edit.module.css";
 import Navbar from "./components/Navbar";
 import OptimizingModal from "./components/OptimizingModal";
+import Sidebar from "./components/Sidebar/Sidebar";
+import SidebarEditButton from "./components/Sidebar/SidebarEditButton";
+import SidebarResultsButton from "./components/Sidebar/SidebarResultsButton";
+import { PAGE_V2_BODY, PAGE_V2_MAIN } from "./formStyles.v2";
 import VehicleSection from "./components/VehicleSection";
 import AddressSection from "./components/AddressSection";
 import AddressPagination from "./components/AddressPagination";
@@ -156,7 +161,7 @@ export default function Page() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white font-sans-manrope">
+    <div className={`min-h-screen flex flex-col bg-white font-sans-manrope ${styles.root}`}>
       <OptimizingModal isOpen={isOptimizing} />
       <Navbar
         onImportSession={handleImportSession}
@@ -166,11 +171,17 @@ export default function Page() {
         error={sessionError ?? optimizeError ?? csvError}
         onClearError={() => { clearSessionError(); clearOptimizeError(); clearCsvError(); }}
       />
-      <main className="px-4 sm:px-6 md:px-8 py-6 md:py-8 space-y-8 md:space-y-10 max-w-[1480px] mx-auto">
-        <VehicleSection {...vehicleState} geocodeFailedVehicleIds={geocodeFailedVehicleIds} outOfRegionVehicleIds={outOfRegionVehicleIds} />
-        <AddressSection {...addressState} geocodeFailedIds={geocodeFailedAddressIds} outOfRegionIds={outOfRegionAddressIds} onCSVUpload={handleCSVUpload} />
-        <AddressPagination {...addressState} />
-      </main>
+      <div className={PAGE_V2_BODY}>
+        <Sidebar>
+          <SidebarEditButton />
+          <SidebarResultsButton />
+        </Sidebar>
+        <main className={PAGE_V2_MAIN}>
+          <VehicleSection {...vehicleState} geocodeFailedVehicleIds={geocodeFailedVehicleIds} outOfRegionVehicleIds={outOfRegionVehicleIds} />
+          <AddressSection {...addressState} geocodeFailedIds={geocodeFailedAddressIds} outOfRegionIds={outOfRegionAddressIds} onCSVUpload={handleCSVUpload} />
+          <AddressPagination {...addressState} />
+        </main>
+      </div>
     </div>
   );
 }
