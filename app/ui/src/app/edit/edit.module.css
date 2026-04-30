@@ -28,11 +28,18 @@
   --edit-stone-500:   #908F8C;
   --edit-stone-600:   #777673;
   --edit-stone-700:   #5D5C59;
-  
+
   /* ── Nav ─────────────────────────────────────────────────────── */
   --edit-container-active: #D5F2E8;
   --edit-text-primary:     #272725;
   --edit-btn-primary:      #39AC8F;
+
+  /* ── Button Hover States ──────────────────────────────────────────────────── */
+  --edit-primary-btn-hover: linear-gradient(0deg, rgba(0, 0, 0, 0.08) 0%, rgba(0, 0, 0, 0.08) 100%), var(--edit-btn-primary);
+  --edit-primary-btn-pressed: linear-gradient(0deg, rgba(0, 0, 0, 0.16) 0%, rgba(0, 0, 0, 0.16) 100%), var(--edit-btn-primary);
+
+  --edit-secondary-btn-hover: rgba(0, 0, 0, 0.02);
+  --edit-secondary-btn-pressed: rgba(0, 0, 0, 0.04);
 
   /* ── Text ────────────────────────────────────────────────────── */
   --edit-foreground:  #1C1B1F;
