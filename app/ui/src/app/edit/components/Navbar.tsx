@@ -1,6 +1,5 @@
 "use client";
 
-import { useRef } from "react";
 import {
   NAVBAR_V2_ACTIONS,
   NAVBAR_V2_BTN_FILLED,
@@ -27,8 +26,6 @@ export default function Navbar({
   error,
   onClearError,
 }: NavbarProps) {
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-
   return (
     <>
       <ErrorPopup message={error} onClose={onClearError} />
