@@ -8,40 +8,6 @@ export function formatSize(bytes: number): string {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-/** Decorative gradient blobs shared by landing and welcome pages. */
-export function GradientBlobs() {
-    return (
-        <>
-            <div
-                style={{
-                    position: "fixed",
-                    top: "-80px",
-                    right: "-80px",
-                    width: "520px",
-                    height: "520px",
-                    background:
-                        "radial-gradient(ellipse at top right, #c8ddd6 0%, #dceade 30%, transparent 70%)",
-                    pointerEvents: "none",
-                    zIndex: 0,
-                }}
-            />
-            <div
-                style={{
-                    position: "fixed",
-                    bottom: "-100px",
-                    left: "-100px",
-                    width: "400px",
-                    height: "400px",
-                    background:
-                        "radial-gradient(ellipse at bottom left, #d4e6df 0%, transparent 65%)",
-                    pointerEvents: "none",
-                    zIndex: 0,
-                }}
-            />
-        </>
-    );
-}
-
 /** Footer shared by landing and welcome pages. */
 export function PageFooter() {
     return (
@@ -57,16 +23,33 @@ export function PageFooter() {
                 fontFamily: "'DM Sans', sans-serif",
             }}
         >
-            <span
-                style={{
-                    fontSize: "22px",
-                    fontWeight: 700,
-                    color: "#111",
-                    fontFamily: "'DM Serif Display', serif",
-                }}
+            {/* b² logo — inline SVG recreated from brand asset */}
+            <svg
+                width="44"
+                height="36"
+                viewBox="0 0 44 36"
+                fill="none"
+                aria-label="b² logo"
+                xmlns="http://www.w3.org/2000/svg"
             >
-                b²
-            </span>
+                {/* Stem of the b */}
+                <rect x="0" y="0" width="7" height="36" rx="3.5" fill="#2d6e6e" />
+                {/* Bowl of the b — constructed from a circle with the left side merged into the stem */}
+                <circle cx="17" cy="23" r="13" fill="#2d6e6e" />
+                <circle cx="17" cy="23" r="7.5" fill="white" />
+                {/* Superscript 2 */}
+                <text
+                    x="32"
+                    y="16"
+                    fontSize="16"
+                    fontWeight="700"
+                    fontFamily="'DM Sans', sans-serif"
+                    fill="#2d6e6e"
+                >
+                    2
+                </text>
+            </svg>
+
             <span style={{ fontSize: "13px", color: "#555" }}>
                 Built with ❤️ for Humanity. The Benevolent Bandwidth Foundation
             </span>

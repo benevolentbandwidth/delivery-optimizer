@@ -32,7 +32,6 @@ export default function LandingPage() {
         }
 
         /* Navbar override — pure white */
-        .landing-root :global(.shell-navbar),
         .landing-navbar-wrap {
           position: relative;
           z-index: 10;
