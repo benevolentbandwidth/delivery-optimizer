@@ -11,6 +11,29 @@ const TIMEOUT_MS = Number(
   process.env.DELIVERYOPTIMIZER_API_TIMEOUT_MS ?? 60000
 )
 
+// Cached GCP identity token — reuse until 5 min before expiry
+let cachedToken: { value: string; expiresAt: number } | null = null
+
+async function getIdToken(audience: string): Promise<string> {
+  const now = Date.now()
+  if (cachedToken && cachedToken.expiresAt - now > 5 * 60 * 1000) {
+    return cachedToken.value
+  }
+  const metadataUrl =
+    `http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/identity?audience=${encodeURIComponent(audience)}`
+  const res = await fetch(metadataUrl, {
+    headers: { "Metadata-Flavor": "Google" },
+  })
+  if (!res.ok) {
+    throw new Error(`Failed to fetch GCP identity token: ${res.status}`)
+  }
+  const token = await res.text()
+  // GCP identity tokens are JWTs valid for 1 hour
+  cachedToken = { value: token, expiresAt: now + 60 * 60 * 1000 }
+  return token
+}
+
+
 export type DeliveryOptimizerClientError = Error & {
   source: "deliveryoptimizer-api"
   retryable: boolean
@@ -111,10 +134,20 @@ async function requestJsonResponse<T>(
 ): Promise<JsonResponse<T>> {
   const url = `${API_BASE}${path}`
 
+  // Only authenticate when targeting a remote Cloud Run URL (not local dev)
+  const authHeaders: Record<string, string> = {}
+  if (process.env.DELIVERYOPTIMIZER_API_URL) {
+    const token = await getIdToken(API_BASE)
+    authHeaders["Authorization"] = `Bearer ${token}`
+  }
+
   const response = await retry(async () => {
     let res: Response
     try {
-      res = await fetchWithTimeout(url, options)
+      res = await fetchWithTimeout(url, {
+        ...options,
+        headers: { ...(options.headers as Record<string, string>), ...authHeaders },
+      })
     } catch (error) {
       const aborted =
         error &&

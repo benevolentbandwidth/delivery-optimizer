@@ -71,10 +71,10 @@ steps:
               --project $PROJECT_ID
         gcloud run services add-iam-policy-binding deliveryoptimizer \
           --region ${_REGION} \
-          --member="allUsers" \
+          --member="serviceAccount:firebase-app-hosting-compute@$PROJECT_ID.iam.gserviceaccount.com" \
           --role="roles/run.invoker" \
           --project $PROJECT_ID \
-          --quiet || true
+          --quiet
 
 serviceAccount: projects/$PROJECT_ID/serviceAccounts/do-app-service@$PROJECT_ID.iam.gserviceaccount.com
 

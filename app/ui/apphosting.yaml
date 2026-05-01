@@ -11,8 +11,7 @@ env:
   - variable: NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID
     secret: GOOGLE_MAPS_MAP_ID
   - variable: DELIVERYOPTIMIZER_API_URL
-    # Set via: firebase apphosting:secrets:set DELIVERYOPTIMIZER_API_URL
-    # Value: your Cloud Run service URL (e.g. https://<service>.<region>.run.app)
+    secret: DELIVERYOPTIMIZER_API_URL
     availability:
       - BUILD
       - RUNTIME
