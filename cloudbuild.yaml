@@ -1,50 +1,56 @@
+substitutions:
+  _REGION: us-east1
+  _OSRM_BUCKET: b2-delivery-optimizer-osrm-data
+
 steps:
   # Build and push API image
   - name: gcr.io/cloud-builders/docker
     id: build-api
+    env: ['DOCKER_BUILDKIT=1']
     args:
       - build
       - --cache-from
-      - us-east1-docker.pkg.dev/b2-delivery-optimizer/services/deliveryoptimizer-api:cache
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/services/deliveryoptimizer-api:cache
       - -f
       - deploy/services/http-server.Dockerfile
       - -t
-      - us-east1-docker.pkg.dev/b2-delivery-optimizer/services/deliveryoptimizer-api:$COMMIT_SHA
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/services/deliveryoptimizer-api:$COMMIT_SHA
       - -t
-      - us-east1-docker.pkg.dev/b2-delivery-optimizer/services/deliveryoptimizer-api:latest
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/services/deliveryoptimizer-api:latest
       - -t
-      - us-east1-docker.pkg.dev/b2-delivery-optimizer/services/deliveryoptimizer-api:cache
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/services/deliveryoptimizer-api:cache
       - .
 
   # Build and push OSRM image
   - name: gcr.io/cloud-builders/docker
     id: build-osrm
     waitFor: ['-']  # run in parallel with build-api
+    env: ['DOCKER_BUILDKIT=1']
     args:
       - build
       - --cache-from
-      - us-east1-docker.pkg.dev/b2-delivery-optimizer/services/osrm:cache
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/services/osrm:cache
       - -f
       - deploy/services/osrm.Dockerfile
       - -t
-      - us-east1-docker.pkg.dev/b2-delivery-optimizer/services/osrm:$COMMIT_SHA
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/services/osrm:$COMMIT_SHA
       - -t
-      - us-east1-docker.pkg.dev/b2-delivery-optimizer/services/osrm:latest
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/services/osrm:latest
       - -t
-      - us-east1-docker.pkg.dev/b2-delivery-optimizer/services/osrm:cache
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/services/osrm:cache
       - .
 
   # Push API images
   - name: gcr.io/cloud-builders/docker
     id: push-api
     waitFor: [build-api]
-    args: [push, --all-tags, us-east1-docker.pkg.dev/b2-delivery-optimizer/services/deliveryoptimizer-api]
+    args: [push, --all-tags, ${_REGION}-docker.pkg.dev/$PROJECT_ID/services/deliveryoptimizer-api]
 
   # Push OSRM images
   - name: gcr.io/cloud-builders/docker
     id: push-osrm
     waitFor: [build-osrm]
-    args: [push, --all-tags, us-east1-docker.pkg.dev/b2-delivery-optimizer/services/osrm]
+    args: [push, --all-tags, ${_REGION}-docker.pkg.dev/$PROJECT_ID/services/osrm]
 
   # Deploy sidecar service to Cloud Run
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
@@ -54,18 +60,23 @@ steps:
     args:
       - -c
       - |
-        sed "s/:TAG/:$COMMIT_SHA/g" infra/cloud-run/service.yaml \
+        sed \
+          -e "s|:TAG|:$COMMIT_SHA|g" \
+          -e "s|REGISTRY|${_REGION}-docker.pkg.dev/$PROJECT_ID/services|g" \
+          -e "s|SERVICE_ACCOUNT|do-app-service@$PROJECT_ID.iam.gserviceaccount.com|g" \
+          -e "s|OSRM_BUCKET|${_OSRM_BUCKET}|g" \
+          infra/cloud-run/service.yaml \
           | gcloud run services replace - \
-            --region us-east1 \
-            --project b2-delivery-optimizer
+              --region ${_REGION} \
+              --project $PROJECT_ID
         gcloud run services add-iam-policy-binding deliveryoptimizer \
-          --region us-east1 \
+          --region ${_REGION} \
           --member="allUsers" \
           --role="roles/run.invoker" \
-          --project b2-delivery-optimizer \
+          --project $PROJECT_ID \
           --quiet || true
 
-serviceAccount: projects/b2-delivery-optimizer/serviceAccounts/do-app-service@b2-delivery-optimizer.iam.gserviceaccount.com
+serviceAccount: projects/$PROJECT_ID/serviceAccounts/do-app-service@$PROJECT_ID.iam.gserviceaccount.com
 
 options:
   logging: CLOUD_LOGGING_ONLY

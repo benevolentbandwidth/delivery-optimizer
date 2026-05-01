@@ -12,10 +12,10 @@ spec:
     spec:
       containerConcurrency: 80
       timeoutSeconds: 60
-      serviceAccountName: do-app-service@b2-delivery-optimizer.iam.gserviceaccount.com
+      serviceAccountName: SERVICE_ACCOUNT
       containers:
         - name: api
-          image: us-east1-docker.pkg.dev/b2-delivery-optimizer/services/deliveryoptimizer-api:TAG
+          image: REGISTRY/deliveryoptimizer-api:TAG
           ports:
             - containerPort: 8080
           env:
@@ -40,18 +40,18 @@ spec:
             periodSeconds: 5
             failureThreshold: 20
         - name: osrm
-          image: us-east1-docker.pkg.dev/b2-delivery-optimizer/services/osrm:TAG
+          image: REGISTRY/osrm:TAG
           env:
             - name: OSRM_GCS_BUCKET
-              value: b2-delivery-optimizer-osrm-data
+              value: OSRM_BUCKET
             - name: OSRM_GCS_PREFIX
               value: california
             - name: OSRM_PORT
               value: "5001"
           resources:
             limits:
-              memory: 4Gi
-              cpu: "1"
+              memory: 6Gi
+              cpu: "2"
           startupProbe:
             tcpSocket:
               port: 5001

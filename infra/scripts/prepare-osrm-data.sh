@@ -4,10 +4,12 @@
 # Prerequisites: docker, gcloud CLI authenticated with storage write access.
 set -euo pipefail
 
-BUCKET="${1:?Usage: $0 <gcs-bucket> [prefix]}"
+BUCKET="${1:?Usage: $0 <gcs-bucket> [prefix] [region]}"
 PREFIX="${2:-california}"
+REGION="${3:-us-east1}"
+PROJECT_ID="$(gcloud config get-value project)"
 PBF_URL="https://download.geofabrik.de/north-america/us/california-latest.osm.pbf"
-REGISTRY="us-east1-docker.pkg.dev/b2-delivery-optimizer/services"
+REGISTRY="${REGION}-docker.pkg.dev/${PROJECT_ID}/services"
 DATA_DIR="$(mktemp -d)"
 trap 'rm -rf "${DATA_DIR}"' EXIT
 
@@ -26,7 +28,6 @@ docker run --rm \
   "
 
 echo "==> Uploading to gs://${BUCKET}/${PREFIX}/"
-gcloud storage cp "${DATA_DIR}/${PREFIX}.osrm"* "gs://${BUCKET}/${PREFIX}/" \
-  --impersonate-service-account=do-app-service@b2-delivery-optimizer.iam.gserviceaccount.com
+gcloud storage cp "${DATA_DIR}/${PREFIX}.osrm"* "gs://${BUCKET}/${PREFIX}/"
 
 echo "==> Done. Verify with: gcloud storage ls gs://${BUCKET}/${PREFIX}/"
