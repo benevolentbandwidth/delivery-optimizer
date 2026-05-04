@@ -52,9 +52,11 @@ function RoutePolylinesOverlay({
     polylinesRef.current = [];
 
     let cancelled = false;
-    const directionsService = new google.maps.DirectionsService(); // DirectionsService is used to get the route data from Google Maps Directions API (no need for API key, since we're calling the API from the browser)
+    // Same browser session as the Maps JS script — billing still uses your Maps key, not a second secret.
+    const directionsService = new google.maps.DirectionsService();
 
     const drawFallback = (route: Route) => {
+      if (cancelled) return;
       const fallbackPath = buildRoutePath(route, pendingPinMove);
       if (fallbackPath.length < 2) return;
       const fallbackPoly = new google.maps.Polyline({
@@ -65,15 +67,19 @@ function RoutePolylinesOverlay({
       polylinesRef.current.push(fallbackPoly);
     };
 
-    (async () => {
-      for (const route of routes) {
+    void Promise.allSettled(
+      routes.map(async (route) => {
         const path = buildRoutePath(route, pendingPinMove);
-        if (path.length < 2) continue;
-        const origin = path[0];
-        const destination = path[path.length - 1];
-        if (!origin || !destination) continue;
+        if (path.length < 2) return;
+        const origin = path[0]!;
+        const destination = path[path.length - 1]!;
 
         const waypoints = path.slice(1, -1).map((location) => ({ location, stopover: true }));
+        // Google limits intermediate waypoints to 25; past that we skip Directions and use straight segments.
+        if (waypoints.length > 25) {
+          drawFallback(route);
+          return;
+        }
 
         try {
           const result = await directionsService.route({
@@ -88,7 +94,7 @@ function RoutePolylinesOverlay({
           const roadPath = result.routes[0]?.overview_path;
           if (!roadPath || roadPath.length < 2) {
             drawFallback(route);
-            continue;
+            return;
           }
 
           const totalMeters = (result.routes[0]?.legs ?? []).reduce(
@@ -99,6 +105,7 @@ function RoutePolylinesOverlay({
             const distanceMi = Number((totalMeters / 1609.344).toFixed(1));
             onRouteDistanceUpdate(route.vehicleId, distanceMi);
           }
+          if (cancelled) return;
 
           const roadPoly = new google.maps.Polyline({
             map,
@@ -107,11 +114,10 @@ function RoutePolylinesOverlay({
           });
           polylinesRef.current.push(roadPoly);
         } catch {
-          if (cancelled) return;
           drawFallback(route);
         }
-      }
-    })();
+      })
+    );
 
     return () => {
       cancelled = true;
