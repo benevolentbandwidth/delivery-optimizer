@@ -1,5 +1,4 @@
 // Colors go in list order: first route uses palette[0], second uses palette[1], etc.
-// More routes than colors → wrap back to the start. Swap the hex list later; keep this shape.
 
 const PALETTE = [
   "#0d9488",
@@ -12,7 +11,6 @@ const PALETTE = [
   "#b45309",
 ] as const;
 
-/** `routeIndex` = 0-based position in the routes array (same order as "Route 1", "Route 2", …). */
-export function routeColorHex(routeIndex: number): string {
-  return PALETTE[routeIndex % PALETTE.length]!;
+export function routeColorHex(routeIndex: number): string { // routeIndex (0 = first route, 1 = second route, etc.)
+  return PALETTE[routeIndex % PALETTE.length]!; // uses the list in order, and wraps back to the start if there are more routes than colors
 }
