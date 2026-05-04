@@ -1,4 +1,5 @@
-// One stable color per vehicle/route id for list + map (same id → same color).
+// Colors go in list order: first route uses palette[0], second uses palette[1], etc.
+// More routes than colors → wrap back to the start. Swap the hex list later; keep this shape.
 
 const PALETTE = [
   "#0d9488",
@@ -11,14 +12,7 @@ const PALETTE = [
   "#b45309",
 ] as const;
 
-function paletteIndex(vehicleId: string): number {
-  let h = 0;
-  for (let i = 0; i < vehicleId.length; i++) {
-    h = (h * 31 + vehicleId.charCodeAt(i)) >>> 0;
-  }
-  return h % PALETTE.length;
-}
-
-export function routeColorHex(vehicleId: string): string {
-  return PALETTE[paletteIndex(vehicleId)]!;
+/** `routeIndex` = 0-based position in the routes array (same order as "Route 1", "Route 2", …). */
+export function routeColorHex(routeIndex: number): string {
+  return PALETTE[routeIndex % PALETTE.length]!;
 }

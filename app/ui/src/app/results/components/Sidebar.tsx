@@ -71,7 +71,7 @@ export default function Sidebar({ routes, isEditMode, onEditModeChange, onUpdate
             {routes.map((route, idx) => {
               const isExpanded = expandedRouteIds.has(route.vehicleId);
               const sortedStops = [...route.stops].sort((a, b) => a.sequence - b.sequence);
-              const accent = routeColorHex(route.vehicleId);
+              const accent = routeColorHex(idx);
 
               return (
                 <li
