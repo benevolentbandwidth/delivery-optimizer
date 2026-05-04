@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { Route } from "../types";
+import { routeColorHex } from "../utils/routeColors";
 import EditableStopItem from "./EditableStopItem";
 
 type SidebarProps = {
@@ -70,11 +71,13 @@ export default function Sidebar({ routes, isEditMode, onEditModeChange, onUpdate
             {routes.map((route, idx) => {
               const isExpanded = expandedRouteIds.has(route.vehicleId);
               const sortedStops = [...route.stops].sort((a, b) => a.sequence - b.sequence);
+              const accent = routeColorHex(route.vehicleId);
 
               return (
                 <li
                   key={route.vehicleId}
-                  className="rounded-xl border border-zinc-200 bg-zinc-50 shadow-sm overflow-hidden"
+                  className="rounded-xl border border-zinc-200 border-l-4 bg-zinc-50 shadow-sm overflow-hidden"
+                  style={{ borderLeftColor: accent }}
                 >
                   <button
                     type="button"
@@ -83,9 +86,20 @@ export default function Sidebar({ routes, isEditMode, onEditModeChange, onUpdate
                     aria-expanded={isExpanded}
                   >
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-zinc-800">Route {idx + 1}</span>
-                        <span className="text-xs text-zinc-500">{route.vehicleType ?? "Vehicle"} {route.vehicleId}</span>
+                      <div className="flex items-start gap-2 min-w-0">
+                        <span
+                          className="mt-0.5 h-8 w-8 shrink-0 rounded-md"
+                          style={{ backgroundColor: accent }}
+                          aria-hidden
+                        />
+                        <div className="min-w-0">
+                          <div className="text-sm font-semibold" style={{ color: accent }}>
+                            Route {idx + 1}
+                          </div>
+                          <div className="text-xs text-zinc-500">
+                            {route.vehicleType ?? "Vehicle"} {route.vehicleId}
+                          </div>
+                        </div>
                       </div>
                       <div className="mt-2 grid grid-cols-3 gap-2">
                         <div className="rounded-lg bg-white px-2 py-1.5 shadow-sm min-w-0 text-center">
