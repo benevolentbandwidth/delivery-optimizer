@@ -12,19 +12,12 @@ type SidebarProps = {
   onUpdateStopNote: (routeId: string, stopId: string, note: string) => void;
 };
 
-export default function Sidebar({
-  routes,
-  isEditMode,
-  onEditModeChange,
-  onUpdateStopNote,
-}: SidebarProps) {
-  const [expandedRouteIds, setExpandedRouteIds] = useState<Set<string>>(
-    () => new Set(),
-  );
+export default function Sidebar({ routes, isEditMode, onEditModeChange, onUpdateStopNote }: SidebarProps) {
+  const [expandedRouteIds, setExpandedRouteIds] = useState<Set<string>>(() => new Set());
 
   const totalStops = useMemo(
     () => routes.reduce((sum, r) => sum + r.stops.length, 0),
-    [routes],
+    [routes]
   );
 
   function toggleExpanded(routeId: string) {
@@ -49,9 +42,7 @@ export default function Sidebar({
       className={`w-full h-full flex flex-col overflow-hidden border-r-2 bg-white p-4 ${isEditMode ? "border-amber-500" : "border-zinc-200"}`}
     >
       {isEditMode && (
-        <p className="mb-2 text-xs font-medium text-amber-700 bg-amber-50 rounded px-2 py-1">
-          Edit Mode Active
-        </p>
+        <p className="mb-2 text-xs font-medium text-amber-700 bg-amber-50 rounded px-2 py-1">Edit Mode Active</p>
       )}
       <div className="flex shrink-0 items-center justify-between gap-2 mb-4">
         <span className="text-sm font-medium text-zinc-700">Edit mode</span>
@@ -67,12 +58,9 @@ export default function Sidebar({
           />
         </button>
       </div>
-      <h2 className="shrink-0 text-lg font-semibold text-zinc-800">
-        Optimized Routes
-      </h2>
+      <h2 className="shrink-0 text-lg font-semibold text-zinc-800">Optimized Routes</h2>
       <p className="mt-1 shrink-0 text-xs text-zinc-500">
-        {routes.length} route{routes.length === 1 ? "" : "s"} with {totalStops}{" "}
-        total stop
+        {routes.length} route{routes.length === 1 ? "" : "s"} with {totalStops} total stop
         {totalStops === 1 ? "" : "s"}
       </p>
       <div className="flex-1 min-h-0 overflow-y-auto mt-3">
@@ -82,9 +70,7 @@ export default function Sidebar({
           <ul className="space-y-3 pb-2">
             {routes.map((route, idx) => {
               const isExpanded = expandedRouteIds.has(route.vehicleId);
-              const sortedStops = [...route.stops].sort(
-                (a, b) => a.sequence - b.sequence,
-              );
+              const sortedStops = [...route.stops].sort((a, b) => a.sequence - b.sequence);
               const accent = routeColorHex(idx);
 
               return (
@@ -107,10 +93,7 @@ export default function Sidebar({
                           aria-hidden
                         />
                         <div className="min-w-0">
-                          <div
-                            className="text-sm font-semibold"
-                            style={{ color: accent }}
-                          >
+                          <div className="text-sm font-semibold" style={{ color: accent }}>
                             Route {idx + 1}
                           </div>
                           <div className="text-xs text-zinc-500">
@@ -120,37 +103,20 @@ export default function Sidebar({
                       </div>
                       <div className="mt-2 grid grid-cols-3 gap-2">
                         <div className="rounded-lg bg-white px-2 py-1.5 shadow-sm min-w-0 text-center">
-                          <div className="text-[9px] uppercase tracking-wide text-zinc-500">
-                            STOPS
-                          </div>
-                          <div className="text-sm font-semibold text-zinc-800">
-                            {sortedStops.length}
-                          </div>
+                          <div className="text-[9px] uppercase tracking-wide text-zinc-500">STOPS</div>
+                          <div className="text-sm font-semibold text-zinc-800">{sortedStops.length}</div>
                         </div>
                         <div className="rounded-lg bg-white px-2 py-1.5 shadow-sm min-w-0 text-center">
-                          <div className="text-[9px] uppercase tracking-wide text-zinc-500">
-                            DISTANCE
-                          </div>
-                          <div className="text-sm font-semibold text-zinc-800 tabular-nums">
-                            {route.distanceMi != null
-                              ? `${route.distanceMi}mi`
-                              : "—"}
-                          </div>
+                          <div className="text-[9px] uppercase tracking-wide text-zinc-500">DISTANCE</div>
+                          <div className="text-sm font-semibold text-zinc-800 tabular-nums">{route.distanceMi != null ? `${route.distanceMi}mi` : "—"}</div>
                         </div>
                         <div className="rounded-lg bg-white px-2 py-1.5 shadow-sm min-w-0 text-center">
-                          <div className="text-[9px] uppercase tracking-wide text-zinc-500">
-                            EST. TIME
-                          </div>
-                          <div className="text-sm font-semibold text-zinc-800 tabular-nums">
-                            {formatEstTime(route.estimatedTimeMinutes)}
-                          </div>
+                          <div className="text-[9px] uppercase tracking-wide text-zinc-500">EST. TIME</div>
+                          <div className="text-sm font-semibold text-zinc-800 tabular-nums">{formatEstTime(route.estimatedTimeMinutes)}</div>
                         </div>
                       </div>
                       <p className="mt-2 text-xs text-zinc-600">
-                        <span className="font-medium text-zinc-700">
-                          Driver:
-                        </span>{" "}
-                        {route.driverName}
+                        <span className="font-medium text-zinc-700">Driver:</span> {route.driverName}
                       </p>
                     </div>
 
@@ -179,9 +145,7 @@ export default function Sidebar({
                               stop={stop}
                               accentColor={accent}
                               isEditMode={isEditMode}
-                              onSaveNote={(note) =>
-                                onUpdateStopNote(route.vehicleId, stop.id, note)
-                              }
+                              onSaveNote={(note) => onUpdateStopNote(route.vehicleId, stop.id, note)}
                             />
                           </li>
                         ))}
