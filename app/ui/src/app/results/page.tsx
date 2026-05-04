@@ -74,11 +74,14 @@ export default function ResultsPage() {
   );
 
   const handleRouteDistanceUpdate = useCallback((vehicleId: string, distanceMi: number) => {
-    setRoutes((prev) =>
-      prev.map((route) =>
-        route.vehicleId === vehicleId ? { ...route, distanceMi } : route
-      )
-    );
+    setRoutes((prev) => {
+      const next = prev.map((route) =>
+        route.vehicleId === vehicleId && route.distanceMi !== distanceMi
+          ? { ...route, distanceMi }
+          : route
+      );
+      return next.every((r, i) => r === prev[i]) ? prev : next;
+    });
   }, []);
 
   const handleEditModeChange = useCallback((value: boolean) => {
