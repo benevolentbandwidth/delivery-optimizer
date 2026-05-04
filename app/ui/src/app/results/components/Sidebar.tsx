@@ -90,8 +90,8 @@ export default function Sidebar({
               return (
                 <li
                   key={route.vehicleId}
-                  className="rounded-xl border border-zinc-200 bg-zinc-50 shadow-sm overflow-hidden"
-                  style={{ boxShadow: `inset 4px 0 0 ${accent}` }}
+                  className="rounded-xl border border-zinc-200 border-l-4 bg-zinc-50 shadow-sm overflow-hidden"
+                  style={{ borderLeftColor: accent }}
                 >
                   <button
                     type="button"
@@ -102,7 +102,7 @@ export default function Sidebar({
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start gap-2 min-w-0">
                         <span
-                          className="mt-0.5 h-5 w-5 shrink-0 rounded-md"
+                          className="mt-0.5 h-8 w-8 shrink-0 rounded-md"
                           style={{ backgroundColor: accent }}
                           aria-hidden
                         />
