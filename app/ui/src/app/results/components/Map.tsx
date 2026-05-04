@@ -15,6 +15,12 @@ const ROUTE_POLYLINE_OPTIONS: google.maps.PolylineOptions = {
   strokeOpacity: 0.75,
 };
 
+const directionsCache = new Map<string, google.maps.LatLng[]>();
+
+function routeCacheKey(path: google.maps.LatLngLiteral[]): string {
+  return path.map((p) => `${p.lat.toFixed(6)},${p.lng.toFixed(6)}`).join("|");
+}
+
 function buildRoutePath(
   route: Route,
   pendingPinMove: PendingPinMove | null
@@ -53,6 +59,7 @@ function RoutePolylinesOverlay({
     const directionsService = new google.maps.DirectionsService();
 
     const drawFallback = (route: Route) => {
+      if (cancelled) return;
       const fallbackPath = buildRoutePath(route, pendingPinMove);
       if (fallbackPath.length < 2) return;
       const fallbackPoly = new google.maps.Polyline({
@@ -63,15 +70,31 @@ function RoutePolylinesOverlay({
       polylinesRef.current.push(fallbackPoly);
     };
 
-    (async () => {
-      for (const route of routes) {
+    void Promise.allSettled(
+      routes.map(async (route) => {
         const path = buildRoutePath(route, pendingPinMove);
-        if (path.length < 2) continue;
-        const origin = path[0];
-        const destination = path[path.length - 1];
-        if (!origin || !destination) continue;
+        if (path.length < 2) return;
+        const origin = path[0]!;
+        const destination = path[path.length - 1]!;
 
         const waypoints = path.slice(1, -1).map((location) => ({ location, stopover: true }));
+        if (waypoints.length > 25) {
+          drawFallback(route);
+          return;
+        }
+
+        const cacheKey = routeCacheKey(path);
+        const cachedRoadPath = directionsCache.get(cacheKey);
+        if (cachedRoadPath && cachedRoadPath.length >= 2) {
+          if (cancelled) return;
+          const cachedPoly = new google.maps.Polyline({
+            map,
+            path: cachedRoadPath,
+            ...ROUTE_POLYLINE_OPTIONS,
+          });
+          polylinesRef.current.push(cachedPoly);
+          return;
+        }
 
         try {
           const result = await directionsService.route({
@@ -86,8 +109,11 @@ function RoutePolylinesOverlay({
           const roadPath = result.routes[0]?.overview_path;
           if (!roadPath || roadPath.length < 2) {
             drawFallback(route);
-            continue;
+            return;
           }
+
+          directionsCache.set(cacheKey, roadPath);
+          if (cancelled) return;
 
           const roadPoly = new google.maps.Polyline({
             map,
@@ -96,11 +122,10 @@ function RoutePolylinesOverlay({
           });
           polylinesRef.current.push(roadPoly);
         } catch {
-          if (cancelled) return;
           drawFallback(route);
         }
-      }
-    })();
+      })
+    );
 
     return () => {
       cancelled = true;
