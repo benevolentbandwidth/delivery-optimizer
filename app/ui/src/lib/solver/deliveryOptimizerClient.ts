@@ -136,7 +136,11 @@ async function requestJsonResponse<T>(
 
   // Only authenticate when targeting a remote Cloud Run URL (not local dev)
   const authHeaders: Record<string, string> = {}
-  if (process.env.DELIVERYOPTIMIZER_API_URL) {
+  if (
+    process.env.DELIVERYOPTIMIZER_API_URL &&
+    !API_BASE.startsWith("http://localhost") &&
+    !API_BASE.startsWith("http://127.0.0.1")
+  ) {
     const token = await getIdToken(API_BASE)
     authHeaders["Authorization"] = `Bearer ${token}`
   }
