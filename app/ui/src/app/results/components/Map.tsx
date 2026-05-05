@@ -5,15 +5,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState, Fragment } from "react";
 import { LoadScriptNext, GoogleMap, Marker, useGoogleMap } from "@react-google-maps/api";
 import type { PendingPinMove, Route } from "../types";
+import { routeColorHex } from "../utils/routeColors";
 
 const DAVIS_CENTER = { lat: 38.5449, lng: -121.7405 };
-const POLYLINE_COLOR = "#2563eb";
 
-const ROUTE_POLYLINE_OPTIONS: google.maps.PolylineOptions = {
-  strokeColor: POLYLINE_COLOR,
-  strokeWeight: 4,
-  strokeOpacity: 0.75,
-};
+function routePolylineOptions(strokeColor: string): google.maps.PolylineOptions {
+  return {
+    strokeColor,
+    strokeWeight: 4,
+    strokeOpacity: 0.75,
+  };
+}
 
 function buildRoutePath(
   route: Route,
@@ -55,20 +57,21 @@ function RoutePolylinesOverlay({
     // Same browser session as the Maps JS script — billing still uses your Maps key, not a second secret.
     const directionsService = new google.maps.DirectionsService();
 
-    const drawFallback = (route: Route) => {
+    const drawFallback = (route: Route, strokeColor: string) => {
       if (cancelled) return;
       const fallbackPath = buildRoutePath(route, pendingPinMove);
       if (fallbackPath.length < 2) return;
       const fallbackPoly = new google.maps.Polyline({
         map,
         path: fallbackPath,
-        ...ROUTE_POLYLINE_OPTIONS,
+        ...routePolylineOptions(strokeColor),
       });
       polylinesRef.current.push(fallbackPoly);
     };
 
     void Promise.allSettled(
-      routes.map(async (route) => {
+      routes.map(async (route, routeIndex) => {
+        const strokeColor = routeColorHex(routeIndex);
         const path = buildRoutePath(route, pendingPinMove);
         if (path.length < 2) return;
         const origin = path[0]!;
@@ -77,7 +80,7 @@ function RoutePolylinesOverlay({
         const waypoints = path.slice(1, -1).map((location) => ({ location, stopover: true }));
         // Google limits intermediate waypoints to 25; past that we skip Directions and use straight segments.
         if (waypoints.length > 25) {
-          drawFallback(route);
+          drawFallback(route, strokeColor);
           return;
         }
 
@@ -93,7 +96,7 @@ function RoutePolylinesOverlay({
 
           const roadPath = result.routes[0]?.overview_path;
           if (!roadPath || roadPath.length < 2) {
-            drawFallback(route);
+            drawFallback(route, strokeColor);
             return;
           }
 
@@ -110,11 +113,11 @@ function RoutePolylinesOverlay({
           const roadPoly = new google.maps.Polyline({
             map,
             path: roadPath,
-            ...ROUTE_POLYLINE_OPTIONS,
+            ...routePolylineOptions(strokeColor),
           });
           polylinesRef.current.push(roadPoly);
         } catch {
-          drawFallback(route);
+          drawFallback(route, strokeColor);
         }
       })
     );
