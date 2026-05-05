@@ -1,14 +1,11 @@
 // Colors go in list order: first route uses palette[0], second uses palette[1], etc.
 
 const PALETTE = [
-  "#0d9488",
-  "#2563eb",
-  "#7c3aed",
-  "#db2777",
-  "#d97706",
-  "#059669",
-  "#4f46e5",
-  "#b45309",
+  "#1E90B5",
+  "#C84F63",
+  "#3B4B86",
+  "#D57303",
+  "#50881F",
 ] as const;
 
 export function routeColorHex(routeIndex: number): string { // routeIndex (0 = first route, 1 = second route, etc.)
