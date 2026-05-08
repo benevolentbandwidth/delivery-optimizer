@@ -12,12 +12,7 @@ type EditableStopItemProps = {
   onSaveNote: (note: string) => void;
 };
 
-export default function EditableStopItem({
-  stop,
-  accentColor,
-  isEditMode,
-  onSaveNote,
-}: EditableStopItemProps) {
+export default function EditableStopItem({ stop, accentColor, isEditMode, onSaveNote }: EditableStopItemProps) {
   const [draft, setDraft] = useState(stop.note ?? "");
 
   return (
@@ -38,9 +33,7 @@ export default function EditableStopItem({
           >
             {stop.sequence}
           </span>
-          <span className="text-xs font-semibold text-zinc-800 truncate">
-            {stop.address}
-          </span>
+          <span className="text-xs font-semibold text-zinc-800 truncate">{stop.address}</span>
         </div>
         <span
           className="flex shrink-0 items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium text-white"
@@ -51,34 +44,18 @@ export default function EditableStopItem({
         </span>
       </div>
       <div className="mt-1.5 space-y-0.5 text-xs text-zinc-600">
-        <div>
-          <span className="font-medium text-zinc-700">
-            Name of addressed to:
-          </span>{" "}
-          {stop.addresseeName ?? "—"}
-        </div>
-        <div>
-          <span className="font-medium text-zinc-700">
-            Est time of arrival:
-          </span>{" "}
-          {stop.timeWindow?.time ?? "—"}
-        </div>
+        <div><span className="font-medium text-zinc-700">Name of addressed to:</span> {stop.addresseeName ?? "—"}</div>
+        <div><span className="font-medium text-zinc-700">Est time of arrival:</span> {stop.timeWindow?.time ?? "—"}</div>
       </div>
 
       {!isEditMode ? (
         <div className="mt-2 rounded-md border border-zinc-200 bg-white px-2 py-1.5 text-xs text-zinc-600 shadow-sm">
           <span className="font-medium text-zinc-700">Notes:</span>{" "}
-          {stop.note?.trim() ? (
-            stop.note
-          ) : (
-            <span className="text-zinc-400">No notes</span>
-          )}
+          {stop.note?.trim() ? stop.note : <span className="text-zinc-400">No notes</span>}
         </div>
       ) : (
         <div className="mt-2">
-          <label className="block text-xs font-medium text-zinc-700">
-            Notes
-          </label>
+          <label className="block text-xs font-medium text-zinc-700">Notes</label>
           <textarea
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
