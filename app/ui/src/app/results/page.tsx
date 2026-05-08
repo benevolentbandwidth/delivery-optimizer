@@ -194,7 +194,7 @@ export default function ResultsPage() {
         </aside>
 
         <div
-          className={`shrink-0 h-full overflow-hidden transition-[width] duration-300 ease-in-out ${isSidebarOpen ? "w-72" : "w-0"}`}
+          className={`shrink-0 h-full overflow-hidden transition-[width] duration-300 ease-in-out ${isSidebarOpen ? "w-[26rem]" : "w-0"}`}
         >
           <Sidebar
             routes={routes}
@@ -204,7 +204,12 @@ export default function ResultsPage() {
           />
         </div>
         <div className="flex-1 min-w-0 min-h-0 flex flex-col">
-          <div className="flex-1 min-h-0 w-full overflow-hidden">
+          <div className="relative flex-1 min-h-0 w-full overflow-hidden">
+            {isEditMode && (
+              <div className="pointer-events-none absolute left-1/2 top-4 z-10 -translate-x-1/2 rounded-[80px] bg-[#7BCFC2] px-4 py-2 text-sm font-medium text-[#1C1B1F] shadow-sm">
+                You are now in editing mode
+              </div>
+            )}
             <MapComponent
               routes={routes}
               isEditMode={isEditMode}
