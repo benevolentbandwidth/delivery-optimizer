@@ -166,7 +166,7 @@ export default function ResultsPage() {
         </EditSidebar>
 
         <div
-          className={`shrink-0 h-full overflow-hidden transition-[width] duration-300 ease-in-out ${isSidebarOpen ? "w-[26rem]" : "w-0"}`}
+          className={`shrink-0 h-full overflow-hidden transition-[width] duration-300 ease-in-out ${isSidebarOpen ? "w-[28rem]" : "w-0"}`}
         >
           <Sidebar
             routes={routes}
