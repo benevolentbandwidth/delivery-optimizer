@@ -17,6 +17,11 @@ function routePolylineOptions(strokeColor: string): google.maps.PolylineOptions 
   };
 }
 
+function markerSvgDataUrl(fillColor: string): string {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="40" viewBox="0 0 28 40"><path d="M14 1C7.373 1 2 6.373 2 13c0 9.246 12 24 12 24s12-14.754 12-24C26 6.373 20.627 1 14 1z" fill="${fillColor}" stroke="#ffffff" stroke-width="2"/><circle cx="14" cy="13" r="4.25" fill="#ffffff"/></svg>`;
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
+
 function buildRoutePath(
   route: Route,
   pendingPinMove: PendingPinMove | null
@@ -198,16 +203,37 @@ function AdvancedMarkers({
 
         if (cancelled) return;
 
-        routes.forEach((route) => {
+        routes.forEach((route, routeIndex) => {
+          const accentColor = routeColorHex(routeIndex);
           const sorted = [...route.stops].sort((a, b) => a.sequence - b.sequence);
           sorted.forEach((stop) => {
             const position = { lat: stop.lat, lng: stop.lng };
+            const pin = document.createElement("div");
+            pin.style.position = "relative";
+            pin.style.width = "18px";
+            pin.style.height = "18px";
+            pin.style.borderRadius = "9999px 9999px 9999px 0";
+            pin.style.transform = "rotate(-45deg)";
+            pin.style.transformOrigin = "center";
+            pin.style.backgroundColor = accentColor;
+            pin.style.border = "2px solid #ffffff";
+            pin.style.boxShadow = "0 2px 6px rgba(0, 0, 0, 0.35)";
+            const inner = document.createElement("span");
+            inner.style.position = "absolute";
+            inner.style.width = "6px";
+            inner.style.height = "6px";
+            inner.style.borderRadius = "9999px";
+            inner.style.background = "#ffffff";
+            inner.style.top = "4px";
+            inner.style.left = "4px";
+            pin.appendChild(inner);
 
             const m = new AdvancedMarkerElement({
               map,
               position,
               title: stop.address,
               gmpDraggable: isEditMode,
+              content: pin,
             });
 
             m.addListener("dragend", () => {
@@ -350,7 +376,9 @@ export default function MapComponent({
             />
           )}
           {!mapId &&
-            routes.map((route) => {
+            routes.map((route, routeIndex) => {
+              const accentColor = routeColorHex(routeIndex);
+              const iconUrl = markerSvgDataUrl(accentColor);
               const sorted = [...route.stops].sort((a, b) => a.sequence - b.sequence);
               return (
                 <Fragment key={route.vehicleId}>
@@ -367,6 +395,7 @@ export default function MapComponent({
                         key={stop.id}
                         position={position}
                         title={stop.address}
+                        icon={{ url: iconUrl, scaledSize: new google.maps.Size(28, 40) }}
                         draggable={isEditMode}
                         onDragEnd={(e) => {
                           const latLng = e.latLng;
