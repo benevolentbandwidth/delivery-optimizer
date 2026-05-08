@@ -39,11 +39,11 @@ export default function Sidebar({ routes, isEditMode, onEditModeChange, onUpdate
 
   return (
     <aside
-      className={`w-full h-full flex flex-col overflow-hidden border-r-2 bg-white p-4 ${isEditMode ? "border-amber-500" : "border-zinc-200"}`}
+      className="w-full h-full flex flex-col overflow-hidden border-r-2 border-zinc-200 bg-white p-4"
     >
       <div className="flex shrink-0 items-start justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold text-zinc-800">Optimized Routes</h2>
+          <h2 className="text-lg font-semibold text-zinc-800 whitespace-nowrap">Optimized Routes</h2>
           <p className="mt-1 text-xs text-zinc-500">
             {routes.length} route{routes.length === 1 ? "" : "s"} with {totalStops} total stop
             {totalStops === 1 ? "" : "s"}
@@ -52,9 +52,13 @@ export default function Sidebar({ routes, isEditMode, onEditModeChange, onUpdate
         <button
           type="button"
           onClick={() => onEditModeChange(!isEditMode)}
-          className="h-9 shrink-0 rounded-[80px] border border-zinc-900 bg-white px-4 text-sm font-semibold text-zinc-900 hover:bg-zinc-50"
+          className={`h-9 shrink-0 rounded-[80px] px-5 text-sm font-semibold transition-colors ${
+            isEditMode
+              ? "border border-[#7BCFC2] bg-[#7BCFC2] text-[#1C1B1F] hover:bg-[#6dc5b7]"
+              : "border border-zinc-900 bg-white text-zinc-900 hover:bg-zinc-50"
+          }`}
         >
-          {isEditMode ? "Done" : "Edit"}
+          {isEditMode ? "Save edits" : "Edit"}
         </button>
       </div>
       <div className="mt-3 flex-1 min-h-0 flex flex-col">
@@ -71,7 +75,9 @@ export default function Sidebar({ routes, isEditMode, onEditModeChange, onUpdate
               return (
                 <li
                   key={route.vehicleId}
-                  className="rounded-xl border border-zinc-200 border-l-4 bg-zinc-50 shadow-sm overflow-hidden"
+                  className={`rounded-xl border border-l-4 shadow-sm overflow-hidden ${
+                    isEditMode ? "border-[#6CCBBE] bg-white" : "border-zinc-200 bg-zinc-50"
+                  }`}
                   style={{ borderLeftColor: accent }}
                 >
                   <button
