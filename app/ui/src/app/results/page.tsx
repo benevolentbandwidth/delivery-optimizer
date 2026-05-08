@@ -110,36 +110,47 @@ export default function ResultsPage() {
           </div>
         </div>
       )} {/* Map container switched to h-screen and added overflow hidden so the page is forced to be exactly one screen tall, whereas before the page was allowed to get taller than browser window leading to a long scroll */}
-      <header className="flex items-center gap-2 p-4 shrink-0 border-b border-zinc-200 bg-white">
-        <button
-          type="button"
-          onClick={() => setIsSidebarOpen((prev) => !prev)}
-          className="flex h-10 w-10 items-center justify-center rounded-lg border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50"
-          aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
-        >
-          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
-        <h1 className="text-2xl font-semibold text-zinc-800">Results – Route map</h1>
-        {pendingPinMove != null && (
-          <div className="ml-auto flex items-center gap-2">
+      <header className="flex items-center justify-between gap-3 p-4 shrink-0 border-b border-zinc-200 bg-white">
+        <div className="flex items-center gap-3 min-w-0">
+          <button
+            type="button"
+            onClick={() => setIsSidebarOpen((prev) => !prev)}
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50"
+            aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
+          >
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+          <p className="truncate text-sm font-semibold tracking-wide text-zinc-800 uppercase">
+            Delivery Optimizer
+          </p>
+        </div>
+
+        <div className="ml-auto flex items-center gap-2">
+          {pendingPinMove != null && (
             <button
               type="button"
               onClick={cancelPendingPinMove}
-              className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+              className="rounded-full border border-zinc-300 bg-white px-3 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-50"
             >
               Cancel
             </button>
-            <button
-              type="button"
-              onClick={savePendingPinMove}
-              className="rounded-md bg-amber-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-600"
-            >
-              Save
-            </button>
-          </div>
-        )}
+          )}
+          <button
+            type="button"
+            onClick={savePendingPinMove}
+            className="rounded-full border border-zinc-300 bg-white px-3 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-50"
+          >
+            Save
+          </button>
+          <button
+            type="button"
+            className="rounded-full bg-emerald-500 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-600"
+          >
+            Export
+          </button>
+        </div>
       </header>
       <div className="flex flex-1 min-h-0">
         <div
