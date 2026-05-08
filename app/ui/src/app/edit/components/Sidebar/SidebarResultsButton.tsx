@@ -15,7 +15,7 @@ const SIDEBAR_RESULTS_ICON = (
 
 export default function SidebarResultsButton() {
   return (
-    <Link href="#" className={SIDEBAR_NAV_ITEM}>  {/* TODO: add results page link when at least one route exists */}
+    <Link href="/results" className={SIDEBAR_NAV_ITEM}>
       <span className={SIDEBAR_NAV_PILL_INACTIVE}>
         {SIDEBAR_RESULTS_ICON}
       </span>
