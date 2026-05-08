@@ -3,6 +3,11 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { NAVBAR_V2_LOGO, NAVBAR_V2_ROOT } from "../edit/formStyles.v2";
+import styles from "../edit/edit.module.css";
+import EditSidebar from "../edit/components/layout/sidebar/Sidebar";
+import SidebarEditButton from "../edit/components/layout/sidebar/SidebarEditButton";
+import SidebarResultsButton from "../edit/components/layout/sidebar/SidebarResultsButton";
 import MapComponent from "./components/Map";
 import Sidebar from "./components/Sidebar";
 import type { PendingPinMove, Route } from "./types";
@@ -107,7 +112,9 @@ export default function ResultsPage() {
   const cancelPendingPinMove = useCallback(() => setPendingPinMove(null), []);
 
   return (
-    <main className="h-screen flex flex-col overflow-hidden">
+    <main
+      className={`h-screen flex flex-col overflow-hidden font-sans-manrope ${styles.root}`}
+    >
       {error && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm w-80 space-y-4">
@@ -122,62 +129,42 @@ export default function ResultsPage() {
         </div>
       )}{" "}
       {/* Map container switched to h-screen and added overflow hidden so the page is forced to be exactly one screen tall, whereas before the page was allowed to get taller than browser window leading to a long scroll */}
-      <header className="flex items-center justify-between gap-3 p-4 shrink-0 border-b border-zinc-200 bg-white">
+      <header className={`${NAVBAR_V2_ROOT} shrink-0 border-b border-zinc-200`}>
         <div className="flex items-center gap-3 min-w-0">
-          <button
-            type="button"
-            onClick={() => setIsSidebarOpen((prev) => !prev)}
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50"
-            aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
-          >
-            <svg
-              className="h-5 w-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              aria-hidden
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 6h16M4 12h16M4 18h16"
-              />
-            </svg>
-          </button>
-          <p className="truncate text-sm font-semibold tracking-wide text-zinc-800 uppercase">
-            Delivery Optimizer
-          </p>
+          <p className={NAVBAR_V2_LOGO}>DELIVERY OPTIMIZER</p>
         </div>
 
         <div className="ml-auto flex items-center gap-2">
           {pendingPinMove != null && (
-            <>
-              <button
-                type="button"
-                onClick={cancelPendingPinMove}
-                className="rounded-full border border-zinc-300 bg-white px-3 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={savePendingPinMove}
-                className="rounded-full border border-zinc-300 bg-white px-3 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-50"
-              >
-                Save
-              </button>
-            </>
+            <button
+              type="button"
+              onClick={cancelPendingPinMove}
+              className="h-9 px-6 rounded-[80px] border border-[var(--edit-foreground)] font-medium text-[14px] leading-5 text-[var(--edit-foreground)] whitespace-nowrap hover:bg-black/5 transition-colors"
+            >
+              Cancel
+            </button>
           )}
           <button
             type="button"
-            className="rounded-full bg-emerald-500 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-600"
+            onClick={savePendingPinMove}
+            className="h-9 px-6 rounded-[80px] border border-[var(--edit-foreground)] font-medium text-[14px] leading-5 text-[var(--edit-foreground)] whitespace-nowrap hover:bg-black/5 transition-colors"
+          >
+            Save
+          </button>
+          <button
+            type="button"
+            className="h-9 px-6 rounded-[80px] bg-[var(--edit-teal-500)] font-medium text-[14px] leading-5 text-[var(--edit-foreground)] whitespace-nowrap hover:opacity-90 transition-opacity"
           >
             Export
           </button>
         </div>
       </header>
       <div className="flex flex-1 min-h-0">
+        <EditSidebar>
+          <SidebarEditButton />
+          <SidebarResultsButton />
+        </EditSidebar>
+
         <div
           className={`shrink-0 h-full overflow-hidden transition-[width] duration-300 ease-in-out ${isSidebarOpen ? "w-72" : "w-0"}`}
         >
