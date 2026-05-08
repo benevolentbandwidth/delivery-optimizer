@@ -7,23 +7,38 @@ import type { Stop } from "../types";
 
 type EditableStopItemProps = {
   stop: Stop;
+  accentColor: string;
   isEditMode: boolean;
   onSaveNote: (note: string) => void;
 };
 
-export default function EditableStopItem({ stop, isEditMode, onSaveNote }: EditableStopItemProps) {
+export default function EditableStopItem({ stop, accentColor, isEditMode, onSaveNote }: EditableStopItemProps) {
   const [draft, setDraft] = useState(stop.note ?? "");
 
   return (
-    <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-3 shadow-sm">
+    <div
+      className="rounded-lg border border-zinc-200 bg-white p-3 shadow-sm"
+      style={{
+        borderLeftWidth: "4px",
+        borderLeftColor: accentColor,
+        boxShadow: `inset 0 0 0 1px ${accentColor}22`,
+        background: `linear-gradient(to right, ${accentColor}22 0%, #ffffff 34px)`,
+      }}
+    >
       <div className="flex items-start justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2">
-          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-zinc-600 text-xs font-semibold text-white">
+          <span
+            className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-xs font-semibold text-white"
+            style={{ backgroundColor: accentColor }}
+          >
             {stop.sequence}
           </span>
           <span className="text-xs font-semibold text-zinc-800 truncate">{stop.address}</span>
         </div>
-        <span className="flex shrink-0 items-center gap-1 rounded-md bg-zinc-600 px-1.5 py-0.5 text-[10px] font-medium text-white">
+        <span
+          className="flex shrink-0 items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium text-white"
+          style={{ backgroundColor: accentColor }}
+        >
           <span className="sr-only">Packages:</span>
           <span aria-hidden>📦</span> {stop.capacityUsed ?? "—"}
         </span>

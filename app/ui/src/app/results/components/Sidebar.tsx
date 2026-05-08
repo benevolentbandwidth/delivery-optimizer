@@ -143,6 +143,7 @@ export default function Sidebar({ routes, isEditMode, onEditModeChange, onUpdate
                           <li key={stop.id}>
                             <EditableStopItem
                               stop={stop}
+                              accentColor={accent}
                               isEditMode={isEditMode}
                               onSaveNote={(note) => onUpdateStopNote(route.vehicleId, stop.id, note)}
                             />
