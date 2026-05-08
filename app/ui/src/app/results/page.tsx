@@ -145,12 +145,9 @@ export default function ResultsPage() {
               />
             </svg>
           </button>
-          <div className="min-w-0">
-            <span className="block truncate text-sm font-semibold tracking-wide text-zinc-800 uppercase">
-              Delivery Optimizer
-            </span>
-            <h1 className="sr-only">Results</h1>
-          </div>
+          <p className="truncate text-sm font-semibold tracking-wide text-zinc-800 uppercase">
+            Delivery Optimizer
+          </p>
         </div>
 
         <div className="ml-auto flex items-center gap-2">
@@ -166,7 +163,7 @@ export default function ResultsPage() {
               <button
                 type="button"
                 onClick={savePendingPinMove}
-                className="rounded-full bg-amber-500 px-3 py-1 text-xs font-medium text-white hover:bg-amber-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-amber-500"
+                className="rounded-full border border-zinc-300 bg-white px-3 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-50"
               >
                 Save
               </button>
@@ -174,10 +171,7 @@ export default function ResultsPage() {
           )}
           <button
             type="button"
-            disabled
-            aria-disabled="true"
-            title="Export coming soon"
-            className="rounded-full bg-emerald-500 px-3 py-1 text-xs font-medium text-white opacity-50 cursor-not-allowed"
+            className="rounded-full bg-emerald-500 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-600"
           >
             Export
           </button>
