@@ -20,6 +20,43 @@ import type { PendingPinMove, Route } from "../types";
 import { routeColorHex } from "../utils/routeColors";
 
 const DAVIS_CENTER = { lat: 38.5449, lng: -121.7405 };
+const MARKER_ICON_WIDTH = 28;
+const MARKER_ICON_HEIGHT = 40;
+
+let markerScaledSize: google.maps.Size | undefined;
+
+function getMarkerScaledSize(): google.maps.Size | undefined {
+  if (typeof google === "undefined") return undefined;
+  markerScaledSize ??= new google.maps.Size(
+    MARKER_ICON_WIDTH,
+    MARKER_ICON_HEIGHT,
+  );
+  return markerScaledSize;
+}
+
+// fillColor is always a route palette hex from routeColorHex, never user input.
+function markerSvgDataUrl(fillColor: string): string {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${MARKER_ICON_WIDTH}" height="${MARKER_ICON_HEIGHT}" viewBox="0 0 28 40"><path d="M14 1C7.373 1 2 6.373 2 13c0 9.246 12 24 12 24s12-14.754 12-24C26 6.373 20.627 1 14 1z" fill="${fillColor}" stroke="#ffffff" stroke-width="2"/><circle cx="14" cy="13" r="4.25" fill="#ffffff"/></svg>`;
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
+
+function createRoutePinElement(fillColor: string): HTMLElement {
+  const wrapper = document.createElement("div");
+  wrapper.style.width = `${MARKER_ICON_WIDTH}px`;
+  wrapper.style.height = `${MARKER_ICON_HEIGHT}px`;
+  // Advanced marker anchor is the content center; shift so the SVG tip sits on the stop.
+  wrapper.style.transform = "translate(-50%, -50%)";
+
+  const img = document.createElement("img");
+  img.src = markerSvgDataUrl(fillColor);
+  img.width = MARKER_ICON_WIDTH;
+  img.height = MARKER_ICON_HEIGHT;
+  img.style.display = "block";
+  img.draggable = false;
+  img.alt = "";
+  wrapper.appendChild(img);
+  return wrapper;
+}
 
 function routePolylineOptions(
   strokeColor: string,
@@ -307,7 +344,8 @@ function AdvancedMarkers({
 
         if (cancelled) return;
 
-        routes.forEach((route) => {
+        routes.forEach((route, routeIndex) => {
+          const accentColor = routeColorHex(routeIndex);
           const sorted = [...route.stops].sort(
             (a, b) => a.sequence - b.sequence,
           );
@@ -319,6 +357,7 @@ function AdvancedMarkers({
               position,
               title: stop.address,
               gmpDraggable: isEditMode,
+              content: createRoutePinElement(accentColor),
             });
 
             m.addListener("dragend", () => {
@@ -466,7 +505,10 @@ export default function MapComponent({
             />
           )}
           {!mapId &&
-            routes.map((route) => {
+            routes.map((route, routeIndex) => {
+              const accentColor = routeColorHex(routeIndex);
+              const iconUrl = markerSvgDataUrl(accentColor);
+              const scaledSize = getMarkerScaledSize();
               const sorted = [...route.stops].sort(
                 (a, b) => a.sequence - b.sequence,
               );
@@ -485,6 +527,18 @@ export default function MapComponent({
                         key={stop.id}
                         position={position}
                         title={stop.address}
+                        icon={
+                          scaledSize
+                            ? {
+                                url: iconUrl,
+                                scaledSize,
+                                anchor: new google.maps.Point(
+                                  MARKER_ICON_WIDTH / 2,
+                                  MARKER_ICON_HEIGHT,
+                                ),
+                              }
+                            : { url: iconUrl }
+                        }
                         draggable={isEditMode}
                         onDragEnd={(e) => {
                           const latLng = e.latLng;
