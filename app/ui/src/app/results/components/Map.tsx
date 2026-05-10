@@ -16,6 +16,17 @@ const ROUTE_POLYLINE_OPTIONS: google.maps.PolylineOptions = {
 };
 
 const directionsCache = new Map<string, google.maps.LatLng[]>();
+/** Cap cache size so one long session does not grow memory without bound. */
+const MAX_DIRECTIONS_CACHE_SIZE = 100;
+
+function rememberDirectionsPath(cacheKey: string, roadPath: google.maps.LatLng[]) {
+  directionsCache.set(cacheKey, roadPath);
+  while (directionsCache.size > MAX_DIRECTIONS_CACHE_SIZE) {
+    const firstKey = directionsCache.keys().next().value;
+    if (firstKey === undefined) break;
+    directionsCache.delete(firstKey);
+  }
+}
 
 function routeCacheKey(path: google.maps.LatLngLiteral[]): string {
   return path.map((p) => `${p.lat.toFixed(6)},${p.lng.toFixed(6)}`).join("|");
@@ -112,7 +123,7 @@ function RoutePolylinesOverlay({
             return;
           }
 
-          directionsCache.set(cacheKey, roadPath);
+          rememberDirectionsPath(cacheKey, roadPath);
           if (cancelled) return;
 
           const roadPoly = new google.maps.Polyline({
@@ -121,7 +132,8 @@ function RoutePolylinesOverlay({
             ...ROUTE_POLYLINE_OPTIONS,
           });
           polylinesRef.current.push(roadPoly);
-        } catch {
+        } catch (err) {
+          console.warn("[Map] DirectionsService failed, falling back to straight line:", err);
           drawFallback(route);
         }
       })
