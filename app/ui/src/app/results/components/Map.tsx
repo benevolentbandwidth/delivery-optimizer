@@ -15,6 +15,23 @@ const ROUTE_POLYLINE_OPTIONS: google.maps.PolylineOptions = {
   strokeOpacity: 0.75,
 };
 
+const directionsCache = new Map<string, google.maps.LatLng[]>();
+// Cap cache size so one long session does not grow memory without bound
+const MAX_DIRECTIONS_CACHE_SIZE = 100;
+
+function rememberDirectionsPath(cacheKey: string, roadPath: google.maps.LatLng[]) {
+  directionsCache.set(cacheKey, roadPath);
+  while (directionsCache.size > MAX_DIRECTIONS_CACHE_SIZE) {
+    const firstKey = directionsCache.keys().next().value;
+    if (firstKey === undefined) break;
+    directionsCache.delete(firstKey);
+  }
+}
+
+function routeCacheKey(path: google.maps.LatLngLiteral[]): string {
+  return path.map((p) => `${p.lat.toFixed(6)},${p.lng.toFixed(6)}`).join("|");
+}
+
 function buildRoutePath(
   route: Route,
   pendingPinMove: PendingPinMove | null
@@ -52,7 +69,6 @@ function RoutePolylinesOverlay({
     polylinesRef.current = [];
 
     let cancelled = false;
-    // Same browser session as the Maps JS script — billing still uses your Maps key, not a second secret.
     const directionsService = new google.maps.DirectionsService();
 
     const drawFallback = (route: Route) => {
@@ -75,9 +91,21 @@ function RoutePolylinesOverlay({
         const destination = path[path.length - 1]!;
 
         const waypoints = path.slice(1, -1).map((location) => ({ location, stopover: true }));
-        // Google limits intermediate waypoints to 25; past that we skip Directions and use straight segments.
         if (waypoints.length > 25) {
           drawFallback(route);
+          return;
+        }
+
+        const cacheKey = routeCacheKey(path);
+        const cachedRoadPath = directionsCache.get(cacheKey);
+        if (cachedRoadPath && cachedRoadPath.length >= 2) {
+          if (cancelled) return;
+          const cachedPoly = new google.maps.Polyline({
+            map,
+            path: cachedRoadPath,
+            ...ROUTE_POLYLINE_OPTIONS,
+          });
+          polylinesRef.current.push(cachedPoly);
           return;
         }
 
@@ -101,10 +129,14 @@ function RoutePolylinesOverlay({
             (sum, leg) => sum + (leg.distance?.value ?? 0),
             0
           );
+          if (cancelled) return;
           if (totalMeters > 0 && onRouteDistanceUpdate) {
             const distanceMi = Number((totalMeters / 1609.344).toFixed(1));
             onRouteDistanceUpdate(route.vehicleId, distanceMi);
           }
+          if (cancelled) return;
+
+          rememberDirectionsPath(cacheKey, roadPath);
           if (cancelled) return;
 
           const roadPoly = new google.maps.Polyline({
@@ -113,7 +145,8 @@ function RoutePolylinesOverlay({
             ...ROUTE_POLYLINE_OPTIONS,
           });
           polylinesRef.current.push(roadPoly);
-        } catch {
+        } catch (err) {
+          console.warn("[Map] DirectionsService failed, falling back to straight line:", err);
           drawFallback(route);
         }
       })
