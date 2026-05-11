@@ -2,6 +2,7 @@
 // Then converting it into the output shape defined in types.ts (full Route and Stop objects) so the rest of the app can use it
 
 import type { Route, Stop } from "../types";
+import mockRouteData from "./mock_route.json";
 
 export interface MockRouteStop { // Defining the shape of a single stop in the mock route
   id: string;
@@ -36,4 +37,24 @@ export function mockRouteToRoute(data: MockRouteJson): Route { // Converting the
     distanceMi: 89,
     estimatedTimeMinutes: 195, // 3h 15m 
   };
+}
+
+/** Two routes for sidebar / expanded-card dev work (`/results?mock=1`). */
+export function getDevMockRoutes(): Route[] {
+  const base = mockRouteToRoute(mockRouteData as MockRouteJson);
+  const second: Route = {
+    ...base,
+    vehicleId: "mock-vehicle-2",
+    driverName: "Alex Morgan",
+    vehicleType: "Truck",
+    distanceMi: 34.2,
+    estimatedTimeMinutes: 92,
+    stops: base.stops.slice(0, 6).map((s, i) => ({
+      ...s,
+      id: `v2-${s.id}`,
+      lng: s.lng + 0.018,
+      sequence: i + 1,
+    })),
+  };
+  return [base, second];
 }

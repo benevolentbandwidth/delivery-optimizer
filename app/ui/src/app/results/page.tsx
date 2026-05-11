@@ -17,37 +17,52 @@ import {
 } from "../edit/formStyles.v2";
 import styles from "../edit/edit.module.css";
 import MapComponent from "./components/Map";
+import { getDevMockRoutes } from "./data/mockRouteLoader";
 import Sidebar from "./components/Sidebar";
 import type { PendingPinMove, Route } from "./types";
 
-function readInitialRoutes(): { routes: Route[]; error: string | null } {
-  if (typeof window === "undefined") return { routes: [], error: null };
+type InitialRoutes = { routes: Route[]; error: string | null; fromMock: boolean };
+
+function readInitialRoutes(): InitialRoutes {
+  if (typeof window === "undefined") {
+    return { routes: [], error: null, fromMock: false };
+  }
+
+  if (
+    process.env.NODE_ENV === "development" &&
+    new URLSearchParams(window.location.search).get("mock") === "1"
+  ) {
+    return { routes: getDevMockRoutes(), error: null, fromMock: true };
+  }
 
   const stored = sessionStorage.getItem("optimizeResults");
-  if (!stored) return { routes: [], error: null };
+  if (!stored) return { routes: [], error: null, fromMock: false };
 
   try {
     const parsed = JSON.parse(stored) as Route[];
-    return { routes: parsed, error: null };
+    return { routes: parsed, error: null, fromMock: false };
   } catch {
     return {
       routes: [],
       error: "Route data could not be loaded. Please go back and try again.",
+      fromMock: false,
     };
   }
 }
 
 export default function ResultsPage() {
   const router = useRouter();
-  const [{ routes: initialRoutes, error: initialError }] = useState(readInitialRoutes);
+  const [initial] = useState(readInitialRoutes);
+  const { routes: initialRoutes, error: initialError, fromMock: initialFromMock } = initial;
   const [routes, setRoutes] = useState<Route[]>(initialRoutes);
   const [error] = useState<string | null>(initialError);
 
   useEffect(() => {
+    if (initialFromMock) return;
     if (initialRoutes.length > 0) {
       sessionStorage.removeItem("optimizeResults"); // consume once after successful parse + state update
     }
-  }, [initialRoutes.length]);
+  }, [initialFromMock, initialRoutes.length]);
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isEditMode, setIsEditMode] = useState(false);
