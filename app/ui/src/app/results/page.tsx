@@ -8,7 +8,6 @@ import {
   NAVBAR_V2_LOGO,
   NAVBAR_V2_ROOT,
   SIDEBAR_NAV,
-  SIDEBAR_NAV_ITEM,
   SIDEBAR_NAV_LABEL_ACTIVE,
   SIDEBAR_NAV_LABEL_INACTIVE,
   SIDEBAR_NAV_PILL_ACTIVE,
@@ -19,6 +18,8 @@ import styles from "../edit/edit.module.css";
 import MapComponent from "./components/Map";
 import Sidebar from "./components/Sidebar";
 import type { PendingPinMove, Route } from "./types";
+
+const SIDEBAR_NAV_ITEM_CLASS = "flex flex-col gap-1 items-center w-full";
 
 function readInitialRoutes(): { routes: Route[]; error: string | null } {
   if (typeof window === "undefined") return { routes: [], error: null };
@@ -162,7 +163,7 @@ export default function ResultsPage() {
             <button
               type="button"
               onClick={() => router.push("/edit")}
-              className={SIDEBAR_NAV_ITEM}
+              className={SIDEBAR_NAV_ITEM_CLASS}
             >
               <span className="w-full flex items-center justify-center rounded-[80px] px-[9px] py-[4px] text-[var(--edit-muted)]">
                 <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" aria-hidden>
@@ -177,7 +178,7 @@ export default function ResultsPage() {
 
             <button
               type="button"
-              className={SIDEBAR_NAV_ITEM}
+              className={SIDEBAR_NAV_ITEM_CLASS}
               aria-current="page"
             >
               <span className={`${SIDEBAR_NAV_PILL_ACTIVE} text-[var(--edit-foreground)]`}>
