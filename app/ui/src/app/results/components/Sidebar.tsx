@@ -158,18 +158,38 @@ export default function Sidebar({ routes, isEditMode, onEditModeChange, onUpdate
                   </button>
 
                   {isExpanded && (
-                    <div className="border-t border-zinc-200 bg-zinc-100/50 p-3">
-                      <ul className="space-y-2">
-                        {sortedStops.map((stop) => (
-                          <li key={stop.id}>
-                            <EditableStopItem
-                              stop={stop}
-                              accentColor={accent}
-                              isEditMode={isEditMode}
-                              onSaveNote={(note) => onUpdateStopNote(route.vehicleId, stop.id, note)}
-                            />
-                          </li>
-                        ))}
+                    <div className="border-t border-zinc-200 bg-white px-4 pb-4 pt-1">
+                      <ul className="flex flex-col">
+                        {sortedStops.map((stop, stopIdx) => {
+                          const isLastStop = stopIdx === sortedStops.length - 1;
+                          return (
+                            <li key={stop.id} className="flex gap-3">
+                              <div className="flex w-9 shrink-0 flex-col items-center pt-1">
+                                <span
+                                  className="relative z-[1] flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[13px] font-semibold text-white shadow-sm"
+                                  style={{ backgroundColor: accent }}
+                                >
+                                  {stop.sequence}
+                                </span>
+                                {!isLastStop && (
+                                  <div
+                                    className="mt-2 w-px flex-1 min-h-[20px] border-l-2 border-dotted"
+                                    style={{ borderColor: accent }}
+                                    aria-hidden
+                                  />
+                                )}
+                              </div>
+                              <div className={`min-w-0 flex-1 ${isLastStop ? "" : "pb-5"}`}>
+                                <EditableStopItem
+                                  stop={stop}
+                                  accentColor={accent}
+                                  isEditMode={isEditMode}
+                                  onSaveNote={(note) => onUpdateStopNote(route.vehicleId, stop.id, note)}
+                                />
+                              </div>
+                            </li>
+                          );
+                        })}
                       </ul>
                     </div>
                   )}
