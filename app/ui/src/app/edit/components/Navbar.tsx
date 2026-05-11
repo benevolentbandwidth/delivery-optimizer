@@ -1,6 +1,5 @@
 "use client";
 
-import { useRef } from "react";
 import {
   NAVBAR_V2_ACTIONS,
   NAVBAR_V2_BTN_FILLED,
@@ -8,6 +7,7 @@ import {
   NAVBAR_V2_LOGO,
   NAVBAR_V2_ROOT,
 } from "../formStyles.v2";
+import styles from "../edit.module.css";
 import ErrorPopup from "./ErrorPopup";
 
 type NavbarProps = {
@@ -27,8 +27,6 @@ export default function Navbar({
   error,
   onClearError,
 }: NavbarProps) {
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-
   return (
     <>
       <ErrorPopup message={error} onClose={onClearError} />
@@ -42,7 +40,7 @@ export default function Navbar({
             Export Session
           </button>
           <button
-            className={NAVBAR_V2_BTN_FILLED}
+            className={`${NAVBAR_V2_BTN_FILLED} ${styles.primaryBtnOverlay}`}
             onClick={onOptimize}
             disabled={isOptimizing}
           >

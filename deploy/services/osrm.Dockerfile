@@ -54,6 +54,15 @@ RUN git clone --depth 1 --branch "${OSRM_REF}" https://github.com/Project-OSRM/o
       -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
     && cmake --build build --target install -j"${OSRM_BUILD_JOBS}"
 
+RUN apt-get update && apt-get install -y --no-install-recommends gnupg \
+    && mkdir -p /etc/apt/keyrings \
+    && curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg \
+      | gpg --dearmor -o /etc/apt/keyrings/cloud.google.gpg \
+    && echo "deb [signed-by=/etc/apt/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" \
+      > /etc/apt/sources.list.d/google-cloud-sdk.list \
+    && apt-get update && apt-get install -y --no-install-recommends google-cloud-cli \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY deploy/services/osrm-entrypoint.sh /usr/local/bin/osrm-entrypoint.sh
 RUN chmod +x /usr/local/bin/osrm-entrypoint.sh
 
