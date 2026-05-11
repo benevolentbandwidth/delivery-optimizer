@@ -134,6 +134,8 @@ function mapCsvRowsToAddresses(
       locked: true,
       editingExisting: false,
       recipientAddress: address,
+      recipientName: get(row, "recipient_name"),
+      recipientPhone: get(row, "recipient_phone"),
       timeBuffer: bufferSecondsToLabel(get(row, "time_buffer")),
       deliveryTimeStart: timeStart,
       deliveryTimeEnd: timeEnd,

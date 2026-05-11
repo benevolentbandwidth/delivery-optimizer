@@ -80,5 +80,8 @@ export function addressCardToDeliveryInput(
     location,
     bufferTime: a.timeBuffer ? timeBufferToSeconds(a.timeBuffer) : 0,
     demand: { type: demandType, value: a.deliveryQuantity },
-    ...(timeWindow && { timeWindows: [timeWindow] }),  };
+    ...(timeWindow && { timeWindows: [timeWindow] }),
+    ...(a.recipientName.trim() && { recipientName: a.recipientName.trim() }),
+    ...(a.recipientPhone.trim() && { phoneNumber: a.recipientPhone.trim() }),
+  };
 }

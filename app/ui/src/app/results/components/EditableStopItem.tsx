@@ -3,7 +3,7 @@
 "use client";
 
 import { useState } from "react";
-import type { Stop } from "../types";
+import type { Stop, TimeWindow } from "../types";
 
 type EditableStopItemProps = {
   stop: Stop;
@@ -12,65 +12,165 @@ type EditableStopItemProps = {
   onSaveNote: (note: string) => void;
 };
 
+function formatTime12h(raw: string): string {
+  const t = raw.trim();
+  if (/am|pm/i.test(t)) return t;
+  const m = t.match(/^(\d{1,2}):(\d{2})$/);
+  if (!m) return t;
+  let h = parseInt(m[1]!, 10);
+  const min = m[2];
+  const ap = h >= 12 ? "PM" : "AM";
+  h = h % 12;
+  if (h === 0) h = 12;
+  return `${h}:${min} ${ap}`;
+}
+
+function formatDeliveryWindow(stop: Stop): string {
+  const a = stop.deliveryWindowStart?.trim();
+  const b = stop.deliveryWindowEnd?.trim();
+  if (a && b) return `${formatTime12h(a)} – ${formatTime12h(b)}`;
+  return formatTimeWindowLine(stop.timeWindow);
+}
+
+function formatTimeWindowLine(tw: TimeWindow | undefined): string {
+  if (!tw?.time) return "—";
+  const label = formatTime12h(tw.time);
+  if (tw.kind === "by") return `By ${label}`;
+  if (tw.kind === "at") return label;
+  return `From ${label}`;
+}
+
+function formatContactLine(stop: Stop): string {
+  const name = stop.addresseeName?.trim();
+  const phone = stop.addresseePhone?.trim();
+  if (name && phone) return `${name} · ${phone}`;
+  if (name) return name;
+  if (phone) return phone;
+  return "—";
+}
+
+function PersonIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 20 20" fill="none" aria-hidden>
+      <path
+        d="M10 10a3.25 3.25 0 1 0 0-6.5 3.25 3.25 0 0 0 0 6.5ZM4.5 16.5v-.75A4.25 4.25 0 0 1 8.75 11.5h2.5A4.25 4.25 0 0 1 15.5 15.75v.75"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function ClockIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 20 20" fill="none" aria-hidden>
+      <circle cx="10" cy="10" r="7.25" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M10 6.25V10l2.5 1.25" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function NoteDocIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 20 20" fill="none" aria-hidden>
+      <path
+        d="M6.5 3.5h5.5L15.5 7v8.25A1.25 1.25 0 0 1 14.25 16.5h-7.5A1.25 1.25 0 0 1 5.5 15.25v-10.5A1.25 1.25 0 0 1 6.75 3.5h-.25Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+      <path d="M11.5 3.5V7h4" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function PackageIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 20 20" fill="none" aria-hidden>
+      <path
+        d="M3.5 7.5 10 4l6.5 3.5v6L10 17l-6.5-3.5v-6Z"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinejoin="round"
+      />
+      <path d="M3.5 7.5 10 11l6.5-3.5M10 11v5.5" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export default function EditableStopItem({ stop, accentColor, isEditMode, onSaveNote }: EditableStopItemProps) {
   const [draft, setDraft] = useState(stop.note ?? "");
+  const contactText = formatContactLine(stop);
+  const timeText = formatDeliveryWindow(stop);
 
   return (
-    <div
-      className="rounded-lg border border-zinc-200 bg-white p-3 shadow-sm"
-      style={{
-        borderLeftWidth: "4px",
-        borderLeftColor: accentColor,
-        boxShadow: `inset 0 0 0 1px ${accentColor}22`,
-        background: `linear-gradient(to right, ${accentColor}22 0%, #ffffff 34px)`,
-      }}
-    >
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex min-w-0 items-center gap-2">
-          <span
-            className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-xs font-semibold text-white"
-            style={{ backgroundColor: accentColor }}
-          >
-            {stop.sequence}
-          </span>
-          <span className="text-xs font-semibold text-zinc-800 truncate">{stop.address}</span>
-        </div>
+    <div className="min-w-0 flex-1 rounded-2xl border border-zinc-200 bg-white p-3.5 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <p className="min-w-0 flex-1 text-[14px] font-semibold leading-snug text-zinc-900">{stop.address}</p>
         <span
-          className="flex shrink-0 items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium text-white"
-          style={{ backgroundColor: accentColor }}
+          className="flex shrink-0 items-center gap-1 rounded-full border px-2 py-1 text-[12px] font-semibold tabular-nums"
+          style={{
+            borderColor: `${accentColor}55`,
+            backgroundColor: `${accentColor}18`,
+            color: accentColor,
+          }}
         >
-          <span className="sr-only">Packages:</span>
-          <span aria-hidden>📦</span> {stop.capacityUsed ?? "—"}
+          <span className="sr-only">Boxes:</span>
+          <PackageIcon className="h-3.5 w-3.5 opacity-90" />
+          {typeof stop.capacityUsed === "number" ? stop.capacityUsed : "—"}
         </span>
       </div>
-      <div className="mt-1.5 space-y-0.5 text-xs text-zinc-600">
-        <div><span className="font-medium text-zinc-700">Name of addressed to:</span> {stop.addresseeName ?? "—"}</div>
-        <div><span className="font-medium text-zinc-700">Est time of arrival:</span> {stop.timeWindow?.time ?? "—"}</div>
+
+      <div className="mt-3 space-y-2 text-[13px] leading-snug">
+        <div className="flex items-start gap-2">
+          <PersonIcon className="mt-2 h-4 w-4 shrink-0 text-zinc-400" />
+          <div className="min-w-0 flex-1 rounded-lg border border-zinc-200 bg-white px-2.5 py-2 text-zinc-800">
+            {contactText}
+          </div>
+        </div>
+        <div className="flex items-start gap-2">
+          <ClockIcon className="mt-2 h-4 w-4 shrink-0 text-zinc-400" />
+          <div className="min-w-0 flex-1 rounded-lg border border-zinc-200 bg-white px-2.5 py-2 text-zinc-700">
+            {timeText}
+          </div>
+        </div>
       </div>
 
       {!isEditMode ? (
-        <div className="mt-2 rounded-md border border-zinc-200 bg-white px-2 py-1.5 text-xs text-zinc-600 shadow-sm">
-          <span className="font-medium text-zinc-700">Notes:</span>{" "}
-          {stop.note?.trim() ? stop.note : <span className="text-zinc-400">No notes</span>}
+        <div className="mt-3 flex gap-2 rounded-xl border border-zinc-200 bg-zinc-50/80 px-3 py-2.5 text-[13px] text-zinc-700">
+          <NoteDocIcon className="mt-0.5 h-4 w-4 shrink-0 text-zinc-400" />
+          <div>
+            <span className="font-semibold text-zinc-800">Note:</span>{" "}
+            {stop.note?.trim() ? (
+              <span className="text-zinc-700">{stop.note}</span>
+            ) : (
+              <span className="text-zinc-400">No notes</span>
+            )}
+          </div>
         </div>
       ) : (
-        <div className="mt-2">
-          <label className="block text-xs font-medium text-zinc-700">Notes</label>
-          <textarea
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            rows={3}
-            className="mt-1 w-full resize-none rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs text-zinc-800 shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
-            placeholder="Driver notes (e.g., Gate code is 1234)"
-          />
-          <div className="mt-2 flex justify-end">
-            <button
-              type="button"
-              onClick={() => onSaveNote(draft)}
-              className="inline-flex items-center rounded-md bg-amber-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-amber-500"
-            >
-              Save
-            </button>
+        <div className="mt-3 flex gap-2 rounded-xl border border-zinc-200 bg-white px-3 py-2.5">
+          <NoteDocIcon className="mt-1 h-4 w-4 shrink-0 text-zinc-400" />
+          <div className="min-w-0 flex-1">
+            <label className="text-[12px] font-semibold text-zinc-800">Note</label>
+            <textarea
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              rows={3}
+              className="mt-1.5 w-full resize-none rounded-lg border border-zinc-200 bg-zinc-50/50 px-2.5 py-2 text-[13px] text-zinc-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7BCFC2]"
+              placeholder="Driver notes (e.g., Gate code is 1234)"
+            />
+            <div className="mt-2 flex justify-end">
+              <button
+                type="button"
+                onClick={() => onSaveNote(draft)}
+                className="inline-flex items-center rounded-full bg-[#7BCFC2] px-3 py-1.5 text-[12px] font-semibold text-[#1C1B1F] hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-[#7BCFC2]"
+              >
+                Save
+              </button>
+            </div>
           </div>
         </div>
       )}

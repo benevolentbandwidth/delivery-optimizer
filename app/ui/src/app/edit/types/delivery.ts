@@ -39,6 +39,9 @@ export type AddressCard = {
   locked: boolean;
   editingExisting: boolean;
   recipientAddress: string;
+  /** Recipient / contact shown on route results cards */
+  recipientName: string;
+  recipientPhone: string;
   cachedLocation?: CachedLocation;
   timeBuffer: string;
   deliveryTimeStart: string;

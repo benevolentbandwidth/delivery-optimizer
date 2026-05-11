@@ -77,6 +77,8 @@ const COLUMN_ALIASES: Record<string, string[]> = {
   ],
   time_buffer: ["time_buffer", "buffer", "service_time"],
   demand_value: ["demand_value", "demand", "quantity", "qty", "packages"],
+  recipient_name: ["recipient_name", "recipient", "contact_name", "addressee"],
+  recipient_phone: ["recipient_phone", "phone", "tel", "mobile", "contact_phone"],
   notes: ["notes", "note", "comments", "instructions", "description"],
 };
 

@@ -16,6 +16,8 @@ export function useAddresses() {
       locked: false,
       editingExisting: false,
       recipientAddress: "",
+      recipientName: "",
+      recipientPhone: "",
       cachedLocation: undefined,
       timeBuffer: "",
       deliveryTimeStart: "",
@@ -30,7 +32,7 @@ export function useAddresses() {
 
   // Fuse.js is a fuzzy search library that allows us to search for addresses and notes.
   const fuse = useMemo(() => new Fuse(addresses, {
-    keys: ["recipientAddress", "notes"],
+    keys: ["recipientAddress", "recipientName", "recipientPhone", "notes"],
     threshold: 0.3,         // 0.0 = exact, 1.0 = match anything
     ignoreLocation: true,   // don't penalize matches far from string start
   }), [addresses]);
@@ -118,6 +120,8 @@ export function useAddresses() {
           locked: false,
           editingExisting: false,
           recipientAddress: "",
+          recipientName: "",
+          recipientPhone: "",
           cachedLocation: undefined,
           timeBuffer: "",
           deliveryTimeStart: "",

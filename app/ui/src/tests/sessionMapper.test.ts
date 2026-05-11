@@ -88,6 +88,8 @@ describe("mapOptimizeRequestToEditState", () => {
           locked: true,
           editingExisting: false,
           recipientAddress: "456 Delivery Ave",
+          recipientName: "",
+          recipientPhone: "",
           timeBuffer: "No buffer",
           deliveryTimeStart: "",
           deliveryTimeEnd: "",

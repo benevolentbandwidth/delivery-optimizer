@@ -50,19 +50,28 @@ export function vroomToRoutes(
       // arrival is in seconds; % 86400 extracts the within-day portion for display
       const arrivalTimeStr = secondsToTimeString(step.arrival % 86400);
 
+      const qtyFromForm =
+        address && address.deliveryQuantity > 0 ? address.deliveryQuantity : undefined;
+      const capacityUsed = qtyFromForm ?? step.load?.[0] ?? 0;
+
+      const winStart = address?.deliveryTimeStart?.trim();
+      const winEnd = address?.deliveryTimeEnd?.trim();
+
       return {
         id: step.job_external_id!,
         address: address?.recipientAddress ?? `${lat.toFixed(5)}, ${lng.toFixed(5)}`,
         lat,
         lng,
         sequence: idx + 1,
-        capacityUsed: step.load?.[0] ?? 0,
+        capacityUsed,
         timeWindow: {
           kind: inferTimeWindowKind(address?.deliveryTimeStart, address?.deliveryTimeEnd),
           time: arrivalTimeStr,
         },
         note: address?.notes ?? "",
-        addresseeName: undefined,
+        addresseeName: address?.recipientName?.trim() || undefined,
+        addresseePhone: address?.recipientPhone?.trim() || undefined,
+        ...(winStart && winEnd ? { deliveryWindowStart: winStart, deliveryWindowEnd: winEnd } : {}),
       };
     });
 

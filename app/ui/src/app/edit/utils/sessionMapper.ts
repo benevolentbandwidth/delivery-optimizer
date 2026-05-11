@@ -132,6 +132,8 @@ function mapDeliveryInputToCard(delivery: DeliveryInput): AddressCard {
     editingExisting: false,
     recipientAddress:
       delivery.address ?? formatLocation(delivery.location.lat, delivery.location.lng),
+    recipientName: delivery.recipientName ?? "",
+    recipientPhone: delivery.phoneNumber ?? "",
     cachedLocation: {
       lat: delivery.location.lat,
       lng: delivery.location.lng,

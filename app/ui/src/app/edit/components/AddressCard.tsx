@@ -57,6 +57,15 @@ type AddressCardProps = {
   outOfRegionFailed: boolean;
 };
 
+function recipientSummary(a: AddressCardType): string {
+  const n = a.recipientName.trim();
+  const p = a.recipientPhone.trim();
+  if (n && p) return `${n} · ${p}`;
+  if (n) return n;
+  if (p) return p;
+  return "—";
+}
+
 export default function AddressCard({
   address: a,
   addressesCount,
@@ -103,8 +112,13 @@ export default function AddressCard({
           <span />
           {a.locked ? (
             <>
-              <div className={`${ADDRESS_LOCKED_SURFACE_MD}${geocodeFailed || outOfRegionFailed ? ` ${GEOCODE_ERROR_LOCKED}` : ""}`}>
-                <span className={`${ADDRESS_DESKTOP_FIELD} truncate`}>{a.recipientAddress}</span>
+              <div className="flex min-w-0 flex-col gap-1.5 self-stretch">
+                <div className={`${ADDRESS_LOCKED_SURFACE_MD}${geocodeFailed || outOfRegionFailed ? ` ${GEOCODE_ERROR_LOCKED}` : ""}`}>
+                  <span className={`${ADDRESS_DESKTOP_FIELD} truncate`}>{a.recipientAddress}</span>
+                </div>
+                <div className={ADDRESS_LOCKED_SURFACE_MD}>
+                  <span className={`${ADDRESS_DESKTOP_FIELD} truncate`}>{recipientSummary(a)}</span>
+                </div>
               </div>
               <div className={`${ADDRESS_LOCKED_SURFACE_MD} ${ADDRESS_COL_MIN_TIME_BUFFER}`}>
                 <span className={`${ADDRESS_DESKTOP_FIELD} truncate`}>{a.timeBuffer || "—"}</span>
@@ -155,13 +169,33 @@ export default function AddressCard({
             </>
           ) : (
             <>
-              <AddressAutocompleteInput
-                value={a.recipientAddress}
-                onChange={(val) => updateAddress(a.id, "recipientAddress", val)}
-                placeholder="Address"
-                ariaLabel="Recipient address"
-                className={`${ADDRESS_INPUT_DESKTOP_BASE} ${fieldBorder(addrInvalid)}`}
-              />
+              <div className="flex min-w-0 flex-col gap-1.5">
+                <AddressAutocompleteInput
+                  value={a.recipientAddress}
+                  onChange={(val) => updateAddress(a.id, "recipientAddress", val)}
+                  placeholder="Address"
+                  ariaLabel="Recipient address"
+                  className={`${ADDRESS_INPUT_DESKTOP_BASE} ${fieldBorder(addrInvalid)}`}
+                />
+                <input
+                  type="text"
+                  value={a.recipientName}
+                  onChange={(e) => updateAddress(a.id, "recipientName", e.target.value)}
+                  placeholder="Recipient name"
+                  aria-label="Recipient name"
+                  autoComplete="name"
+                  className={`${ADDRESS_INPUT_DESKTOP_BASE} ${fieldBorder(false)}`}
+                />
+                <input
+                  type="tel"
+                  value={a.recipientPhone}
+                  onChange={(e) => updateAddress(a.id, "recipientPhone", e.target.value)}
+                  placeholder="Phone"
+                  aria-label="Recipient phone"
+                  autoComplete="tel"
+                  className={`${ADDRESS_INPUT_DESKTOP_BASE} ${fieldBorder(false)}`}
+                />
+              </div>
               <select
                 value={a.timeBuffer}
                 onChange={(e) => updateAddress(a.id, "timeBuffer", e.target.value)}
@@ -294,6 +328,12 @@ export default function AddressCard({
                     <span className="text-sm text-black truncate">{a.recipientAddress}</span>
                   </div>
                 </div>
+                <div>
+                  <span className={MOBILE_FIELD_LABEL}>Recipient</span>
+                  <div className={MOBILE_ADDRESS_LOCKED_ROW}>
+                    <span className="text-sm text-black truncate">{recipientSummary(a)}</span>
+                  </div>
+                </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <span className={MOBILE_FIELD_LABEL}>Time Buffer</span>
@@ -353,6 +393,32 @@ export default function AddressCard({
                     ariaLabel="Recipient address"
                     className={mobileInputClass(addrInvalid)}
                   />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <span className={MOBILE_FIELD_LABEL}>Name</span>
+                    <input
+                      type="text"
+                      value={a.recipientName}
+                      onChange={(e) => updateAddress(a.id, "recipientName", e.target.value)}
+                      placeholder="Recipient name"
+                      aria-label="Recipient name"
+                      autoComplete="name"
+                      className={mobileInputClass(false)}
+                    />
+                  </div>
+                  <div>
+                    <span className={MOBILE_FIELD_LABEL}>Phone</span>
+                    <input
+                      type="tel"
+                      value={a.recipientPhone}
+                      onChange={(e) => updateAddress(a.id, "recipientPhone", e.target.value)}
+                      placeholder="Phone"
+                      aria-label="Recipient phone"
+                      autoComplete="tel"
+                      className={mobileInputClass(false)}
+                    />
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>

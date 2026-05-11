@@ -14,6 +14,8 @@ function makeAddress(overrides: Partial<AddressCard> = {}): AddressCard {
     locked: true,
     editingExisting: false,
     recipientAddress: "123 Main St",
+    recipientName: "",
+    recipientPhone: "",
     timeBuffer: "",
     deliveryTimeStart: "",
     deliveryTimeEnd: "",
@@ -83,6 +85,22 @@ describe("addressCardToDeliveryInput", () => {
 
   it("blank notes are omitted", () => {
     expect(addressCardToDeliveryInput(makeAddress({ notes: "   " }), LOC, "units").notes).toBeUndefined();
+  });
+
+  it("recipient name and phone forwarded when present", () => {
+    expect(
+      addressCardToDeliveryInput(
+        makeAddress({
+          recipientName: "Kayla Wong",
+          recipientPhone: "(530) 555-0199",
+        }),
+        LOC,
+        "units"
+      )
+    ).toMatchObject({
+      recipientName: "Kayla Wong",
+      phoneNumber: "(530) 555-0199",
+    });
   });
 });
 
