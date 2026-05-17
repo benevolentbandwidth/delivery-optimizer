@@ -7,7 +7,9 @@ type SidebarProps = {
 
 export default function Sidebar({ children, className }: SidebarProps) {
   return (
-    <aside className={className ? `${SIDEBAR_ROOT} ${className}` : SIDEBAR_ROOT}>
+    <aside
+      className={className ? `${SIDEBAR_ROOT} ${className}` : SIDEBAR_ROOT}
+    >
       <div className={SIDEBAR_NAV}>{children}</div>
     </aside>
   );
