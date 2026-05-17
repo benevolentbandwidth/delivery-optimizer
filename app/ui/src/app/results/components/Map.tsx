@@ -2,14 +2,28 @@
 // Uses @react-google-maps/api with Advanced Markers
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, Fragment } from "react";
-import { LoadScriptNext, GoogleMap, Marker, useGoogleMap } from "@react-google-maps/api";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  Fragment,
+} from "react";
+import {
+  LoadScriptNext,
+  GoogleMap,
+  Marker,
+  useGoogleMap,
+} from "@react-google-maps/api";
 import type { PendingPinMove, Route } from "../types";
 import { routeColorHex } from "../utils/routeColors";
 
 const DAVIS_CENTER = { lat: 38.5449, lng: -121.7405 };
 
-function routePolylineOptions(strokeColor: string): google.maps.PolylineOptions {
+function routePolylineOptions(
+  strokeColor: string,
+): google.maps.PolylineOptions {
   return {
     strokeColor,
     strokeWeight: 5,
@@ -40,7 +54,7 @@ function routeCacheKey(path: google.maps.LatLngLiteral[]): string {
 
 function buildRoutePath(
   route: Route,
-  pendingPinMove: PendingPinMove | null
+  pendingPinMove: PendingPinMove | null,
 ): google.maps.LatLngLiteral[] {
   const sorted = [...route.stops].sort((a, b) => a.sequence - b.sequence);
   return sorted.map((s) => {
@@ -64,7 +78,9 @@ function RoutePolylinesOverlay({
   onRouteDistanceUpdate?: (vehicleId: string, distanceMi: number) => void;
 }) {
   const map = useGoogleMap();
-  const polylinesByVehicleRef = useRef<Record<string, google.maps.Polyline>>({});
+  const polylinesByVehicleRef = useRef<Record<string, google.maps.Polyline>>(
+    {},
+  );
   const directionsCacheRef = useRef(new Map<string, CachedDirections>());
 
   useEffect(() => {
@@ -96,7 +112,9 @@ function RoutePolylinesOverlay({
         const origin = path[0]!;
         const destination = path[path.length - 1]!;
 
-        const waypoints = path.slice(1, -1).map((location) => ({ location, stopover: true }));
+        const waypoints = path
+          .slice(1, -1)
+          .map((location) => ({ location, stopover: true }));
         if (waypoints.length > 25) {
           drawFallback(route, strokeColor);
           return;
@@ -138,7 +156,7 @@ function RoutePolylinesOverlay({
 
           const totalMeters = (result.routes[0]?.legs ?? []).reduce(
             (sum, leg) => sum + (leg.distance?.value ?? 0),
-            0
+            0,
           );
           if (cancelled) return;
           if (totalMeters > 0 && onRouteDistanceUpdate) {
@@ -159,15 +177,20 @@ function RoutePolylinesOverlay({
           });
           polylinesByVehicleRef.current[route.vehicleId] = roadPoly;
         } catch (err) {
-          console.warn("[Map] DirectionsService failed, falling back to straight line:", err);
+          console.warn(
+            "[Map] DirectionsService failed, falling back to straight line:",
+            err,
+          );
           drawFallback(route, strokeColor);
         }
-      })
+      }),
     );
 
     return () => {
       cancelled = true;
-      Object.values(polylinesByVehicleRef.current).forEach((p) => p.setMap(null));
+      Object.values(polylinesByVehicleRef.current).forEach((p) =>
+        p.setMap(null),
+      );
       polylinesByVehicleRef.current = {};
     };
   }, [map, routes, onRouteDistanceUpdate]);
@@ -177,7 +200,9 @@ function RoutePolylinesOverlay({
     const byVehicle = polylinesByVehicleRef.current;
 
     if (pendingPinMove) {
-      const route = routes.find((r) => r.vehicleId === pendingPinMove.vehicleId);
+      const route = routes.find(
+        (r) => r.vehicleId === pendingPinMove.vehicleId,
+      );
       if (!route) return;
       const poly = byVehicle[pendingPinMove.vehicleId];
       if (!poly) return;
@@ -205,7 +230,7 @@ function RoutePolylinesOverlay({
 }
 
 function latLngFromMarkerPosition(
-  p: google.maps.marker.AdvancedMarkerElement["position"]
+  p: google.maps.marker.AdvancedMarkerElement["position"],
 ): { lat: number; lng: number } | null {
   if (p == null) return null;
   if (typeof (p as google.maps.LatLng).lat === "function") {
@@ -223,7 +248,12 @@ type MapComponentProps = {
   routes: Route[];
   isEditMode: boolean;
   pendingPinMove: PendingPinMove | null;
-  onPendingPinMove: (vehicleId: string, stopId: string, lat: number, lng: number) => void;
+  onPendingPinMove: (
+    vehicleId: string,
+    stopId: string,
+    lat: number,
+    lng: number,
+  ) => void;
   onRouteDistanceUpdate?: (vehicleId: string, distanceMi: number) => void;
 };
 
@@ -232,7 +262,12 @@ type AdvancedMarkersProps = {
   routes: Route[];
   isEditMode: boolean;
   pendingPinMove: PendingPinMove | null;
-  onPendingPinMove: (vehicleId: string, stopId: string, lat: number, lng: number) => void;
+  onPendingPinMove: (
+    vehicleId: string,
+    stopId: string,
+    lat: number,
+    lng: number,
+  ) => void;
 };
 
 function stopKey(vehicleId: string, stopId: string): string {
@@ -247,7 +282,9 @@ function AdvancedMarkers({
   onPendingPinMove,
 }: AdvancedMarkersProps) {
   const markersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
-  const markerByStopKeyRef = useRef<Record<string, google.maps.marker.AdvancedMarkerElement>>({});
+  const markerByStopKeyRef = useRef<
+    Record<string, google.maps.marker.AdvancedMarkerElement>
+  >({});
   const pendingPinMoveRef = useRef(pendingPinMove);
 
   useEffect(() => {
@@ -264,12 +301,16 @@ function AdvancedMarkers({
 
     (async () => {
       try {
-        const { AdvancedMarkerElement } = (await google.maps.importLibrary("marker")) as google.maps.MarkerLibrary;
+        const { AdvancedMarkerElement } = (await google.maps.importLibrary(
+          "marker",
+        )) as google.maps.MarkerLibrary;
 
         if (cancelled) return;
 
         routes.forEach((route) => {
-          const sorted = [...route.stops].sort((a, b) => a.sequence - b.sequence);
+          const sorted = [...route.stops].sort(
+            (a, b) => a.sequence - b.sequence,
+          );
           sorted.forEach((stop) => {
             const position = { lat: stop.lat, lng: stop.lng };
 
@@ -326,7 +367,10 @@ function AdvancedMarkers({
   useEffect(() => {
     if (!map) return;
     if (pendingPinMove) {
-      const m = markerByStopKeyRef.current[stopKey(pendingPinMove.vehicleId, pendingPinMove.stopId)];
+      const m =
+        markerByStopKeyRef.current[
+          stopKey(pendingPinMove.vehicleId, pendingPinMove.stopId)
+        ];
       if (m) m.position = { lat: pendingPinMove.lat, lng: pendingPinMove.lng };
       return;
     }
@@ -362,7 +406,7 @@ export default function MapComponent({
       });
       mapInstance.fitBounds(bounds, 48);
     },
-    [routes]
+    [routes],
   );
 
   const onUnmount = useCallback(() => setMap(null), []);
@@ -381,7 +425,7 @@ export default function MapComponent({
       zoom: 11,
       ...(mapId ? { mapId } : {}),
     }),
-    [mapId]
+    [mapId],
   );
 
   if (!apiKey) {
@@ -397,7 +441,9 @@ export default function MapComponent({
       <LoadScriptNext
         googleMapsApiKey={apiKey}
         mapIds={mapId ? [mapId] : undefined}
-        loadingElement={<div className="min-h-[70vh] bg-zinc-100 animate-pulse rounded-lg" />}
+        loadingElement={
+          <div className="min-h-[70vh] bg-zinc-100 animate-pulse rounded-lg" />
+        }
       >
         <GoogleMap
           mapContainerStyle={{ width: "100%", height: "100%" }}
@@ -421,7 +467,9 @@ export default function MapComponent({
           )}
           {!mapId &&
             routes.map((route) => {
-              const sorted = [...route.stops].sort((a, b) => a.sequence - b.sequence);
+              const sorted = [...route.stops].sort(
+                (a, b) => a.sequence - b.sequence,
+              );
               return (
                 <Fragment key={route.vehicleId}>
                   {sorted.map((stop) => {
@@ -445,7 +493,7 @@ export default function MapComponent({
                             route.vehicleId,
                             stop.id,
                             latLng.lat(),
-                            latLng.lng()
+                            latLng.lng(),
                           );
                         }}
                       />
