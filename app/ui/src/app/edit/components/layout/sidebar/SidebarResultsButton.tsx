@@ -55,7 +55,9 @@ export default function SidebarResultsButton() {
   if (hasStoredRoutes) {
     return (
       <Link href="/results" className={SIDEBAR_NAV_ITEM}>
-        <span className={SIDEBAR_NAV_PILL_INACTIVE}>{SIDEBAR_RESULTS_ICON}</span>
+        <span className={SIDEBAR_NAV_PILL_INACTIVE}>
+          {SIDEBAR_RESULTS_ICON}
+        </span>
         <span className={SIDEBAR_NAV_LABEL_INACTIVE}>Results</span>
       </Link>
     );
