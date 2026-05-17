@@ -6,12 +6,19 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   createPersistedRouteState,
   loadSessionFromFile,
+  loadSessionFromText,
   parsePersistedRouteState,
 } from "@/lib/driver-route/importSession";
 import { transformSessionToDriverRoute } from "@/lib/driver-route/transformSession";
 import type { DeliveryStop, DriverRoute } from "@/lib/driver-route/types";
 
 const STORAGE_KEY = "driver_assist.routeState";
+const UPLOADED_ROUTE_KEY = "routeFile";
+
+type UploadedRouteFile = {
+  name: string;
+  content: string;
+};
 
 function readSavedRoute(): DriverRoute | null {
   if (typeof window === "undefined") return null;
@@ -23,6 +30,24 @@ function readSavedRoute(): DriverRoute | null {
   } catch {
     window.localStorage.removeItem(STORAGE_KEY);
     return null;
+  }
+}
+
+function readUploadedRouteFile(): UploadedRouteFile | null {
+  if (typeof window === "undefined") return null;
+
+  try {
+    const raw = window.sessionStorage.getItem(UPLOADED_ROUTE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<UploadedRouteFile>;
+    if (typeof parsed.name !== "string" || typeof parsed.content !== "string") {
+      return null;
+    }
+    return { name: parsed.name, content: parsed.content };
+  } catch {
+    return null;
+  } finally {
+    window.sessionStorage.removeItem(UPLOADED_ROUTE_KEY);
   }
 }
 
@@ -50,6 +75,24 @@ export default function DriverAssistPwaPage() {
   } | null>(null);
 
   useEffect(() => {
+    const uploadedRoute = readUploadedRouteFile();
+
+    if (uploadedRoute) {
+      try {
+        const session = loadSessionFromText(uploadedRoute.content);
+        const nextRoute = transformSessionToDriverRoute(session);
+        setRoute(nextRoute);
+        setOpenId(nextRoute.stops[0]?.id || null);
+        return;
+      } catch (importError) {
+        setError(
+          importError instanceof Error
+            ? importError.message
+            : "Please upload a valid JSON file."
+        );
+      }
+    }
+
     setRoute(readSavedRoute());
   }, []);
 

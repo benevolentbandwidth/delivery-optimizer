@@ -64,7 +64,7 @@ export default function UploadRoutePage() {
         "routeFile",
         JSON.stringify({ name: file.name, content: text }),
       );
-      router.push("/driver-view");
+      router.push("/driver_assist");
     } catch (err) {
       setError(
         err instanceof Error
@@ -94,7 +94,8 @@ export default function UploadRoutePage() {
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          padding: 48px 24px;
+          width: 100%;
+          padding: clamp(28px, 8vw, 48px) clamp(16px, 5vw, 24px);
         }
 
         .ur-title {
@@ -119,7 +120,8 @@ export default function UploadRoutePage() {
           max-width: 580px;
           border: 1.5px dashed #ccc;
           border-radius: 12px;
-          padding: 52px 24px;
+          min-height: 184px;
+          padding: clamp(32px, 10vw, 52px) clamp(18px, 6vw, 24px);
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -163,6 +165,7 @@ export default function UploadRoutePage() {
           align-items: center;
           gap: 10px;
           margin-bottom: 24px;
+          min-width: 0;
         }
 
         .ur-file-name {
@@ -170,6 +173,10 @@ export default function UploadRoutePage() {
           font-weight: 500;
           color: #111;
           flex: 1;
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
 
         .ur-file-size { font-size: 12px; color: #666; }
@@ -250,6 +257,40 @@ export default function UploadRoutePage() {
           border-top-color: #4a8c7a;
           border-radius: 50%;
           animation: ur-spin 0.8s linear infinite;
+        }
+
+        @media (max-width: 520px) {
+          .ur-content {
+            justify-content: flex-start;
+            padding-top: 36px;
+            padding-bottom: calc(24px + env(safe-area-inset-bottom));
+          }
+
+          .ur-title {
+            font-size: 1.75rem;
+          }
+
+          .ur-subtitle {
+            margin-bottom: 24px;
+            max-width: 280px;
+            line-height: 1.5;
+          }
+
+          .ur-actions {
+            align-items: stretch;
+            flex-direction: column-reverse;
+            gap: 16px;
+          }
+
+          .ur-back-btn {
+            justify-content: center;
+            min-height: 44px;
+          }
+
+          .ur-continue-btn {
+            min-height: 48px;
+            width: 100%;
+          }
         }
       `}</style>
 
