@@ -3,6 +3,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import styles from "../edit/edit.module.css";
+import EditSidebar from "../edit/components/Sidebar/Sidebar";
+import SidebarEditButton from "../edit/components/Sidebar/SidebarEditButton";
+import SidebarResultsButton from "../edit/components/Sidebar/SidebarResultsButton";
 import MapComponent from "./components/Map";
 import Sidebar from "./components/Sidebar";
 import type { PendingPinMove, Route } from "./types";
@@ -107,7 +111,9 @@ export default function ResultsPage() {
   const cancelPendingPinMove = useCallback(() => setPendingPinMove(null), []);
 
   return (
-    <main className="h-screen flex flex-col overflow-hidden">
+    <main
+      className={`h-screen flex flex-col overflow-hidden font-sans-manrope ${styles.root}`}
+    >
       {error && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm w-80 space-y-4">
@@ -184,6 +190,11 @@ export default function ResultsPage() {
         </div>
       </header>
       <div className="flex flex-1 min-h-0">
+        <EditSidebar className="border-r border-zinc-200 shrink-0">
+          <SidebarEditButton />
+          <SidebarResultsButton />
+        </EditSidebar>
+
         <div
           className={`shrink-0 h-full overflow-hidden transition-[width] duration-300 ease-in-out ${isSidebarOpen ? "w-72" : "w-0"}`}
         >
