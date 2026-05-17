@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
 import { readHasOptimizeResults } from "../../utils/hasOptimizeResults";
 import {
   SIDEBAR_NAV_ITEM,
@@ -33,11 +32,7 @@ const SIDEBAR_RESULTS_ICON = (
 export default function SidebarResultsButton() {
   const pathname = usePathname();
   const isResultsPage = pathname === "/results";
-  const [hasStoredRoutes, setHasStoredRoutes] = useState(false);
-
-  useEffect(() => {
-    setHasStoredRoutes(readHasOptimizeResults());
-  }, []);
+  const hasStoredRoutes = readHasOptimizeResults();
 
   if (isResultsPage) {
     return (
