@@ -22,6 +22,7 @@ export interface Stop {
   timeWindow: TimeWindow; // time type and time for the stop
   note: string; // driver notes for the stop
   addresseeName?: string; // name of person at address
+  phoneNumber?: string; // phone number of person at address
 }
 
 // Data that a single route contains (one driver, their stops in order, and the path to draw for the route)
