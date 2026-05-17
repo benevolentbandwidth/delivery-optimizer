@@ -145,31 +145,39 @@ export default function ResultsPage() {
               />
             </svg>
           </button>
-          <p className="truncate text-sm font-semibold tracking-wide text-zinc-800 uppercase">
-            Delivery Optimizer
-          </p>
+          <div className="min-w-0">
+            <span className="block truncate text-sm font-semibold tracking-wide text-zinc-800 uppercase">
+              Delivery Optimizer
+            </span>
+            <h1 className="sr-only">Results</h1>
+          </div>
         </div>
 
         <div className="ml-auto flex items-center gap-2">
           {pendingPinMove != null && (
-            <button
-              type="button"
-              onClick={cancelPendingPinMove}
-              className="rounded-full border border-zinc-300 bg-white px-3 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-50"
-            >
-              Cancel
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={cancelPendingPinMove}
+                className="rounded-full border border-zinc-300 bg-white px-3 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={savePendingPinMove}
+                className="rounded-full border border-zinc-300 bg-white px-3 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-50"
+              >
+                Save
+              </button>
+            </>
           )}
           <button
             type="button"
-            onClick={savePendingPinMove}
-            className="rounded-full border border-zinc-300 bg-white px-3 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-50"
-          >
-            Save
-          </button>
-          <button
-            type="button"
-            className="rounded-full bg-emerald-500 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-600"
+            disabled
+            aria-disabled="true"
+            title="Export coming soon"
+            className="rounded-full bg-emerald-500 px-3 py-1 text-xs font-medium text-white opacity-50 cursor-not-allowed"
           >
             Export
           </button>
