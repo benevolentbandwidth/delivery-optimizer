@@ -4,9 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { readHasOptimizeResults } from "../../utils/hasOptimizeResults";
 import {
-  SIDEBAR_NAV_ITEM,
   SIDEBAR_NAV_ITEM_ACTIVE,
   SIDEBAR_NAV_ITEM_DISABLED,
+  SIDEBAR_NAV_ITEM_INACTIVE,
   SIDEBAR_NAV_LABEL_ACTIVE,
   SIDEBAR_NAV_LABEL_INACTIVE,
   SIDEBAR_NAV_PILL_ACTIVE,
@@ -49,7 +49,7 @@ export default function SidebarResultsButton() {
 
   if (hasStoredRoutes) {
     return (
-      <Link href="/results" className={SIDEBAR_NAV_ITEM}>
+      <Link href="/results" className={SIDEBAR_NAV_ITEM_INACTIVE}>
         <span className={SIDEBAR_NAV_PILL_INACTIVE}>
           {SIDEBAR_RESULTS_ICON}
         </span>
