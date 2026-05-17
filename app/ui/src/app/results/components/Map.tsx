@@ -19,15 +19,18 @@ function routePolylineOptions(strokeColor: string): google.maps.PolylineOptions 
 
 type CachedDirections = { path: google.maps.LatLng[]; meters: number };
 
-const directionsCache = new Map<string, CachedDirections>();
 const MAX_DIRECTIONS_CACHE_SIZE = 100;
 
-function rememberDirections(cacheKey: string, entry: CachedDirections) {
-  directionsCache.set(cacheKey, entry);
-  while (directionsCache.size > MAX_DIRECTIONS_CACHE_SIZE) {
-    const firstKey = directionsCache.keys().next().value;
+function rememberDirections(
+  cache: Map<string, CachedDirections>,
+  cacheKey: string,
+  entry: CachedDirections,
+) {
+  cache.set(cacheKey, entry);
+  while (cache.size > MAX_DIRECTIONS_CACHE_SIZE) {
+    const firstKey = cache.keys().next().value;
     if (firstKey === undefined) break;
-    directionsCache.delete(firstKey);
+    cache.delete(firstKey);
   }
 }
 
@@ -62,6 +65,7 @@ function RoutePolylinesOverlay({
 }) {
   const map = useGoogleMap();
   const polylinesByVehicleRef = useRef<Record<string, google.maps.Polyline>>({});
+  const directionsCacheRef = useRef(new Map<string, CachedDirections>());
 
   useEffect(() => {
     if (!map || typeof google === "undefined") return;
@@ -99,7 +103,7 @@ function RoutePolylinesOverlay({
         }
 
         const cacheKey = routeCacheKey(path);
-        const cached = directionsCache.get(cacheKey);
+        const cached = directionsCacheRef.current.get(cacheKey);
         if (cached && cached.path.length >= 2) {
           if (cancelled) return;
           const cachedPoly = new google.maps.Polyline({
@@ -143,7 +147,10 @@ function RoutePolylinesOverlay({
           }
           if (cancelled) return;
 
-          rememberDirections(cacheKey, { path: roadPath, meters: totalMeters });
+          rememberDirections(directionsCacheRef.current, cacheKey, {
+            path: roadPath,
+            meters: totalMeters,
+          });
 
           const roadPoly = new google.maps.Polyline({
             map,
@@ -185,7 +192,7 @@ function RoutePolylinesOverlay({
       const committed = buildRoutePath(route, null);
       if (committed.length < 2) continue;
       const key = routeCacheKey(committed);
-      const cached = directionsCache.get(key);
+      const cached = directionsCacheRef.current.get(key);
       if (cached && cached.path.length >= 2) {
         poly.setPath(cached.path);
       } else {
