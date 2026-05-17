@@ -6,6 +6,7 @@ add_library(deliveryoptimizer::adapters ALIAS deliveryoptimizer_adapters)
 target_sources(
   deliveryoptimizer_adapters
   PRIVATE
+    src/json_utils.cpp
     src/osrm_contract.cpp
     src/routing_facade.cpp
     src/vroom_contract.cpp
@@ -13,6 +14,7 @@ target_sources(
     FILE_SET HEADERS
     BASE_DIRS include
     FILES
+      include/deliveryoptimizer/adapters/json_utils.hpp
       include/deliveryoptimizer/adapters/osrm_contract.hpp
       include/deliveryoptimizer/adapters/routing_facade.hpp
       include/deliveryoptimizer/adapters/vroom_contract.hpp
@@ -24,7 +26,6 @@ target_link_libraries(
   deliveryoptimizer_adapters
   PUBLIC
     deliveryoptimizer::application
-  PRIVATE
     JsonCpp::JsonCpp
 )
 

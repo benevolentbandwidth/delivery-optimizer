@@ -12,13 +12,17 @@ interface VehicleFormProps {
   onFieldChange: (reactId: string, field: keyof VehicleForm, value: string) => void;
   onAddressChange: (reactId: string, field: 'start' | 'end', value: string) => void;
   onFocus: (reactId: string, field: 'start' | 'end') => void;
-  onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
-  // Autocomplete props
+  onStartKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  onEndKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  // Autocomplete props — independent state per field
   showStartSuggestions: boolean;
   showEndSuggestions: boolean;
-  suggestions: AddressSuggestion[];
-  selectedIndex: number;
-  onSelectSuggestion: (suggestion: AddressSuggestion) => void;
+  startSuggestions: AddressSuggestion[];
+  endSuggestions: AddressSuggestion[];
+  startSelectedIndex: number;
+  endSelectedIndex: number;
+  onSelectStartSuggestion: (suggestion: AddressSuggestion) => void;
+  onSelectEndSuggestion: (suggestion: AddressSuggestion) => void;
 }
 
 export const VehicleFormComponent: React.FC<VehicleFormProps> = ({
@@ -29,12 +33,16 @@ export const VehicleFormComponent: React.FC<VehicleFormProps> = ({
   onFieldChange,
   onAddressChange,
   onFocus,
-  onKeyDown,
+  onStartKeyDown,
+  onEndKeyDown,
   showStartSuggestions,
   showEndSuggestions,
-  suggestions,
-  selectedIndex,
-  onSelectSuggestion,
+  startSuggestions,
+  endSuggestions,
+  startSelectedIndex,
+  endSelectedIndex,
+  onSelectStartSuggestion,
+  onSelectEndSuggestion,
 }) => {
   const startDropdownRef = useRef<HTMLDivElement>(null);
   const endDropdownRef = useRef<HTMLDivElement>(null);
@@ -88,17 +96,17 @@ export const VehicleFormComponent: React.FC<VehicleFormProps> = ({
             type="text"
             value={vehicle.startAddress}
             onChange={(e) => onAddressChange(vehicle._reactId, 'start', e.target.value)}
-            onKeyDown={onKeyDown}
+            onKeyDown={onStartKeyDown}
             onFocus={() => onFocus(vehicle._reactId, 'start')}
             className="w-full px-2 py-1.5 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="123 Main St, San Francisco, CA"
           />
-          
+
           {showStartSuggestions && (
             <AutocompleteDropdown
-              suggestions={suggestions}
-              selectedIndex={selectedIndex}
-              onSelect={onSelectSuggestion}
+              suggestions={startSuggestions}
+              selectedIndex={startSelectedIndex}
+              onSelect={onSelectStartSuggestion}
               dropdownRef={startDropdownRef}
             />
           )}
@@ -112,17 +120,17 @@ export const VehicleFormComponent: React.FC<VehicleFormProps> = ({
             type="text"
             value={vehicle.endAddress}
             onChange={(e) => onAddressChange(vehicle._reactId, 'end', e.target.value)}
-            onKeyDown={onKeyDown}
+            onKeyDown={onEndKeyDown}
             onFocus={() => onFocus(vehicle._reactId, 'end')}
             className="w-full px-2 py-1.5 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="123 Main St, San Francisco, CA"
           />
-          
+
           {showEndSuggestions && (
             <AutocompleteDropdown
-              suggestions={suggestions}
-              selectedIndex={selectedIndex}
-              onSelect={onSelectSuggestion}
+              suggestions={endSuggestions}
+              selectedIndex={endSelectedIndex}
+              onSelect={onSelectEndSuggestion}
               dropdownRef={endDropdownRef}
             />
           )}

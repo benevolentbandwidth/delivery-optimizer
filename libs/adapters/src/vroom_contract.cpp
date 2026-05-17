@@ -1,7 +1,8 @@
 #include "deliveryoptimizer/adapters/vroom_contract.hpp"
 
+#include "deliveryoptimizer/adapters/json_utils.hpp"
+
 #include <json/json.h>
-#include <memory>
 #include <sstream>
 
 namespace deliveryoptimizer::adapters {
@@ -35,23 +36,6 @@ namespace {
   return capacity;
 }
 
-[[nodiscard]] std::optional<Json::Value> ParseJson(const std::string_view input) {
-  Json::CharReaderBuilder builder;
-  builder["collectComments"] = false;
-
-  Json::Value root;
-  JSONCPP_STRING errors;
-  std::unique_ptr<Json::CharReader> reader{builder.newCharReader()};
-  const auto* begin = input.data();
-  const auto* end = begin + input.size();
-  const bool parsed = reader->parse(begin, end, &root, &errors);
-  if (!parsed) {
-    return std::nullopt;
-  }
-
-  return root;
-}
-
 } // namespace
 
 std::string BuildSolvePayload(const std::size_t deliveries, const std::size_t vehicles) {
@@ -83,7 +67,7 @@ std::string BuildSolvePayload(const std::size_t deliveries, const std::size_t ve
 }
 
 std::optional<VroomSolveSummary> ParseSolveSummary(const std::string_view response_json) {
-  const auto root = ParseJson(response_json);
+  const auto root = ParseJsonText(response_json);
   if (!root.has_value()) {
     return std::nullopt;
   }

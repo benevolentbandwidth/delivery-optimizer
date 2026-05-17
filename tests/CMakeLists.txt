@@ -30,6 +30,7 @@ target_sources(
     "${CMAKE_SOURCE_DIR}/app/api/src/optimize_request.cpp"
     "${CMAKE_SOURCE_DIR}/app/api/src/solve_admission.cpp"
     "${CMAKE_SOURCE_DIR}/app/api/src/solve_coordinator.cpp"
+    "${CMAKE_SOURCE_DIR}/app/api/src/solve_execution.cpp"
     "${CMAKE_SOURCE_DIR}/app/api/src/server_options.cpp"
 )
 target_compile_features(deliveryoptimizer_tests PRIVATE cxx_std_20)

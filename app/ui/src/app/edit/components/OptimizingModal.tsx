@@ -7,6 +7,7 @@ import {
   MODAL_TITLE,
   OPTIMIZING_SPINNER,
 } from "../formStyles";
+import { OPTIMIZING_SPINNER_WRAP } from "../formStyles.v2";
 import { useFocusTrap } from "../hooks/useFocusTrap";
 
 type OptimizingModalProps = {
@@ -35,7 +36,7 @@ export default function OptimizingModal({ isOpen }: OptimizingModalProps) {
         <p id="optimizing-desc" className={MODAL_MESSAGE}>
           This may take a few seconds. Please wait.
         </p>
-        <div className="flex justify-center mt-2">
+        <div className={OPTIMIZING_SPINNER_WRAP}>
           <span
             className={OPTIMIZING_SPINNER}
             aria-hidden="true"

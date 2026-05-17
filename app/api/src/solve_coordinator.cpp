@@ -1,33 +1,12 @@
 #include "deliveryoptimizer/api/solve_coordinator.hpp"
 
+#include "deliveryoptimizer/api/solve_execution.hpp"
+
 #include <algorithm>
 #include <chrono>
 #include <utility>
 
 namespace {
-
-[[nodiscard]] deliveryoptimizer::api::CoordinatedSolveResult
-ToCoordinatedSolveResult(const deliveryoptimizer::api::VroomRunResult& result) {
-  switch (result.status) {
-  case deliveryoptimizer::api::VroomRunStatus::kSuccess:
-    return deliveryoptimizer::api::CoordinatedSolveResult{
-        .status = deliveryoptimizer::api::CoordinatedSolveStatus::kSucceeded,
-        .output = result.output,
-    };
-  case deliveryoptimizer::api::VroomRunStatus::kTimedOut:
-    return deliveryoptimizer::api::CoordinatedSolveResult{
-        .status = deliveryoptimizer::api::CoordinatedSolveStatus::kTimedOut,
-        .output = std::nullopt,
-    };
-  case deliveryoptimizer::api::VroomRunStatus::kFailed:
-    break;
-  }
-
-  return deliveryoptimizer::api::CoordinatedSolveResult{
-      .status = deliveryoptimizer::api::CoordinatedSolveStatus::kFailed,
-      .output = std::nullopt,
-  };
-}
 
 [[nodiscard]] bool HasQueueWaitExpired(const std::chrono::steady_clock::time_point deadline) {
   return std::chrono::steady_clock::now() >= deadline;

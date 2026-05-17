@@ -2,6 +2,28 @@
 
 namespace deliveryoptimizer::api {
 
+CoordinatedSolveResult ToCoordinatedSolveResult(const VroomRunResult& result) {
+  switch (result.status) {
+  case VroomRunStatus::kSuccess:
+    return CoordinatedSolveResult{
+        .status = CoordinatedSolveStatus::kSucceeded,
+        .output = result.output,
+    };
+  case VroomRunStatus::kTimedOut:
+    return CoordinatedSolveResult{
+        .status = CoordinatedSolveStatus::kTimedOut,
+        .output = std::nullopt,
+    };
+  case VroomRunStatus::kFailed:
+    break;
+  }
+
+  return CoordinatedSolveResult{
+      .status = CoordinatedSolveStatus::kFailed,
+      .output = std::nullopt,
+  };
+}
+
 SolveExecutionResult BuildSolveExecutionResult(const OptimizeRequestInput& input,
                                                const CoordinatedSolveResult& result) {
   switch (result.status) {

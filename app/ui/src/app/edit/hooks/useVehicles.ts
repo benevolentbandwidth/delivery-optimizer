@@ -8,7 +8,6 @@ import type { VehicleRow } from "../types/delivery";
 function isVehicleValid(v: VehicleRow): boolean {
   return (
     v.name.trim() !== "" &&
-    (v.startLocation ?? "").trim() !== "" &&
     v.type !== "" &&
     v.capacityUnit !== "" &&
     v.capacity > 0 &&
@@ -17,28 +16,15 @@ function isVehicleValid(v: VehicleRow): boolean {
 }
 
 export function useVehicles() {
-  const [vehicles, setVehicles] = useState<VehicleRow[]>([
-    {
-      id: 1,
-      locked: false,
-      editingExisting: false,
-      name: "",
-      startLocation: "",
-      cachedLocation: undefined,
-      type: "",
-      capacityUnit: "",
-      capacity: 0,
-      available: true,
-      departureTime: "",
-    },
-  ]);
+  const [vehicles, setVehicles] = useState<VehicleRow[]>([]);
 
   // Set of vehicle IDs whose fields should show validation errors.
   const [touchedIds, setTouchedIds] = useState<Set<number>>(new Set());
 
   const activeVehicle = vehicles.find((v) => !v.locked);
   const activeVehicleIsValid = !!activeVehicle && isVehicleValid(activeVehicle);
-  const allVehiclesLocked = vehicles.length > 0 && vehicles.every((v) => v.locked);
+  // Vacuously true for an empty list so "Add vehicle" is enabled from the start.
+  const allVehiclesLocked = vehicles.every((v) => v.locked);
 
   const updateVehicle = useCallback(<K extends keyof VehicleRow>(
     id: number,
@@ -90,10 +76,34 @@ export function useVehicles() {
     });
   }, []);
 
-  // Always keep at least one vehicle in the list.
+  const addVehicleWithDetails = useCallback(
+    (details: Pick<VehicleRow, "name" | "type" | "capacity" | "capacityUnit" | "available" | "departureTime">) => {
+      setVehicles((prev) => {
+        const newId = prev.reduce((max, v) => Math.max(max, v.id), 0) + 1;
+        return [
+          ...prev.map((v) => ({ ...v, locked: true })),
+          {
+            id: newId,
+            locked: true,
+            editingExisting: false,
+            name: details.name,
+            startLocation: "",
+            cachedLocation: undefined,
+            type: details.type,
+            capacityUnit: details.capacityUnit,
+            capacity: details.capacity,
+            available: details.available,
+            departureTime: details.departureTime,
+          },
+        ];
+      });
+      setTouchedIds(new Set());
+    },
+    []
+  );
+
   const deleteVehicle = useCallback((id: number) => {
     setVehicles((prev) => {
-      if (prev.length <= 1) return prev;
       return prev.filter((v) => v.id !== id);
     });
     setTouchedIds((t) => {
@@ -103,38 +113,8 @@ export function useVehicles() {
     });
   }, []);
 
-  // Edit mode for a locked row: clear any stale validation state for the row.
-  const unlockVehicle = useCallback((id: number) => {
-    setVehicles((prev) =>
-      prev.map((v) => (v.id === id ? { ...v, locked: false, editingExisting: true } : v))
-    );
-    setTouchedIds((t) => {
-      const next = new Set(t);
-      next.delete(id);
-      return next;
-    });
-  }, []);
-
-  // Validate required fields; on failure mark only this row, on success lock it.
-  const confirmVehicle = useCallback((id: number) => {
-    setVehicles((prev) => {
-      const v = prev.find((x) => x.id === id);
-      if (!v) return prev;
-  
-      if (!isVehicleValid(v)) {
-        setTouchedIds((t) => new Set([...t, id]));
-        return prev;
-      }
-  
-      setTouchedIds((t) => {
-        const next = new Set(t);
-        next.delete(id);
-        return next;
-      });
-      return prev.map((x) =>
-        x.id === id ? { ...x, locked: true, editingExisting: false } : x
-      );
-    });
+  const markAllAvailable = useCallback(() => {
+    setVehicles((prev) => prev.map((v) => ({ ...v, available: true })));
   }, []);
 
   const importVehicles = useCallback((incoming: VehicleRow[]) => {
@@ -155,9 +135,9 @@ export function useVehicles() {
     vehicles,
     updateVehicle,
     addVehicle,
+    addVehicleWithDetails,
     deleteVehicle,
-    unlockVehicle,
-    confirmVehicle,
+    markAllAvailable,
     importVehicles,
     touchedIds,
     activeVehicleIsValid,

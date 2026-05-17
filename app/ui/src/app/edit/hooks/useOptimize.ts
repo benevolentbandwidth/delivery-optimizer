@@ -88,8 +88,9 @@ export function useOptimize(
   const [outOfRegionVehicleIds, setOutOfRegionVehicleIds] = useState<number[]>([])
   const [optimizationJobId, setOptimizationJobId] = useState<string | null>(null)
   const [result, setResult] = useState<unknown>(null)
+  const [needsDepotAddress, setNeedsDepotAddress] = useState(false)
  
-  const optimize = useCallback(async () => {
+  const optimize = useCallback(async (depotAddress?: string) => {
     setOptimizeError(null)
     setGeocodeFailedAddressIds([])
     setGeocodeFailedVehicleIds([])
@@ -97,6 +98,7 @@ export function useOptimize(
     setOutOfRegionVehicleIds([])
     setOptimizationJobId(null)
     setResult(null)
+    setNeedsDepotAddress(false)
 
     const unlockedVehicle = vehicles.find((v) => !v.locked)
     const unlockedAddress = addresses.find((a) => !a.locked)
@@ -137,22 +139,27 @@ export function useOptimize(
       return
     }
 
+    const trimmedDepotAddress = depotAddress?.trim()
+    if (!trimmedDepotAddress) {
+      setNeedsDepotAddress(true)
+      return
+    }
+
     setIsOptimizing(true)
     try {
-      const vehicleLocations: Map<number, { lat: number; lng: number; state: string | null }> =
-        new Map()
-      const failedVehicles: { id: number; location: string }[] = []
-      for (const v of availableVehicles) {
-        const loc = v.cachedLocation
-          ? { lat: v.cachedLocation.lat, lng: v.cachedLocation.lng, state: v.cachedLocation.state ?? null }
-          : await geocodeAddress(v.startLocation)
-        if (!loc) {
-          failedVehicles.push({ id: v.id, location: v.startLocation })
-        } else {
-          vehicleLocations.set(v.id, loc)
-          cacheVehicleLocation(v.id, loc.lat, loc.lng, loc.state)
-        }
+      // Geocode the shared depot address once and reuse it for all vehicles.
+      const depotLoc = await geocodeAddress(trimmedDepotAddress)
+      if (!depotLoc) {
+        setGeocodeFailedVehicleIds(availableVehicles.map((v) => v.id))
+        setOptimizeError(`Could not geocode starting address "${trimmedDepotAddress}". Try a more specific address.`)
+        return
       }
+      for (const v of availableVehicles) {
+        cacheVehicleLocation(v.id, depotLoc.lat, depotLoc.lng, depotLoc.state)
+      }
+      const vehicleLocations: Map<number, { lat: number; lng: number; state: string | null }> = new Map(
+        availableVehicles.map((v) => [v.id, depotLoc])
+      )
 
       const addressLocations: Map<number, { lat: number; lng: number; state: string | null }> =
         new Map()
@@ -169,29 +176,21 @@ export function useOptimize(
         }
       }
 
-      if (failedVehicles.length > 0 || failedAddresses.length > 0) {
-        setGeocodeFailedVehicleIds(failedVehicles.map((f) => f.id))
+      if (failedAddresses.length > 0) {
         setGeocodeFailedAddressIds(failedAddresses.map((f) => f.id))
-        const allFailed = [
-          ...failedVehicles.map((f) => f.location),
-          ...failedAddresses.map((f) => f.address),
-        ]
-        const shown = allFailed.slice(0, 3)
-        const overflow = allFailed.length - shown.length
-        const list = shown.map((s) => `"${s}"`).join(", ")
+        const shown = failedAddresses.slice(0, 3).map((f) => `"${f.address}"`)
+        const overflow = failedAddresses.length - shown.length
         const suffix = overflow > 0 ? `, and ${overflow} more` : ""
-        setOptimizeError(`Could not geocode: ${list}${suffix}. Try more specific addresses.`)
+        setOptimizeError(`Could not geocode: ${shown.join(", ")}${suffix}. Try more specific addresses.`)
         return
       }
 
-      const badVehicleAddresses: { id: number; location: string }[] = []
-      for (const [id, loc] of vehicleLocations) {
-        if (!loc.state || !SUPPORTED_STATES.has(loc.state)) {
-          const vehicle = availableVehicles.find((candidate) => candidate.id === id)
-          if (vehicle) {
-            badVehicleAddresses.push({ id, location: vehicle.startLocation })
-          }
-        }
+      if (!depotLoc.state || !SUPPORTED_STATES.has(depotLoc.state)) {
+        setOutOfRegionVehicleIds(availableVehicles.map((v) => v.id))
+        setOptimizeError(
+          `Unsupported region: "${trimmedDepotAddress}". We currently only support CA, TX, and FL.`
+        )
+        return
       }
 
       const badDeliveryAddresses: { id: number; address: string }[] = []
@@ -204,19 +203,13 @@ export function useOptimize(
         }
       }
 
-      if (badVehicleAddresses.length > 0 || badDeliveryAddresses.length > 0) {
-        setOutOfRegionVehicleIds(badVehicleAddresses.map((f) => f.id))
+      if (badDeliveryAddresses.length > 0) {
         setOutOfRegionAddressIds(badDeliveryAddresses.map((f) => f.id))
-        const allBad = [
-          ...badVehicleAddresses.map((f) => f.location),
-          ...badDeliveryAddresses.map((f) => f.address),
-        ]
-        const shown = allBad.slice(0, 3)
-        const overflow = allBad.length - shown.length
-        const list = shown.map((s) => `"${s}"`).join(", ")
+        const shown = badDeliveryAddresses.slice(0, 3).map((f) => `"${f.address}"`)
+        const overflow = badDeliveryAddresses.length - shown.length
         const suffix = overflow > 0 ? `, and ${overflow} more` : ""
         setOptimizeError(
-          `Unsupported region(s): ${list}${suffix}. We currently only support CA, TX, and FL.`
+          `Unsupported region(s): ${shown.join(", ")}${suffix}. We currently only support CA, TX, and FL.`
         )
         return
       }
@@ -319,11 +312,17 @@ export function useOptimize(
     setOptimizeError(null)
   }, [])
 
+  const dismissDepotAddressPrompt = useCallback(() => {
+    setNeedsDepotAddress(false)
+  }, [])
+
   return {
     optimize,
     isOptimizing,
     optimizeError,
     clearOptimizeError,
+    needsDepotAddress,
+    dismissDepotAddressPrompt,
     geocodeFailedAddressIds,
     geocodeFailedVehicleIds,
     outOfRegionAddressIds,

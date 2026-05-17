@@ -37,6 +37,7 @@ TEST(ObservabilityRegistryTest, RendersPrometheusMetricsWithExpectedFamiliesAndB
 
   const std::string rendered = registry.RenderPrometheusText();
 
+  EXPECT_GT(rendered.size(), 4096U);
   EXPECT_NE(rendered.find("# HELP deliveryoptimizer_solver_requests_accepted_total Count of solver "
                           "requests accepted into the coordinator queue."),
             std::string::npos);

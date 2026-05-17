@@ -10,20 +10,6 @@ import type { VehicleInput } from "@/lib/types/vehicle.types";
 import type { DeliveryInput } from "@/lib/types/delivery.types";
 import type { Location } from "@/lib/types/common.types";
 
-/**
- * Parses TIME_BUFFER_OPTIONS strings to seconds.
- * "5 min" → 300, "45 min" → 2700, "1hr" → 3600, "8hr" → 28800
- */
-export function timeBufferToSeconds(buffer: string): number {
-  const lower = buffer.trim().toLowerCase();
-  if (lower.includes("min")) {
-    return parseInt(lower, 10) * 60;
-  }
-  if (lower.endsWith("hr")) {
-    return parseInt(lower, 10) * 3600;
-  }
-  return 0;
-}
 
 
 /**
@@ -73,12 +59,20 @@ export function addressCardToDeliveryInput(
     timeWindow = [0, timeToSeconds(end)];
   }
 
+  const recipientNameTrimmed = (a.recipientName ?? "").trim();
+  const phoneRaw = a.phoneNumber ?? "";
+  const phoneDigits = phoneRaw.replace(/\D/g, "");
+  const notesTrimmed = (a.notes ?? "").trim();
+
   return {
     id: a.id,
+    recipientName: recipientNameTrimmed || undefined,
+    phoneNumber: phoneDigits.length >= 10 ? phoneRaw.trim() : undefined,
     address: a.recipientAddress,
-    notes: a.notes.trim() ? a.notes : undefined,
+    notes: notesTrimmed || undefined,
     location,
-    bufferTime: a.timeBuffer ? timeBufferToSeconds(a.timeBuffer) : 0,
+    bufferTime: a.timeBuffer > 0 ? a.timeBuffer * 60 : 0,
     demand: { type: demandType, value: a.deliveryQuantity },
-    ...(timeWindow && { timeWindows: [timeWindow] }),  };
+    ...(timeWindow && { timeWindows: [timeWindow] }),
+  };
 }

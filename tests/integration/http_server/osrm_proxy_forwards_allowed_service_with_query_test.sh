@@ -108,3 +108,35 @@ if [[ "${recorded_path}" != "${upstream_path}" && "${recorded_path}" != "${encod
   cat "${stub_log_file}" >&2 || true
   exit 1
 fi
+
+rm -f "${request_path_file}"
+traversal_response_file="${work_dir}/traversal-response.json"
+traversal_http_code="$("${curl_bin}" --path-as-is -sS -o "${traversal_response_file}" -w "%{http_code}" \
+  "$(http_server_url /api/v1/osrm/table/v1/driving/../../../admin/dangerous?annotations=duration)")"
+
+if [[ "${traversal_http_code}" != "403" ]]; then
+  echo "expected HTTP 403 for traversal-shaped OSRM proxy path, got ${traversal_http_code}" >&2
+  cat "${traversal_response_file}" >&2 || true
+  exit 1
+fi
+
+if [[ -f "${request_path_file}" ]]; then
+  echo "traversal-shaped OSRM proxy path reached upstream as '$(cat "${request_path_file}")'" >&2
+  cat "${stub_log_file}" >&2 || true
+  exit 1
+fi
+
+encoded_traversal_http_code="$("${curl_bin}" --path-as-is -sS -o "${traversal_response_file}" -w "%{http_code}" \
+  "$(http_server_url /api/v1/osrm/table/v1/driving/%2e%2e/%2e%2e/admin/dangerous?annotations=duration)")"
+
+if [[ "${encoded_traversal_http_code}" != "403" ]]; then
+  echo "expected HTTP 403 for encoded traversal-shaped OSRM proxy path, got ${encoded_traversal_http_code}" >&2
+  cat "${traversal_response_file}" >&2 || true
+  exit 1
+fi
+
+if [[ -f "${request_path_file}" ]]; then
+  echo "encoded traversal-shaped OSRM proxy path reached upstream as '$(cat "${request_path_file}")'" >&2
+  cat "${stub_log_file}" >&2 || true
+  exit 1
+fi

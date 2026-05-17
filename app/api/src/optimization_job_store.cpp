@@ -1,5 +1,6 @@
 #include "deliveryoptimizer/api/optimization_job_store.hpp"
 #include "deliveryoptimizer/api/internal/json_utils.hpp"
+#include "deliveryoptimizer/adapters/json_utils.hpp"
 
 #include <drogon/orm/DbClient.h>
 #include <drogon/orm/Exception.h>
@@ -47,7 +48,7 @@ ReadOptionalOutcome(const drogon::orm::Row& row) {
   if (field.isNull()) {
     return std::nullopt;
   }
-  return deliveryoptimizer::api::internal::ParseJsonText(field.as<std::string>());
+  return deliveryoptimizer::adapters::ParseJsonText(field.as<std::string>());
 }
 
 [[nodiscard]] std::optional<deliveryoptimizer::api::OptimizationJobRecord>

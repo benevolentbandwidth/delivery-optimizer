@@ -6,7 +6,7 @@
 import { useCallback, useState } from "react";
 import Papa from "papaparse";
 import type { AddressCard } from "../types/delivery";
-import { resolveColumns, normalizeTimeOption, bufferSecondsToLabel } from "@/app/edit/utils/csvParserUtils";
+import { resolveColumns, normalizeTimeOption, bufferSecondsToMinutes } from "@/app/edit/utils/csvParserUtils";
 import { hasAtLeastOneLetter } from "@/app/components/AddressGeocoder/utils";
 import { migrateSessionSaveFile } from "@/lib/validation/session.schema";
 import { mapOptimizeRequestToEditState } from "../utils/sessionMapper";
@@ -133,8 +133,10 @@ function mapCsvRowsToAddresses(
       id: addrId++,
       locked: true,
       editingExisting: false,
+      recipientName: get(row, "recipient_name"),
+      phoneNumber: get(row, "phone_number"),
       recipientAddress: address,
-      timeBuffer: bufferSecondsToLabel(get(row, "time_buffer")),
+      timeBuffer: bufferSecondsToMinutes(get(row, "time_buffer")),
       deliveryTimeStart: timeStart,
       deliveryTimeEnd: timeEnd,
       deliveryQuantity: parseInt(get(row, "demand_value") || "1", 10) || 1,

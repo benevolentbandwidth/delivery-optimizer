@@ -1,8 +1,8 @@
 #include "deliveryoptimizer/api/optimization_job_runtime.hpp"
 
-#include "deliveryoptimizer/api/internal/json_utils.hpp"
 #include "deliveryoptimizer/api/optimize_request.hpp"
 #include "deliveryoptimizer/api/solve_execution.hpp"
+#include "deliveryoptimizer/adapters/json_utils.hpp"
 
 #include <drogon/utils/Utilities.h>
 
@@ -13,29 +13,6 @@ namespace {
 
 [[nodiscard]] std::string BuildWorkerIdPrefix() {
   return "opt-worker-" + drogon::utils::getUuid();
-}
-
-[[nodiscard]] deliveryoptimizer::api::CoordinatedSolveResult
-ToCoordinatedSolveResult(const deliveryoptimizer::api::VroomRunResult& result) {
-  switch (result.status) {
-  case deliveryoptimizer::api::VroomRunStatus::kSuccess:
-    return deliveryoptimizer::api::CoordinatedSolveResult{
-        .status = deliveryoptimizer::api::CoordinatedSolveStatus::kSucceeded,
-        .output = result.output,
-    };
-  case deliveryoptimizer::api::VroomRunStatus::kTimedOut:
-    return deliveryoptimizer::api::CoordinatedSolveResult{
-        .status = deliveryoptimizer::api::CoordinatedSolveStatus::kTimedOut,
-        .output = std::nullopt,
-    };
-  case deliveryoptimizer::api::VroomRunStatus::kFailed:
-    break;
-  }
-
-  return deliveryoptimizer::api::CoordinatedSolveResult{
-      .status = deliveryoptimizer::api::CoordinatedSolveStatus::kFailed,
-      .output = std::nullopt,
-  };
 }
 
 } // namespace
@@ -160,7 +137,7 @@ void OptimizationJobRuntime::WorkerLoop(const std::stop_token stop_token, const 
     }
     RefreshObservability();
 
-    const auto parsed_json = internal::ParseJsonText(claimed_job->request_json);
+    const auto parsed_json = deliveryoptimizer::adapters::ParseJsonText(claimed_job->request_json);
     Json::Value issues{Json::arrayValue};
     const auto parsed_request =
         parsed_json.has_value() ? ParseAndValidateOptimizeRequest(*parsed_json, issues) : std::nullopt;

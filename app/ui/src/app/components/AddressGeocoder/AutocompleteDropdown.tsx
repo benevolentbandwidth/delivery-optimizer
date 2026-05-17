@@ -17,6 +17,8 @@ if (suggestions.length === 0) return null;
 return (
 <div
 ref={dropdownRef}
+role="listbox"
+aria-label="Address suggestions"
 className="absolute z-50 w-full mt-1 bg-white border-2 border-blue-300 rounded-md shadow-xl max-h-48 overflow-y-auto"
 >
 <div className="bg-blue-50 px-3 py-1 border-b border-blue-200">
@@ -25,6 +27,8 @@ className="absolute z-50 w-full mt-1 bg-white border-2 border-blue-300 rounded-m
 {suggestions.map((suggestion, idx) => (
 <div
 key={suggestion.place_id}
+role="option"
+aria-selected={idx === selectedIndex}
 onClick={() => onSelect(suggestion)}
 className={`px-3 py-2 cursor-pointer border-b border-gray-100 last:border-b-0 text-sm ${
             idx === selectedIndex
@@ -33,7 +37,7 @@ className={`px-3 py-2 cursor-pointer border-b border-gray-100 last:border-b-0 te
 }`}
 >
 <div className="flex items-start">
-<span className="text-gray-400 mr-2 text-xs">📍</span>
+<span aria-hidden="true" className="text-gray-400 mr-2 text-xs">📍</span>
 <p className="flex-1 text-gray-900 leading-tight">
 {suggestion.display_name}
 </p>

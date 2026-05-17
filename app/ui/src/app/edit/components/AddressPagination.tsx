@@ -1,70 +1,163 @@
 "use client";
 
-/**
- * Previous/next + numbered pages for the paged address list (state lives in useAddresses).
- */
-
 import {
-  PAGINATION_ICON_BUTTON,
-  PAGINATION_ICON_BUTTON_DISABLED,
-  PAGINATION_ICON_COLOR,
-  PAGINATION_ICON_DISABLED_COLOR,
-  PAGINATION_PAGE_ACTIVE,
-  PAGINATION_PAGE_IDLE,
-  PAGINATION_ROW,
-} from "../formStyles";
+  PAGINATION_V2_ROW,
+  PAGINATION_V2_SHOW_CONTAINER,
+  PAGINATION_V2_SHOW_TEXT,
+  PAGINATION_V2_SHOW_CHEVRON,
+  PAGINATION_V2_SHOW_CHEVRON_ICON,
+  PAGINATION_V2_SHOW_SELECT,
+  PAGINATION_V2_NAV_CONTAINER,
+  PAGINATION_V2_NAV_BTN,
+  PAGINATION_V2_NAV_BTN_DISABLED,
+  PAGINATION_V2_PAGE_ACTIVE,
+  PAGINATION_V2_PAGE_INACTIVE,
+} from "../formStyles.v2";
+import { ADDRESS_PAGE_SIZE_OPTIONS } from "../hooks/useAddresses";
 
 type AddressPaginationProps = {
   addressPage: number;
   setAddressPage: (page: number) => void;
   totalAddressPages: number;
+  addressesPerPage: number;
+  setAddressesPerPage: (n: number) => void;
+  addressesCount: number;
 };
+
+function getVisiblePages(current: number, total: number): number[] {
+  if (total === 0) return [];
+  const count = Math.min(total, 5);
+  const start = Math.max(1, Math.min(current - 2, total - count + 1));
+  return Array.from({ length: count }, (_, i) => start + i);
+}
 
 export default function AddressPagination({
   addressPage,
   setAddressPage,
   totalAddressPages,
+  addressesPerPage,
+  setAddressesPerPage,
+  addressesCount,
 }: AddressPaginationProps) {
+  if (addressesCount === 0) return null;
+
   const isFirst = addressPage <= 1;
   const isLast = addressPage >= totalAddressPages;
+  const visiblePages = getVisiblePages(addressPage, totalAddressPages);
 
   return (
-    <div className={PAGINATION_ROW}>
-      {/* Step backward one page when not on the first page */}
-      <button
-        type="button"
-        disabled={isFirst}
-        onClick={() => setAddressPage(addressPage - 1)}
-        className={isFirst ? PAGINATION_ICON_BUTTON_DISABLED : PAGINATION_ICON_BUTTON}
-      >
-        <svg width="6" height="14" viewBox="0 0 6 14" fill="none">
-          <path d="M5 1L1 7L5 13" stroke={isFirst ? PAGINATION_ICON_DISABLED_COLOR : PAGINATION_ICON_COLOR} strokeWidth="1.5" strokeLinecap="round"/>
-        </svg>
-      </button>
-      {/* Direct jump to any page in range */}
-      <div className="flex items-center gap-6">
-        {Array.from({ length: totalAddressPages }, (_, i) => i + 1).map((pageNum) => (
-          <button
-            key={pageNum}
-            type="button"
-            onClick={() => setAddressPage(pageNum)}
-            className={addressPage === pageNum ? PAGINATION_PAGE_ACTIVE : PAGINATION_PAGE_IDLE}
+    <div className={PAGINATION_V2_ROW}>
+      {/* Show N — native select overlaid on styled container */}
+      <label className={PAGINATION_V2_SHOW_CONTAINER}>
+        <span className={PAGINATION_V2_SHOW_TEXT}>Show {addressesPerPage}</span>
+        <span className={PAGINATION_V2_SHOW_CHEVRON}>
+          <svg
+            width="8"
+            height="12"
+            viewBox="0 0 8 12"
+            fill="none"
+            className={PAGINATION_V2_SHOW_CHEVRON_ICON}
           >
-            {pageNum}
-          </button>
-        ))}
+            <path
+              d="M4.6 6L0 1.4L1.4 0L7.4 6L1.4 12L0 10.6L4.6 6Z"
+              fill="var(--edit-primary-icon)"
+            />
+          </svg>
+        </span>
+        <select
+          className={PAGINATION_V2_SHOW_SELECT}
+          value={addressesPerPage}
+          onChange={(e) => setAddressesPerPage(Number(e.target.value))}
+          aria-label="Addresses per page"
+        >
+          {ADDRESS_PAGE_SIZE_OPTIONS.map((n) => (
+            <option key={n} value={n}>
+              {n}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      {/* |< < [page numbers] > >| */}
+      <div className={PAGINATION_V2_NAV_CONTAINER}>
+        <button
+          type="button"
+          disabled={isFirst}
+          onClick={() => setAddressPage(1)}
+          className={isFirst ? PAGINATION_V2_NAV_BTN_DISABLED : PAGINATION_V2_NAV_BTN}
+          aria-label="First page"
+        >
+          <svg width="13" height="12" viewBox="0 0 13 12" fill="none">
+            <path
+              d="M2 0H0V12H2V0ZM12.4 1.4L11 0L5 6L11 12L12.4 10.6L7.8 6L12.4 1.4Z"
+              fill="var(--edit-primary-icon)"
+            />
+          </svg>
+        </button>
+
+        <button
+          type="button"
+          disabled={isFirst}
+          onClick={() => setAddressPage(addressPage - 1)}
+          className={isFirst ? PAGINATION_V2_NAV_BTN_DISABLED : PAGINATION_V2_NAV_BTN}
+          aria-label="Previous page"
+        >
+          <svg width="8" height="12" viewBox="0 0 8 12" fill="none">
+            <path
+              d="M2.7999 6L7.3999 10.6L5.9999 12L-9.77516e-05 6L5.9999 0L7.3999 1.4L2.7999 6Z"
+              fill="var(--edit-primary-icon)"
+            />
+          </svg>
+        </button>
+
+        {visiblePages.map((n) =>
+          n === addressPage ? (
+            <span key={n} className={PAGINATION_V2_PAGE_ACTIVE} aria-current="page">
+              {n}
+            </span>
+          ) : (
+            <button
+              key={n}
+              type="button"
+              onClick={() => setAddressPage(n)}
+              className={PAGINATION_V2_PAGE_INACTIVE}
+              aria-label={`Page ${n}`}
+            >
+              {n}
+            </button>
+          )
+        )}
+
+        <button
+          type="button"
+          disabled={isLast}
+          onClick={() => setAddressPage(addressPage + 1)}
+          className={isLast ? PAGINATION_V2_NAV_BTN_DISABLED : PAGINATION_V2_NAV_BTN}
+          aria-label="Next page"
+        >
+          <svg width="8" height="12" viewBox="0 0 8 12" fill="none">
+            <path
+              d="M4.6 6L0 1.4L1.4 0L7.4 6L1.4 12L0 10.6L4.6 6Z"
+              fill="var(--edit-primary-icon)"
+            />
+          </svg>
+        </button>
+
+        <button
+          type="button"
+          disabled={isLast}
+          onClick={() => setAddressPage(totalAddressPages)}
+          className={isLast ? PAGINATION_V2_NAV_BTN_DISABLED : PAGINATION_V2_NAV_BTN}
+          aria-label="Last page"
+        >
+          <svg width="13" height="12" viewBox="0 0 13 12" fill="none">
+            <path
+              d="M10.3999 0H12.3999V12H10.3999V0ZM-9.82285e-05 1.4L1.3999 0L7.3999 6L1.3999 12L-9.82285e-05 10.6L4.5999 6L-9.82285e-05 1.4Z"
+              fill="var(--edit-primary-icon)"
+            />
+          </svg>
+        </button>
       </div>
-      {/* Step forward when not on the last page */}
-      <button
-        type="button"
-        disabled={isLast}
-        onClick={() => setAddressPage(addressPage + 1)}
-        className={isLast ? PAGINATION_ICON_BUTTON_DISABLED : PAGINATION_ICON_BUTTON}
-      >
-        <svg width="6" height="14" viewBox="0 0 6 14" fill="none">
-          <path d="M1 1L5 7L1 13" stroke={isLast ? PAGINATION_ICON_DISABLED_COLOR : PAGINATION_ICON_COLOR} strokeWidth="1.5" strokeLinecap="round"/>
-        </svg>
-      </button>
     </div>
   );
 }

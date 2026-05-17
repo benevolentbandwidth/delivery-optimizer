@@ -1,6 +1,6 @@
 import { geocodeAddress } from "@/app/components/AddressGeocoder/utils/nominatim";
 import { secondsToTimeAMPM } from "@/app/components/AddressGeocoder/utils/timeConversion";
-import { bufferSecondsToLabel } from "@/app/edit/utils/csvParserUtils";
+import { bufferSecondsToMinutes } from "@/app/edit/utils/csvParserUtils";
 import type { DeliveryInput } from "@/lib/types/delivery.types";
 import type { OptimizeRequest } from "@/lib/types/optimize.types";
 import type { VehicleInput } from "@/lib/types/vehicle.types";
@@ -130,6 +130,8 @@ function mapDeliveryInputToCard(delivery: DeliveryInput): AddressCard {
     id: delivery.id,
     locked: true,
     editingExisting: false,
+    recipientName: delivery.recipientName ?? "",
+    phoneNumber: delivery.phoneNumber ?? "",
     recipientAddress:
       delivery.address ?? formatLocation(delivery.location.lat, delivery.location.lng),
     cachedLocation: {
@@ -137,7 +139,7 @@ function mapDeliveryInputToCard(delivery: DeliveryInput): AddressCard {
       lng: delivery.location.lng,
       state: null,
     },
-    timeBuffer: bufferSecondsToLabel(String(delivery.bufferTime ?? 0)),
+    timeBuffer: bufferSecondsToMinutes(String(delivery.bufferTime ?? 0)),
     deliveryTimeStart: start,
     deliveryTimeEnd: end,
     deliveryQuantity: delivery.demand.value,

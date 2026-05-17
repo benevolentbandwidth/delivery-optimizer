@@ -1,5 +1,6 @@
 #include "deliveryoptimizer/api/vroom_runner.hpp"
 
+#include "deliveryoptimizer/adapters/json_utils.hpp"
 #include "endpoints/env_utils.hpp"
 
 #include <algorithm>
@@ -196,23 +197,6 @@ private:
   }
 
   return static_cast<int>(parsed);
-}
-
-[[nodiscard]] std::optional<Json::Value> ParseJson(const std::string_view input) {
-  Json::CharReaderBuilder builder;
-  builder["collectComments"] = false;
-
-  Json::Value root;
-  JSONCPP_STRING errors;
-  std::unique_ptr<Json::CharReader> reader{builder.newCharReader()};
-  const char* begin = input.data();
-  const char* end = begin + input.size();
-  const bool parsed = reader->parse(begin, end, &root, &errors);
-  if (!parsed) {
-    return std::nullopt;
-  }
-
-  return root;
 }
 
 [[nodiscard]] bool WritePayloadToFile(const std::string& path, const Json::Value& input_payload) {
@@ -484,7 +468,7 @@ VroomRunResult ProcessVroomRunner::Run(const Json::Value& input_payload) const {
     return VroomRunResult{.status = VroomRunStatus::kFailed, .output = std::nullopt};
   }
 
-  auto parsed = ParseJson(monitor_result.output_text);
+  auto parsed = deliveryoptimizer::adapters::ParseJsonText(monitor_result.output_text);
   if (!parsed.has_value()) {
     return VroomRunResult{.status = VroomRunStatus::kFailed, .output = std::nullopt};
   }

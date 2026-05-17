@@ -6,31 +6,17 @@ import { useState, useCallback, useMemo } from "react";
 import type { AddressCard } from "../types/delivery";
 import Fuse from "fuse.js";
 
-const ADDRESSES_PER_PAGE = 7;
+export const ADDRESS_PAGE_SIZE_OPTIONS = [5, 10, 20, 30] as const;
 
 export function useAddresses() {
-  // Seed with one editable row; IDs are monotonic as rows are added.
-  const [addresses, setAddresses] = useState<AddressCard[]>([
-    {
-      id: 1,
-      locked: false,
-      editingExisting: false,
-      recipientAddress: "",
-      cachedLocation: undefined,
-      timeBuffer: "",
-      deliveryTimeStart: "",
-      deliveryTimeEnd: "",
-      deliveryQuantity: 0,
-      notes: "",
-    },
-  ]);
+  const [addresses, setAddresses] = useState<AddressCard[]>([]);
 
-  // Search: fuzzy filter across address and notes fields.
+  // Search: fuzzy filter across name, phone, address, and notes.
   const [searchQuery, _setSearchQuery] = useState("");
 
-  // Fuse.js is a fuzzy search library that allows us to search for addresses and notes.
+  // Fuse.js fuzzy search across recipient identity and stop details.
   const fuse = useMemo(() => new Fuse(addresses, {
-    keys: ["recipientAddress", "notes"],
+    keys: ["recipientName", "phoneNumber", "recipientAddress", "notes"],
     threshold: 0.3,         // 0.0 = exact, 1.0 = match anything
     ignoreLocation: true,   // don't penalize matches far from string start
   }), [addresses]);
@@ -47,10 +33,17 @@ export function useAddresses() {
 
   // Pagination: slice the flat list so the UI only renders one page of cards.
   const [addressPage, setAddressPage] = useState(1);
-  const totalAddressPages = Math.max(1, Math.ceil(filteredAddresses.length / ADDRESSES_PER_PAGE));
+  const [addressesPerPage, _setAddressesPerPage] = useState(10);
+
+  const setAddressesPerPage = useCallback((n: number) => {
+    _setAddressesPerPage(n);
+    setAddressPage(1);
+  }, []);
+
+  const totalAddressPages = Math.max(1, Math.ceil(filteredAddresses.length / addressesPerPage));
   const addressesOnCurrentPage = filteredAddresses.slice(
-    (addressPage - 1) * ADDRESSES_PER_PAGE,
-    addressPage * ADDRESSES_PER_PAGE
+    (addressPage - 1) * addressesPerPage,
+    addressPage * addressesPerPage
   );
 
   const setSearchQuery = useCallback((q: string) => {
@@ -94,6 +87,25 @@ export function useAddresses() {
   // computed from the latest state and the callback never needs to be recreated.
   const addAddress = useCallback(() => {
     setAddresses((prev) => {
+      if (prev.length === 0) {
+        setTouchedIds(new Set());
+        setAddressPage(1);
+        return [{
+          id: 1,
+          locked: false,
+          editingExisting: false,
+          recipientName: "",
+          phoneNumber: "",
+          recipientAddress: "",
+          cachedLocation: undefined,
+          timeBuffer: 0,
+          deliveryTimeStart: "",
+          deliveryTimeEnd: "",
+          deliveryQuantity: 0,
+          notes: "",
+        }];
+      }
+
       const active = prev.find((a) => !a.locked);
       const allLocked = prev.length > 0 && prev.every((a) => a.locked);
       const isValid =
@@ -109,7 +121,7 @@ export function useAddresses() {
       setTouchedIds(new Set());
       _setSearchQuery("");
       const newId = prev.reduce((max, a) => Math.max(max, a.id), 0) + 1;
-      setAddressPage(Math.ceil((prev.length + 1) / ADDRESSES_PER_PAGE));
+      setAddressPage(Math.ceil((prev.length + 1) / addressesPerPage));
 
       return [
         ...prev.map((a) => (a.locked ? a : { ...a, locked: true, editingExisting: false })),
@@ -117,9 +129,11 @@ export function useAddresses() {
           id: newId,
           locked: false,
           editingExisting: false,
+          recipientName: "",
+          phoneNumber: "",
           recipientAddress: "",
           cachedLocation: undefined,
-          timeBuffer: "",
+          timeBuffer: 0,
           deliveryTimeStart: "",
           deliveryTimeEnd: "",
           deliveryQuantity: 0,
@@ -127,15 +141,13 @@ export function useAddresses() {
         },
       ];
     });
-  }, []);
+  }, [addressesPerPage]);
 
-  // At least one address row must remain. Clamp current page synchronously so
-  // there is no extra render from a useEffect.
   const deleteAddress = useCallback((id: number) => {
     setAddresses((prev) => {
-      if (prev.length <= 1) return prev;
+      if (prev.length === 0) return prev;
       const next = prev.filter((a) => a.id !== id);
-      const maxPage = Math.max(1, Math.ceil(next.length / ADDRESSES_PER_PAGE));
+      const maxPage = Math.max(1, Math.ceil(next.length / addressesPerPage));
       setAddressPage((p) => Math.min(p, maxPage));
       return next;
     });
@@ -144,7 +156,7 @@ export function useAddresses() {
       next.delete(id);
       return next;
     });
-  }, []);
+  }, [addressesPerPage]);
 
   // Re-open a saved row for editing (shows Confirm in the card).
   const unlockAddress = useCallback((id: number) => {
@@ -207,6 +219,8 @@ export function useAddresses() {
     setAddressPage,
     totalAddressPages,
     addressesOnCurrentPage,
+    addressesPerPage,
+    setAddressesPerPage,
     addressesCount: addresses.length,
     activeAddressIsValid,
     allAddressesLocked,

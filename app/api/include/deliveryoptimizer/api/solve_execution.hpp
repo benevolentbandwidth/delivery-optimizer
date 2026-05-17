@@ -3,6 +3,7 @@
 #include "deliveryoptimizer/api/observability.hpp"
 #include "deliveryoptimizer/api/optimize_request.hpp"
 #include "deliveryoptimizer/api/solve_coordinator.hpp"
+#include "deliveryoptimizer/api/vroom_runner.hpp"
 
 #include <cstdint>
 #include <json/json.h>
@@ -20,5 +21,7 @@ struct SolveExecutionResult {
 
 [[nodiscard]] SolveExecutionResult BuildSolveExecutionResult(const OptimizeRequestInput& input,
                                                              const CoordinatedSolveResult& result);
+
+[[nodiscard]] CoordinatedSolveResult ToCoordinatedSolveResult(const VroomRunResult& result);
 
 } // namespace deliveryoptimizer::api

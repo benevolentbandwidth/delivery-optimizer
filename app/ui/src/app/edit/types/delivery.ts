@@ -38,9 +38,12 @@ export type AddressCard = {
   id: number;
   locked: boolean;
   editingExisting: boolean;
+  recipientName: string;
+  phoneNumber: string;
   recipientAddress: string;
   cachedLocation?: CachedLocation;
-  timeBuffer: string;
+  /** Service/dwell time in minutes at this stop. 0 = none. */
+  timeBuffer: number;
   deliveryTimeStart: string;
   deliveryTimeEnd: string;
   deliveryQuantity: number;

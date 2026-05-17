@@ -13,8 +13,10 @@ function makeAddress(overrides: Partial<AddressCard> = {}): AddressCard {
     id: 1,
     locked: true,
     editingExisting: false,
+    recipientName: "",
+    phoneNumber: "",
     recipientAddress: "123 Main St",
-    timeBuffer: "",
+    timeBuffer: 0,
     deliveryTimeStart: "",
     deliveryTimeEnd: "",
     deliveryQuantity: 3,
@@ -55,9 +57,9 @@ describe("addressCardToDeliveryInput", () => {
     expect(result.timeWindows).toEqual([[0, 61200]]);
   });
 
-  it('"5 min" buffer → bufferTime 300', () => {
+  it("5 minute service buffer → bufferTime 300 seconds", () => {
     expect(
-      addressCardToDeliveryInput(makeAddress({ timeBuffer: "5 min" }), LOC, "units").bufferTime
+      addressCardToDeliveryInput(makeAddress({ timeBuffer: 5 }), LOC, "units").bufferTime
     ).toBe(300);
   });
 

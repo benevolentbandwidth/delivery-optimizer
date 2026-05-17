@@ -39,8 +39,9 @@ export default function AddressGeocoder() {
   // Hooks: Autocomplete for deliveries
   const deliveryAutocomplete = useAddressAutocomplete();
 
-  // Hooks: Autocomplete for vehicles
-  const vehicleAutocomplete = useAddressAutocomplete();
+  // Hooks: Autocomplete for vehicles (independent state per field)
+  const vehicleStartAC = useAddressAutocomplete();
+  const vehicleEndAC = useAddressAutocomplete();
 
   // Hooks: Validation
   const { validateDeliveries, validateVehicles } = useGeocodingValidation();
@@ -106,18 +107,25 @@ export default function AddressGeocoder() {
     const fieldName = field === 'start' ? 'startAddress' : 'endAddress';
     handleVehicleFieldChange(reactId, fieldName, value);
     setActiveAddressField({ vehicleId: reactId, field });
-    vehicleAutocomplete.debouncedFetch(value);
+    if (field === 'start') vehicleStartAC.debouncedFetch(value);
+    else vehicleEndAC.debouncedFetch(value);
   };
 
   const handleVehicleFocus = (reactId: string, field: 'start' | 'end') => {
     setActiveAddressField({ vehicleId: reactId, field });
   };
 
-  const handleSelectVehicleSuggestion = (suggestion: AddressSuggestion) => {
+  const handleSelectStartSuggestion = (suggestion: AddressSuggestion) => {
     if (!activeAddressField) return;
-    const fieldName = activeAddressField.field === 'start' ? 'startAddress' : 'endAddress';
-    handleVehicleFieldChange(activeAddressField.vehicleId, fieldName, suggestion.display_name);
-    vehicleAutocomplete.clearSuggestions();
+    handleVehicleFieldChange(activeAddressField.vehicleId, 'startAddress', suggestion.display_name);
+    vehicleStartAC.clearSuggestions();
+    setActiveAddressField(null);
+  };
+
+  const handleSelectEndSuggestion = (suggestion: AddressSuggestion) => {
+    if (!activeAddressField) return;
+    handleVehicleFieldChange(activeAddressField.vehicleId, 'endAddress', suggestion.display_name);
+    vehicleEndAC.clearSuggestions();
     setActiveAddressField(null);
   };
 
@@ -352,8 +360,9 @@ export default function AddressGeocoder() {
   // the effect to re-run on every render (objects are new refs each time).
   const deliveryShowSuggestions = deliveryAutocomplete.showSuggestions;
   const deliveryClearSuggestions = deliveryAutocomplete.clearSuggestions;
-  const vehicleShowSuggestions = vehicleAutocomplete.showSuggestions;
-  const vehicleClearSuggestions = vehicleAutocomplete.clearSuggestions;
+  const vehicleShowSuggestions = vehicleStartAC.showSuggestions || vehicleEndAC.showSuggestions;
+  const vehicleStartClearSuggestions = vehicleStartAC.clearSuggestions;
+  const vehicleEndClearSuggestions = vehicleEndAC.clearSuggestions;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -372,7 +381,8 @@ export default function AddressGeocoder() {
         const clickedInside = Array.from(document.querySelectorAll('[data-vehicle-input]'))
           .some(el => el.contains(target));
         if (!clickedInside) {
-          vehicleClearSuggestions();
+          vehicleStartClearSuggestions();
+          vehicleEndClearSuggestions();
           setActiveAddressField(null);
         }
       }
@@ -384,7 +394,8 @@ export default function AddressGeocoder() {
     deliveryShowSuggestions,
     deliveryClearSuggestions,
     vehicleShowSuggestions,
-    vehicleClearSuggestions,
+    vehicleStartClearSuggestions,
+    vehicleEndClearSuggestions,
   ]);
 
   return (
@@ -466,20 +477,24 @@ export default function AddressGeocoder() {
                       onFieldChange={handleVehicleFieldChange}
                       onAddressChange={handleVehicleAddressChange}
                       onFocus={handleVehicleFocus}
-                      onKeyDown={(e) => vehicleAutocomplete.handleKeyDown(e, handleSelectVehicleSuggestion)}
+                      onStartKeyDown={(e) => vehicleStartAC.handleKeyDown(e, handleSelectStartSuggestion)}
+                      onEndKeyDown={(e) => vehicleEndAC.handleKeyDown(e, handleSelectEndSuggestion)}
                       showStartSuggestions={
-                        vehicleAutocomplete.showSuggestions &&
+                        vehicleStartAC.showSuggestions &&
                         activeAddressField?.vehicleId === vehicle._reactId &&
                         activeAddressField?.field === 'start'
                       }
                       showEndSuggestions={
-                        vehicleAutocomplete.showSuggestions &&
+                        vehicleEndAC.showSuggestions &&
                         activeAddressField?.vehicleId === vehicle._reactId &&
                         activeAddressField?.field === 'end'
                       }
-                      suggestions={vehicleAutocomplete.suggestions}
-                      selectedIndex={vehicleAutocomplete.selectedIndex}
-                      onSelectSuggestion={handleSelectVehicleSuggestion}
+                      startSuggestions={vehicleStartAC.suggestions}
+                      endSuggestions={vehicleEndAC.suggestions}
+                      startSelectedIndex={vehicleStartAC.selectedIndex}
+                      endSelectedIndex={vehicleEndAC.selectedIndex}
+                      onSelectStartSuggestion={handleSelectStartSuggestion}
+                      onSelectEndSuggestion={handleSelectEndSuggestion}
                     />
                   </div>
                 ))}

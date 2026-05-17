@@ -1,4 +1,4 @@
-// app/components/AddressGeocoder/hooks/useGeocodingValidation.ts
+// app/ui/src/app/components/AddressGeocoder/utils/validateGeocodingForms.ts
 import { isValidTime, isStartBeforeEnd } from './timeConversion';
 import { hasAtLeastOneLetter } from '../utils';
 import type { DeliveryForm, VehicleForm } from '../types';
@@ -13,7 +13,10 @@ export const useGeocodingValidation = () => {
     const valid = deliveries.filter((d, index) => {
       const deliveryName = `Delivery ${index + 1}`;
 
-      if (!d.address.trim()) return false;
+      if (!d.address.trim()) {
+        errors.push(`${deliveryName}: Address is required`);
+        return false;
+      }
 
       if (!hasAtLeastOneLetter(d.address)) {
         errors.push(`${deliveryName}: Address must contain at least one letter`);

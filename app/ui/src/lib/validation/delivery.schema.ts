@@ -6,7 +6,7 @@ export const deliverySchema = z.object({
 
   recipientName: z.string().min(1).optional(),
 
-  phoneNumber: z.string().min(7).optional(),
+  phoneNumber: z.string().min(10).optional(),
 
   address: z.string().optional(),
 

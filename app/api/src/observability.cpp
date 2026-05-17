@@ -1,6 +1,7 @@
 #include "deliveryoptimizer/api/observability.hpp"
 
 #include <array>
+#include <cstddef>
 #include <iomanip>
 #include <iostream>
 #include <json/json.h>
@@ -33,6 +34,8 @@ constexpr std::array<HistogramBucket, 12> kHistogramBuckets{{
     {10.0, "10"},
     {30.0, "30"},
 }};
+
+constexpr std::size_t kPrometheusTextInitialCapacity = 16U * 1024U;
 
 [[nodiscard]] double DurationToSeconds(const SteadyClock::duration duration) {
   return std::chrono::duration<double>(duration).count();
@@ -355,7 +358,7 @@ std::string ObservabilityRegistry::RenderPrometheusText() const {
   };
 
   std::string output;
-  output.reserve(4096);
+  output.reserve(kPrometheusTextInitialCapacity);
 
   AppendCounter(output, "deliveryoptimizer_solver_requests_accepted_total",
                 "Count of solver requests accepted into the coordinator queue.",

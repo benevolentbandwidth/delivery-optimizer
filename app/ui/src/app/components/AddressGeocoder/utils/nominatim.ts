@@ -16,7 +16,7 @@ async function throttle(): Promise<void> {
   lastRequestAt = Date.now();
 }
 
-const USER_AGENT = 'DeliveryOptimizer/1.0 (contact@yourcompany.com)'; // TODO: Replace
+const NOMINATIM_CONTACT_EMAIL = 'contact@yourcompany.com'; // TODO: Replace
 
 export interface NominatimResult {
   lat: string;
@@ -36,12 +36,12 @@ export async function geocodeAddress(
     format: 'json',
     limit: '1',
     addressdetails: '1',
+    email: NOMINATIM_CONTACT_EMAIL,
+    countrycodes: 'us',
   });
 
-  const response = await fetch(
-    `https://nominatim.openstreetmap.org/search?${params}`,
-    { headers: { 'User-Agent': USER_AGENT } }
-  );
+  const geocodeUrl = `https://nominatim.openstreetmap.org/search?${params}`;
+  const response = await fetch(geocodeUrl);
 
   if (!response.ok) {
     throw new Error(`Nominatim error: ${response.status} ${response.statusText}`);
@@ -71,12 +71,12 @@ export async function autocompleteAddress(
     format: 'json',
     limit: String(limit),
     addressdetails: '1',
+    countrycodes: 'us',
+    email: NOMINATIM_CONTACT_EMAIL,
   });
 
-  const response = await fetch(
-    `https://nominatim.openstreetmap.org/search?${params}`,
-    { headers: { 'User-Agent': USER_AGENT } }
-  );
+  const autocompleteUrl = `https://nominatim.openstreetmap.org/search?${params}`;
+  const response = await fetch(autocompleteUrl);
 
   if (!response.ok) {
     throw new Error(`Nominatim error: ${response.status} ${response.statusText}`);

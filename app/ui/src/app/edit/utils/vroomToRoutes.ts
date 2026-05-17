@@ -62,7 +62,8 @@ export function vroomToRoutes(
           time: arrivalTimeStr,
         },
         note: address?.notes ?? "",
-        addresseeName: undefined,
+        addresseeName: address?.recipientName || undefined,
+        phoneNumber: address?.phoneNumber || undefined,
       };
     });
 

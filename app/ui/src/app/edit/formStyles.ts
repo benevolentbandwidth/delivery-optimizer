@@ -56,9 +56,9 @@ export const ICON_BUTTON_9 =
 export const ICON_BUTTON_9_DANGER =
   "w-9 h-9 rounded-md border border-zinc-300 flex items-center justify-center text-black hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors cursor-pointer disabled:opacity-0 disabled:pointer-events-none";
 
-/** Name/type/measure/departure flex; capacity + Available (No/Yes pill) stay fixed width below xl. */
+/** Name/type/measure/Available flex; departure (72px) + capacity (108px) fixed below xl. */
 export const DESKTOP_VEHICLE_GRID_CLASS =
-  "lg:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1fr)_72px_108px_minmax(0,1fr)_auto] xl:grid-cols-[1fr_1.5fr_1fr_1fr_112px_112px_140px_auto]";
+  "lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_72px_108px_minmax(0,1fr)_auto] xl:grid-cols-[1fr_1fr_1fr_112px_112px_140px_auto]";
 
 export const VEHICLE_DESKTOP_INPUT =
   "h-11 bg-white rounded-md border px-3 xl:px-4 text-sm xl:text-base text-black focus:outline-none min-w-0";

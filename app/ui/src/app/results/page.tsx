@@ -51,6 +51,17 @@ export default function ResultsPage() {
     );
   }, [setRoutes]);
 
+  const handleRouteDistanceUpdate = useCallback((vehicleId: string, distanceMi: number) => {
+    setRoutes((prev) => {
+      const next = prev.map((route) =>
+        route.vehicleId === vehicleId && route.distanceMi !== distanceMi
+          ? { ...route, distanceMi }
+          : route
+      );
+      return next.every((r, i) => r === prev[i]) ? prev : next;
+    });
+  }, []);
+
   const handleEditModeChange = useCallback((value: boolean) => {
     setIsEditMode(value);
     if (!value) setPendingPinMove(null);
@@ -148,6 +159,7 @@ export default function ResultsPage() {
               isEditMode={isEditMode}
               pendingPinMove={pendingPinMove}
               onPendingPinMove={handlePendingPinMove}
+              onRouteDistanceUpdate={handleRouteDistanceUpdate}
             />
           </div>
         </div>

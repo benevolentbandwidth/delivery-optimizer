@@ -4,6 +4,7 @@ import { useEffect, useRef} from "react";
 import { useAddressAutocomplete } from "../../components/AddressGeocoder/utils/useAddressAutocomplete";
 import { AutocompleteDropdown } from "../../components/AddressGeocoder/AutocompleteDropdown";
 import type { AddressSuggestion } from "../../components/AddressGeocoder/types";
+import { ADDRESS_AUTOCOMPLETE_INPUT_WRAPPER } from "../formStyles.v2";
 
 type Props = {
   value: string;
@@ -54,7 +55,7 @@ export default function AddressAutocompleteInput({
   }
 
   return (
-    <div className="relative">
+    <div className={ADDRESS_AUTOCOMPLETE_INPUT_WRAPPER}>
       <input
         value={value}
         onChange={handleChange}
