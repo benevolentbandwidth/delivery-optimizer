@@ -43,7 +43,7 @@ export default function UploadRoutePage() {
       "routeFile",
       JSON.stringify({ name: file.name, content: text }),
     );
-    router.push("/driver-view");
+    router.push("/driver_assist");
   };
 
   return (
@@ -52,11 +52,16 @@ export default function UploadRoutePage() {
         @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&display=swap');
 
         .upload-root {
-          min-height: 100vh;
+          min-height: 100dvh;
           background: #f7f7f5;
           display: flex;
           flex-direction: column;
           font-family: 'DM Sans', sans-serif;
+        }
+
+        .upload-root,
+        .upload-root * {
+          box-sizing: border-box;
         }
 
         .upload-content {
@@ -65,7 +70,8 @@ export default function UploadRoutePage() {
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          padding: 48px 24px;
+          width: 100%;
+          padding: clamp(28px, 8vw, 48px) clamp(16px, 5vw, 24px);
         }
 
         .upload-title {
@@ -90,7 +96,8 @@ export default function UploadRoutePage() {
           max-width: 580px;
           border: 1.5px dashed #ccc;
           border-radius: 12px;
-          padding: 52px 24px;
+          min-height: 184px;
+          padding: clamp(32px, 10vw, 52px) clamp(18px, 6vw, 24px);
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -132,6 +139,7 @@ export default function UploadRoutePage() {
           align-items: center;
           gap: 10px;
           margin-bottom: 24px;
+          min-width: 0;
         }
 
         .upload-file-name {
@@ -139,9 +147,17 @@ export default function UploadRoutePage() {
           font-weight: 500;
           color: #111;
           flex: 1;
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
 
-        .upload-file-size { font-size: 12px; color: #666; }
+        .upload-file-size {
+          flex-shrink: 0;
+          font-size: 12px;
+          color: #666;
+        }
 
         .upload-file-remove {
           background: none;
@@ -199,6 +215,40 @@ export default function UploadRoutePage() {
 
         .upload-continue-btn:not(:disabled):hover {
           background: #3d7a6a;
+        }
+
+        @media (max-width: 520px) {
+          .upload-content {
+            justify-content: flex-start;
+            padding-top: 36px;
+            padding-bottom: calc(24px + env(safe-area-inset-bottom));
+          }
+
+          .upload-title {
+            font-size: 1.75rem;
+          }
+
+          .upload-subtitle {
+            margin-bottom: 24px;
+            max-width: 280px;
+            line-height: 1.5;
+          }
+
+          .upload-actions {
+            align-items: stretch;
+            flex-direction: column-reverse;
+            gap: 16px;
+          }
+
+          .upload-back-btn {
+            justify-content: center;
+            min-height: 44px;
+          }
+
+          .upload-continue-btn {
+            min-height: 48px;
+            width: 100%;
+          }
         }
       `}</style>
 
