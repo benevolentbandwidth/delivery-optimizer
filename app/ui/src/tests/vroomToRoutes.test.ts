@@ -181,6 +181,26 @@ describe("vroomToRoutes", () => {
     expect(route.stops[1].sequence).toBe(2);
   });
 
+  it("maps recipient, phone, and delivery window from address card", () => {
+    const [route] = vroomToRoutes(
+      SINGLE_STOP,
+      [makeVehicle(1)],
+      [
+        makeAddress(1, {
+          recipientName: " Jane Doe ",
+          phoneNumber: "555-123-4567",
+          deliveryTimeStart: "9:00 AM",
+          deliveryTimeEnd: "11:00 AM",
+        }),
+      ],
+    );
+    const stop = route.stops[0];
+    expect(stop.addresseeName).toBe("Jane Doe");
+    expect(stop.phoneNumber).toBe("555-123-4567");
+    expect(stop.deliveryWindowStart).toBe("9:00 AM");
+    expect(stop.deliveryWindowEnd).toBe("11:00 AM");
+  });
+
   it("arrival wraps via % 86400 — 86400 + 32400 still shows 9:00 AM", () => {
     const response: VroomResponse = {
       routes: [
