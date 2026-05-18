@@ -6,7 +6,7 @@ self.addEventListener("install", (event) => {
     caches
       .open(CACHE_NAME)
       .then((cache) => cache.addAll(APP_SHELL))
-      .then(() => self.skipWaiting())
+      .then(() => self.skipWaiting()),
   );
 });
 
@@ -18,10 +18,10 @@ self.addEventListener("activate", (event) => {
         Promise.all(
           keys
             .filter((key) => key !== CACHE_NAME)
-            .map((key) => caches.delete(key))
-        )
+            .map((key) => caches.delete(key)),
+        ),
       )
-      .then(() => self.clients.claim())
+      .then(() => self.clients.claim()),
   );
 });
 
@@ -45,7 +45,9 @@ self.addEventListener("fetch", (event) => {
           if (!shouldCache) return response;
 
           const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          caches
+            .open(CACHE_NAME)
+            .then((cache) => cache.put(event.request, copy));
           return response;
         })
         .catch(() => {
@@ -54,6 +56,6 @@ self.addEventListener("fetch", (event) => {
           }
           throw new Error("Network unavailable");
         });
-    })
+    }),
   );
 });

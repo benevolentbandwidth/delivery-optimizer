@@ -71,10 +71,11 @@ type SessionSaveFile = z.infer<typeof sessionSaveV1Schema>;
 type PersistedRouteState = z.infer<typeof persistedRouteStateSchema>;
 
 export async function loadSessionFromFile(
-  file: Pick<File, "name" | "size" | "type" | "text">
+  file: Pick<File, "name" | "size" | "type" | "text">,
 ): Promise<OptimizeRequestLike> {
   const isJson =
-    file.type === "application/json" || file.name.toLowerCase().endsWith(".json");
+    file.type === "application/json" ||
+    file.name.toLowerCase().endsWith(".json");
 
   if (!isJson) {
     throw new Error("Please select a valid .json save file.");
@@ -103,12 +104,14 @@ export function loadSessionFromText(text: string): OptimizeRequestLike {
   try {
     return parseSessionSaveFile(parsed).data;
   } catch (error) {
-    throw new Error(formatValidationError(error) ?? "Invalid save file format.");
+    throw new Error(
+      formatValidationError(error) ?? "Invalid save file format.",
+    );
   }
 }
 
 export function createPersistedRouteState(
-  route: DriverRoute
+  route: DriverRoute,
 ): PersistedRouteState {
   return {
     version: 1,
@@ -134,7 +137,9 @@ function formatValidationError(error: unknown): string | null {
   if (!issue) return null;
 
   const path =
-    Array.isArray(issue.path) && issue.path.length ? issue.path.join(".") : "file";
+    Array.isArray(issue.path) && issue.path.length
+      ? issue.path.join(".")
+      : "file";
 
   return `Invalid save file format at "${path}".`;
 }
