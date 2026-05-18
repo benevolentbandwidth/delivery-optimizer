@@ -21,7 +21,7 @@ function filenameTimestamp(date: Date) {
 
 export function buildSessionSave(
   state: OptimizeRequest,
-  now: Date = new Date()
+  now: Date = new Date(),
 ): SessionSaveFile {
   const saveFile = {
     version: 1,
@@ -34,7 +34,7 @@ export function buildSessionSave(
 }
 
 export function downloadSessionSave(
-  state: OptimizeRequest
+  state: OptimizeRequest,
 ): SessionExportResult {
   try {
     const now = new Date();

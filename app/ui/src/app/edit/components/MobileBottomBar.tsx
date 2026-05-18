@@ -16,7 +16,12 @@ type Props = {
   isOptimizing?: boolean;
 };
 
-export default function MobileBottomBar({ onOptimize, onSave, onExport, isOptimizing }: Props) {
+export default function MobileBottomBar({
+  onOptimize,
+  onSave,
+  onExport,
+  isOptimizing,
+}: Props) {
   return (
     <div className={MOBILE_BOTTOM_BAR_ROOT}>
       <div className={MOBILE_BOTTOM_BAR_INNER}>
@@ -29,10 +34,18 @@ export default function MobileBottomBar({ onOptimize, onSave, onExport, isOptimi
           <span className={MOBILE_BOTTOM_BAR_OPTIMIZE_LABEL}>Optimize</span>
         </button>
         <div className={MOBILE_BOTTOM_BAR_ACTIONS_ROW}>
-          <button type="button" className={MOBILE_BOTTOM_BAR_SECONDARY_BTN} onClick={onSave}>
+          <button
+            type="button"
+            className={MOBILE_BOTTOM_BAR_SECONDARY_BTN}
+            onClick={onSave}
+          >
             <span className={MOBILE_BOTTOM_BAR_SECONDARY_LABEL}>Save</span>
           </button>
-          <button type="button" className={MOBILE_BOTTOM_BAR_SECONDARY_BTN} onClick={onExport}>
+          <button
+            type="button"
+            className={MOBILE_BOTTOM_BAR_SECONDARY_BTN}
+            onClick={onExport}
+          >
             <span className={MOBILE_BOTTOM_BAR_SECONDARY_LABEL}>Export</span>
           </button>
         </div>

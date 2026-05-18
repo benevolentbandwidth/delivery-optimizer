@@ -43,9 +43,23 @@ const BLANK_VEHICLE: VehicleRowType = {
 type VehicleSectionProps = {
   vehicles: VehicleRowType[];
   addVehicle: () => void;
-  addVehicleWithDetails: (details: Pick<VehicleRowType, "name" | "type" | "capacity" | "capacityUnit" | "available" | "departureTime">) => void;
+  addVehicleWithDetails: (
+    details: Pick<
+      VehicleRowType,
+      | "name"
+      | "type"
+      | "capacity"
+      | "capacityUnit"
+      | "available"
+      | "departureTime"
+    >,
+  ) => void;
   markAllAvailable: () => void;
-  updateVehicle: <K extends keyof VehicleRowType>(id: number, key: K, value: VehicleRowType[K]) => void;
+  updateVehicle: <K extends keyof VehicleRowType>(
+    id: number,
+    key: K,
+    value: VehicleRowType[K],
+  ) => void;
   deleteVehicle: (id: number) => void;
   touchedIds: Set<number>;
   allVehiclesLocked: boolean;
@@ -67,8 +81,12 @@ export default function VehicleSection({
   outOfRegionVehicleIds,
 }: VehicleSectionProps) {
   const [isAddOverlayOpen, setIsAddOverlayOpen] = useState(false);
-  const [editingVehicle, setEditingVehicle] = useState<VehicleRowType | null>(null);
-  const [vehicleToDelete, setVehicleToDelete] = useState<VehicleRowType | null>(null);
+  const [editingVehicle, setEditingVehicle] = useState<VehicleRowType | null>(
+    null,
+  );
+  const [vehicleToDelete, setVehicleToDelete] = useState<VehicleRowType | null>(
+    null,
+  );
 
   function handleDeleteRequest(id: number) {
     const vehicle = vehicles.find((v) => v.id === id);
@@ -97,7 +115,11 @@ export default function VehicleSection({
       </div>
 
       <div className={VEHICLE_SECTION_ACTIONS}>
-        <button type="button" onClick={markAllAvailable} className={VEHICLE_SECTION_BTN_GHOST}>
+        <button
+          type="button"
+          onClick={markAllAvailable}
+          className={VEHICLE_SECTION_BTN_GHOST}
+        >
           Mark all available
         </button>
         <button
@@ -207,7 +229,6 @@ export default function VehicleSection({
           }}
         />
       )}
-      
     </section>
   );
 }

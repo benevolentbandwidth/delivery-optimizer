@@ -10,8 +10,6 @@ import type { VehicleInput } from "@/lib/types/vehicle.types";
 import type { DeliveryInput } from "@/lib/types/delivery.types";
 import type { Location } from "@/lib/types/common.types";
 
-
-
 /**
  * Maps a locked VehicleRow + geocoded location to a VehicleInput for the API.
  * If the vehicle has a departure time, returnTime is set to end-of-day (86400 s)
@@ -19,7 +17,7 @@ import type { Location } from "@/lib/types/common.types";
  */
 export function vehicleRowToVehicleInput(
   v: LockedVehicleRow,
-  location: Location
+  location: Location,
 ): VehicleInput {
   const departureSeconds = v.departureTime
     ? timeToSeconds(v.departureTime)
@@ -47,7 +45,7 @@ export function vehicleRowToVehicleInput(
 export function addressCardToDeliveryInput(
   a: AddressCard,
   location: Location,
-  demandType: CapacityUnit
+  demandType: CapacityUnit,
 ): DeliveryInput {
   const { deliveryTimeStart: start, deliveryTimeEnd: end } = a;
   let timeWindow: [number, number] | undefined;

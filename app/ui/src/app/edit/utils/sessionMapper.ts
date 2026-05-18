@@ -22,13 +22,15 @@ function isLockedVehicleRow(vehicle: VehicleRow): vehicle is LockedVehicleRow {
 
 export async function mapEditStateToOptimizeRequest(
   vehicles: VehicleRow[],
-  addresses: AddressCard[]
+  addresses: AddressCard[],
 ): Promise<OptimizeRequest> {
   const unlockedVehicle = vehicles.find((vehicle) => !vehicle.locked);
   const unlockedAddress = addresses.find((address) => !address.locked);
 
   if (unlockedVehicle || unlockedAddress) {
-    throw new Error("Please confirm all vehicles and addresses before exporting.");
+    throw new Error(
+      "Please confirm all vehicles and addresses before exporting.",
+    );
   }
 
   if (vehicles.length === 0) {
@@ -36,7 +38,9 @@ export async function mapEditStateToOptimizeRequest(
   }
 
   if (addresses.length === 0) {
-    throw new Error("At least one delivery address is required to export a session.");
+    throw new Error(
+      "At least one delivery address is required to export a session.",
+    );
   }
 
   const lockedVehicles = vehicles.filter(isLockedVehicleRow);
@@ -44,19 +48,26 @@ export async function mapEditStateToOptimizeRequest(
     throw new Error("One or more vehicles are missing type or capacity unit.");
   }
 
-  const units = [...new Set(lockedVehicles.map((vehicle) => vehicle.capacityUnit))];
+  const units = [
+    ...new Set(lockedVehicles.map((vehicle) => vehicle.capacityUnit)),
+  ];
   if (units.length !== 1) {
-    throw new Error("All vehicles must use the same capacity unit to export a session.");
+    throw new Error(
+      "All vehicles must use the same capacity unit to export a session.",
+    );
   }
 
   const demandType = units[0] as CapacityUnit;
   const vehicleInputs: VehicleInput[] = [];
 
   for (const vehicle of lockedVehicles) {
-    const location = vehicle.cachedLocation ?? await geocodeAddress(vehicle.startLocation);
+    const location =
+      vehicle.cachedLocation ?? (await geocodeAddress(vehicle.startLocation));
 
     if (!location) {
-      throw new Error(`Could not geocode vehicle start location "${vehicle.startLocation}".`);
+      throw new Error(
+        `Could not geocode vehicle start location "${vehicle.startLocation}".`,
+      );
     }
 
     vehicleInputs.push(vehicleRowToVehicleInput(vehicle, location));
@@ -65,13 +76,19 @@ export async function mapEditStateToOptimizeRequest(
   const deliveryInputs: DeliveryInput[] = [];
 
   for (const address of addresses) {
-    const location = address.cachedLocation ?? await geocodeAddress(address.recipientAddress);
+    const location =
+      address.cachedLocation ??
+      (await geocodeAddress(address.recipientAddress));
 
     if (!location) {
-      throw new Error(`Could not geocode delivery address "${address.recipientAddress}".`);
+      throw new Error(
+        `Could not geocode delivery address "${address.recipientAddress}".`,
+      );
     }
 
-    deliveryInputs.push(addressCardToDeliveryInput(address, location, demandType));
+    deliveryInputs.push(
+      addressCardToDeliveryInput(address, location, demandType),
+    );
   }
 
   return {
@@ -104,7 +121,10 @@ function mapVehicleInputToRow(vehicle: VehicleInput): VehicleRow {
     locked: true,
     editingExisting: false,
     name: vehicle.driverName ?? "",
-    startLocation: formatLocation(vehicle.startLocation.lat, vehicle.startLocation.lng),
+    startLocation: formatLocation(
+      vehicle.startLocation.lat,
+      vehicle.startLocation.lng,
+    ),
     cachedLocation: {
       lat: vehicle.startLocation.lat,
       lng: vehicle.startLocation.lng,
@@ -115,7 +135,9 @@ function mapVehicleInputToRow(vehicle: VehicleInput): VehicleRow {
     capacity: vehicle.capacity.value,
     available: true,
     departureTime:
-      vehicle.departureTime != null ? secondsToTimeAMPM(vehicle.departureTime) : "",
+      vehicle.departureTime != null
+        ? secondsToTimeAMPM(vehicle.departureTime)
+        : "",
   };
 }
 
@@ -124,7 +146,9 @@ function mapDeliveryInputToCard(delivery: DeliveryInput): AddressCard {
   const start =
     firstWindow && firstWindow[0] > 0 ? secondsToTimeAMPM(firstWindow[0]) : "";
   const end =
-    firstWindow && firstWindow[1] < 86400 ? secondsToTimeAMPM(firstWindow[1]) : "";
+    firstWindow && firstWindow[1] < 86400
+      ? secondsToTimeAMPM(firstWindow[1])
+      : "";
 
   return {
     id: delivery.id,
@@ -133,7 +157,8 @@ function mapDeliveryInputToCard(delivery: DeliveryInput): AddressCard {
     recipientName: delivery.recipientName ?? "",
     phoneNumber: delivery.phoneNumber ?? "",
     recipientAddress:
-      delivery.address ?? formatLocation(delivery.location.lat, delivery.location.lng),
+      delivery.address ??
+      formatLocation(delivery.location.lat, delivery.location.lng),
     cachedLocation: {
       lat: delivery.location.lat,
       lng: delivery.location.lng,

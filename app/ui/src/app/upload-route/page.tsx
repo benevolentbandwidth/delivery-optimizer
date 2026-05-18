@@ -39,7 +39,10 @@ export default function UploadRoutePage() {
   const handleContinue = async () => {
     if (!file) return;
     const text = await file.text();
-    sessionStorage.setItem("routeFile", JSON.stringify({ name: file.name, content: text }));
+    sessionStorage.setItem(
+      "routeFile",
+      JSON.stringify({ name: file.name, content: text }),
+    );
     router.push("/driver-view");
   };
 
@@ -204,7 +207,9 @@ export default function UploadRoutePage() {
 
         <div className="upload-content">
           <h2 className="upload-title">Upload your route</h2>
-          <p className="upload-subtitle">Upload your route to begin your deliveries!</p>
+          <p className="upload-subtitle">
+            Upload your route to begin your deliveries!
+          </p>
 
           <div
             className={`upload-dropzone${isDragging ? " dragging" : ""}`}
@@ -216,12 +221,32 @@ export default function UploadRoutePage() {
           >
             <div className="upload-dropzone-icon">
               <svg width="32" height="36" viewBox="0 0 32 36" fill="none">
-                <path d="M18 2H6a2 2 0 00-2 2v28a2 2 0 002 2h20a2 2 0 002-2V14L18 2z" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M18 2v12h12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M16 22v-6M13 19l3-3 3 3" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+                <path
+                  d="M18 2H6a2 2 0 00-2 2v28a2 2 0 002 2h20a2 2 0 002-2V14L18 2z"
+                  stroke="currentColor"
+                  strokeWidth="1.75"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M18 2v12h12"
+                  stroke="currentColor"
+                  strokeWidth="1.75"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M16 22v-6M13 19l3-3 3 3"
+                  stroke="currentColor"
+                  strokeWidth="1.75"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
             </div>
-            <p className="upload-dropzone-text">Drag and drop .json files here, or</p>
+            <p className="upload-dropzone-text">
+              Drag and drop .json files here, or
+            </p>
             <p className="upload-dropzone-browse">Browse files</p>
             <input
               ref={inputRef}
@@ -237,14 +262,29 @@ export default function UploadRoutePage() {
 
           {file && (
             <div className="upload-file-row">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ color: "#4a8c7a", flexShrink: 0 }}>
-                <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                style={{ color: "#4a8c7a", flexShrink: 0 }}
+              >
+                <path
+                  d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
               <span className="upload-file-name">{file.name}</span>
               <span className="upload-file-size">{formatSize(file.size)}</span>
               <button
                 className="upload-file-remove"
-                onClick={(e) => { e.stopPropagation(); setFile(null); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setFile(null);
+                }}
                 aria-label="Remove file"
               >
                 ×
@@ -255,7 +295,13 @@ export default function UploadRoutePage() {
           <div className="upload-actions">
             <button className="upload-back-btn" onClick={() => router.back()}>
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                <path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                <path
+                  d="M10 3L5 8l5 5"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
               Back
             </button>

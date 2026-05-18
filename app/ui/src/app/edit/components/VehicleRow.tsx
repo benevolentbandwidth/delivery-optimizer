@@ -7,7 +7,10 @@
  * grid fragments), not only responsive CSS on one tree.
  */
 
-import type { VehicleRow as VehicleRowType, VehicleType } from "../types/delivery";
+import type {
+  VehicleRow as VehicleRowType,
+  VehicleType,
+} from "../types/delivery";
 import { capitalize } from "../utils/deliveryHelpers";
 import {
   VEHICLE_ROW_CELL,
@@ -34,7 +37,11 @@ type VehicleLayout = "desktop" | "mobile";
 type VehicleRowProps = {
   layout?: VehicleLayout;
   vehicle: VehicleRowType;
-  updateVehicle: <K extends keyof VehicleRowType>(id: number, key: K, value: VehicleRowType[K]) => void;
+  updateVehicle: <K extends keyof VehicleRowType>(
+    id: number,
+    key: K,
+    value: VehicleRowType[K],
+  ) => void;
   deleteVehicle: (id: number) => void;
   onEditVehicle?: (vehicle: VehicleRowType) => void;
   vehicleTouched: boolean;
@@ -48,8 +55,12 @@ export default function VehicleRow({
   deleteVehicle,
   onEditVehicle,
 }: VehicleRowProps) {
-  const statusBadge = v.available ? VEHICLE_ROW_STATUS_BADGE_AVAILABLE : VEHICLE_ROW_STATUS_BADGE_IN_USE;
-  const statusText = v.available ? VEHICLE_ROW_STATUS_TEXT_AVAILABLE : VEHICLE_ROW_STATUS_TEXT_IN_USE;
+  const statusBadge = v.available
+    ? VEHICLE_ROW_STATUS_BADGE_AVAILABLE
+    : VEHICLE_ROW_STATUS_BADGE_IN_USE;
+  const statusText = v.available
+    ? VEHICLE_ROW_STATUS_TEXT_AVAILABLE
+    : VEHICLE_ROW_STATUS_TEXT_IN_USE;
 
   if (layout === "mobile") {
     return (
@@ -65,12 +76,17 @@ export default function VehicleRow({
           </div>
           <div className={VEHICLE_MOBILE_LOCKED_ICON_ROW}>
             <EditIconButton name={v.name} onClick={() => onEditVehicle?.(v)} />
-            <DeleteIconButton name={v.name} onClick={() => deleteVehicle(v.id)} />
+            <DeleteIconButton
+              name={v.name}
+              onClick={() => deleteVehicle(v.id)}
+            />
           </div>
         </div>
         <div className={VEHICLE_MOBILE_LOCKED_STATUS_ROW}>
           <span className={statusBadge}>
-            <span className={statusText}>{v.available ? "Available" : "In use"}</span>
+            <span className={statusText}>
+              {v.available ? "Available" : "In use"}
+            </span>
           </span>
           <span className={VEHICLE_MOBILE_LOCKED_DEPARTURE}>
             {(v.departureTime || "--:--") + " departure time"}
@@ -85,11 +101,15 @@ export default function VehicleRow({
   return (
     <div className={VEHICLE_ROW_DESKTOP}>
       <span className={VEHICLE_ROW_CELL}>{v.name}</span>
-      <span className={VEHICLE_ROW_CELL}>{capitalize(v.type as VehicleType)}</span>
+      <span className={VEHICLE_ROW_CELL}>
+        {capitalize(v.type as VehicleType)}
+      </span>
       <span className={VEHICLE_ROW_CELL}>{formatCapacity(v)}</span>
       <span className={VEHICLE_ROW_STATUS_CELL}>
         <span className={statusBadge}>
-          <span className={statusText}>{v.available ? "Available" : "In use"}</span>
+          <span className={statusText}>
+            {v.available ? "Available" : "In use"}
+          </span>
         </span>
       </span>
       <span className={VEHICLE_ROW_CELL}>{v.departureTime}</span>
@@ -103,9 +123,7 @@ export default function VehicleRow({
 
 function formatCapacity(vehicle: VehicleRowType): string {
   const unit =
-    vehicle.capacityUnit === "cubic_feet"
-      ? "Cubic Feet"
-      : vehicle.capacityUnit;
+    vehicle.capacityUnit === "cubic_feet" ? "Cubic Feet" : vehicle.capacityUnit;
 
   return [vehicle.capacity || "", unit].filter(Boolean).join(" ");
 }

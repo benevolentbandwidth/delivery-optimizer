@@ -15,9 +15,9 @@ const geistMono = Geist_Mono({
 });
 
 const manrope = Manrope({
-  subsets: ['latin'],
-  variable: '--font-manrope',
-})
+  subsets: ["latin"],
+  variable: "--font-manrope",
+});
 
 export const metadata: Metadata = {
   title: {

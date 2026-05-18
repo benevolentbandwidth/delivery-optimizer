@@ -96,7 +96,7 @@ describe("mapOptimizeRequestToEditState", () => {
           deliveryQuantity: 3,
           notes: "",
         },
-      ]
+      ],
     );
 
     expect(mockGeocodeAddress).toHaveBeenNthCalledWith(1, "123 Depot St");
@@ -132,11 +132,11 @@ describe("mapOptimizeRequestToEditState", () => {
         }),
       ],
       "session.json",
-      { type: "application/json" }
+      { type: "application/json" },
     );
 
     await expect(loadSessionFromFile(file)).rejects.toThrow(
-      'Invalid save file format at "data.vehicles".'
+      'Invalid save file format at "data.vehicles".',
     );
   });
 });

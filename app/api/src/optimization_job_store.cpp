@@ -1,13 +1,12 @@
 #include "deliveryoptimizer/api/optimization_job_store.hpp"
-#include "deliveryoptimizer/api/internal/json_utils.hpp"
+
 #include "deliveryoptimizer/adapters/json_utils.hpp"
+#include "deliveryoptimizer/api/internal/json_utils.hpp"
 
 #include <drogon/orm/DbClient.h>
 #include <drogon/orm/Exception.h>
 #include <drogon/utils/Utilities.h>
-
 #include <json/json.h>
-
 #include <optional>
 #include <string>
 #include <utility>
@@ -58,7 +57,8 @@ ReadJobRecord(const drogon::orm::Result& result) {
   }
 
   const drogon::orm::Row row = result.front();
-  const auto state = deliveryoptimizer::api::ParseOptimizationJobState(row["status"].as<std::string>());
+  const auto state =
+      deliveryoptimizer::api::ParseOptimizationJobState(row["status"].as<std::string>());
   if (!state.has_value()) {
     return std::nullopt;
   }
@@ -175,7 +175,8 @@ std::optional<SolveRequestOutcome> ParseSolveRequestOutcome(const std::string_vi
   return std::nullopt;
 }
 
-OptimizationJobStore::OptimizationJobStore(OptimizationJobStoreConfig config) : config_(std::move(config)) {
+OptimizationJobStore::OptimizationJobStore(OptimizationJobStoreConfig config)
+    : config_(std::move(config)) {
   if (!config_.connection_string.empty()) {
     client_ = drogon::orm::DbClient::newPgClient(config_.connection_string,
                                                  config_.connection_count, false);
@@ -227,42 +228,38 @@ bool OptimizationJobStore::EnsureSchema(std::string* detail) {
   }
 
   try {
-    (void)client_->execSqlSync(
-        "create table if not exists optimization_jobs ("
-        "id text primary key,"
-        "request_id text not null,"
-        "request_json jsonb not null,"
-        "status text not null,"
-        "jobs_count bigint not null,"
-        "vehicles_count bigint not null,"
-        "attempt_count bigint not null default 0,"
-        "worker_id text,"
-        "queued_at timestamptz not null default now(),"
-        "started_at timestamptz,"
-        "completed_at timestamptz,"
-        "updated_at timestamptz not null default now(),"
-        "lease_expires_at timestamptz,"
-        "last_heartbeat_at timestamptz,"
-        "expires_at timestamptz,"
-        "outcome text,"
-        "http_status integer,"
-        "error_message text,"
-        "result_json jsonb"
-        ")");
-    (void)client_->execSqlSync(
-        "create index if not exists optimization_jobs_status_queued_idx "
-        "on optimization_jobs(status, queued_at)");
-    (void)client_->execSqlSync(
-        "create index if not exists optimization_jobs_lease_idx "
-        "on optimization_jobs(status, lease_expires_at)");
-    (void)client_->execSqlSync(
-        "create table if not exists optimization_job_workers ("
-        "worker_id text primary key,"
-        "current_job_id text,"
-        "started_at timestamptz not null default now(),"
-        "last_heartbeat_at timestamptz not null default now(),"
-        "updated_at timestamptz not null default now()"
-        ")");
+    (void)client_->execSqlSync("create table if not exists optimization_jobs ("
+                               "id text primary key,"
+                               "request_id text not null,"
+                               "request_json jsonb not null,"
+                               "status text not null,"
+                               "jobs_count bigint not null,"
+                               "vehicles_count bigint not null,"
+                               "attempt_count bigint not null default 0,"
+                               "worker_id text,"
+                               "queued_at timestamptz not null default now(),"
+                               "started_at timestamptz,"
+                               "completed_at timestamptz,"
+                               "updated_at timestamptz not null default now(),"
+                               "lease_expires_at timestamptz,"
+                               "last_heartbeat_at timestamptz,"
+                               "expires_at timestamptz,"
+                               "outcome text,"
+                               "http_status integer,"
+                               "error_message text,"
+                               "result_json jsonb"
+                               ")");
+    (void)client_->execSqlSync("create index if not exists optimization_jobs_status_queued_idx "
+                               "on optimization_jobs(status, queued_at)");
+    (void)client_->execSqlSync("create index if not exists optimization_jobs_lease_idx "
+                               "on optimization_jobs(status, lease_expires_at)");
+    (void)client_->execSqlSync("create table if not exists optimization_job_workers ("
+                               "worker_id text primary key,"
+                               "current_job_id text,"
+                               "started_at timestamptz not null default now(),"
+                               "last_heartbeat_at timestamptz not null default now(),"
+                               "updated_at timestamptz not null default now()"
+                               ")");
     if (detail != nullptr) {
       *detail = "ok";
     }
@@ -341,7 +338,8 @@ CreateOptimizationJobResult OptimizationJobStore::CreateJob(const std::string& r
   }
 }
 
-std::optional<ClaimedOptimizationJob> OptimizationJobStore::ClaimNextJob(const std::string& worker_id) {
+std::optional<ClaimedOptimizationJob>
+OptimizationJobStore::ClaimNextJob(const std::string& worker_id) {
   if (!IsConfigured()) {
     return std::nullopt;
   }
@@ -391,7 +389,8 @@ std::optional<ClaimedOptimizationJob> OptimizationJobStore::ClaimNextJob(const s
   }
 }
 
-bool OptimizationJobStore::CompleteJobSuccess(const std::string& job_id, const std::string& worker_id,
+bool OptimizationJobStore::CompleteJobSuccess(const std::string& job_id,
+                                              const std::string& worker_id,
                                               const Json::Value& result_body,
                                               const SolveRequestOutcome outcome,
                                               const std::uint16_t http_status) {
@@ -449,8 +448,8 @@ bool OptimizationJobStore::CompleteJobFailure(const std::string& job_id,
         "    result_json = null "
         "where id = $1 and worker_id = $2 and status = 'running'",
         job_id, worker_id, std::string{ToOptimizationJobStateString(state)},
-        static_cast<long long>(config_.result_ttl.count()),
-        std::string{ToOutcomeString(outcome)}, static_cast<int>(http_status), error_message);
+        static_cast<long long>(config_.result_ttl.count()), std::string{ToOutcomeString(outcome)},
+        static_cast<int>(http_status), error_message);
     return result.affectedRows() == 1U;
   } catch (...) {
     return false;
@@ -464,14 +463,14 @@ bool OptimizationJobStore::TouchWorker(const std::string& worker_id,
   }
 
   try {
-    const auto result = client_->execSqlSync(
-        "insert into optimization_job_workers(worker_id, current_job_id) "
-        "values($1, nullif($2, '')) "
-        "on conflict(worker_id) do update "
-        "set current_job_id = nullif(excluded.current_job_id, ''), "
-        "    last_heartbeat_at = now(), "
-        "    updated_at = now()",
-        worker_id, current_job_id.value_or(""));
+    const auto result =
+        client_->execSqlSync("insert into optimization_job_workers(worker_id, current_job_id) "
+                             "values($1, nullif($2, '')) "
+                             "on conflict(worker_id) do update "
+                             "set current_job_id = nullif(excluded.current_job_id, ''), "
+                             "    last_heartbeat_at = now(), "
+                             "    updated_at = now()",
+                             worker_id, current_job_id.value_or(""));
     return result.affectedRows() == 1U;
   } catch (...) {
     return false;
@@ -503,43 +502,42 @@ std::size_t OptimizationJobStore::RequeueExpiredRunningJobs() {
   }
 
   try {
-    const auto failed_result = client_->execSqlSync(
-        "update optimization_jobs "
-        "set status = 'failed', "
-        "    worker_id = null, "
-        "    completed_at = now(), "
-        "    updated_at = now(), "
-        "    lease_expires_at = null, "
-        "    last_heartbeat_at = null, "
-        "    expires_at = now() + (($2)::bigint * interval '1 second'), "
-        "    outcome = $3, "
-        "    http_status = $4, "
-        "    error_message = $5, "
-        "    result_json = null "
-        "where status = 'running' "
-        "  and lease_expires_at is not null "
-        "  and lease_expires_at < now() "
-        "  and attempt_count >= $1",
-        static_cast<long long>(config_.max_attempts),
-        static_cast<long long>(config_.result_ttl.count()),
-        std::string{ToOutcomeString(SolveRequestOutcome::kFailed)}, 500,
-        "Optimization job lease expired too many times.");
-    const auto requeued_result = client_->execSqlSync(
-        "update optimization_jobs "
-        "set status = 'queued', "
-        "    worker_id = null, "
-        "    started_at = null, "
-        "    updated_at = now(), "
-        "    lease_expires_at = null, "
-        "    last_heartbeat_at = null, "
-        "    outcome = null, "
-        "    http_status = null, "
-        "    error_message = null "
-        "where status = 'running' "
-        "  and lease_expires_at is not null "
-        "  and lease_expires_at < now() "
-        "  and attempt_count < $1",
-        static_cast<long long>(config_.max_attempts));
+    const auto failed_result =
+        client_->execSqlSync("update optimization_jobs "
+                             "set status = 'failed', "
+                             "    worker_id = null, "
+                             "    completed_at = now(), "
+                             "    updated_at = now(), "
+                             "    lease_expires_at = null, "
+                             "    last_heartbeat_at = null, "
+                             "    expires_at = now() + (($2)::bigint * interval '1 second'), "
+                             "    outcome = $3, "
+                             "    http_status = $4, "
+                             "    error_message = $5, "
+                             "    result_json = null "
+                             "where status = 'running' "
+                             "  and lease_expires_at is not null "
+                             "  and lease_expires_at < now() "
+                             "  and attempt_count >= $1",
+                             static_cast<long long>(config_.max_attempts),
+                             static_cast<long long>(config_.result_ttl.count()),
+                             std::string{ToOutcomeString(SolveRequestOutcome::kFailed)}, 500,
+                             "Optimization job lease expired too many times.");
+    const auto requeued_result = client_->execSqlSync("update optimization_jobs "
+                                                      "set status = 'queued', "
+                                                      "    worker_id = null, "
+                                                      "    started_at = null, "
+                                                      "    updated_at = now(), "
+                                                      "    lease_expires_at = null, "
+                                                      "    last_heartbeat_at = null, "
+                                                      "    outcome = null, "
+                                                      "    http_status = null, "
+                                                      "    error_message = null "
+                                                      "where status = 'running' "
+                                                      "  and lease_expires_at is not null "
+                                                      "  and lease_expires_at < now() "
+                                                      "  and attempt_count < $1",
+                                                      static_cast<long long>(config_.max_attempts));
     return failed_result.affectedRows() + requeued_result.affectedRows();
   } catch (...) {
     return 0U;
@@ -552,15 +550,14 @@ std::size_t OptimizationJobStore::ExpireFinishedJobs() {
   }
 
   try {
-    const auto result = client_->execSqlSync(
-        "update optimization_jobs "
-        "set status = 'expired', "
-        "    updated_at = now(), "
-        "    result_json = null, "
-        "    error_message = null "
-        "where status in ('succeeded', 'failed', 'timed_out') "
-        "  and expires_at is not null "
-        "  and expires_at < now()");
+    const auto result = client_->execSqlSync("update optimization_jobs "
+                                             "set status = 'expired', "
+                                             "    updated_at = now(), "
+                                             "    result_json = null, "
+                                             "    error_message = null "
+                                             "where status in ('succeeded', 'failed', 'timed_out') "
+                                             "  and expires_at is not null "
+                                             "  and expires_at < now()");
     return result.affectedRows();
   } catch (...) {
     return 0U;
@@ -577,11 +574,11 @@ OptimizationJobStoreStats OptimizationJobStore::GetStats() {
   }
 
   try {
-    const auto result = client_->execSqlSync(
-        "select "
-        "count(*) filter (where status = 'queued') as queued_jobs, "
-        "count(*) filter (where status = 'running') as running_jobs "
-        "from optimization_jobs");
+    const auto result =
+        client_->execSqlSync("select "
+                             "count(*) filter (where status = 'queued') as queued_jobs, "
+                             "count(*) filter (where status = 'running') as running_jobs "
+                             "from optimization_jobs");
     if (result.empty()) {
       return {};
     }

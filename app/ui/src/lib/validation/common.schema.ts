@@ -1,11 +1,11 @@
-import { z } from "zod"
+import { z } from "zod";
 
 /**
  * Shared numeric limits
  */
-export const MAX_CAPACITY = 1_000_000 // max capacity held by one vehicle
-export const MAX_DEMAND = 1_000_000 // max load for one delivery
-export const MAX_BUFFER_TIME = 86_400 // buffer time between deliveries in seconds (24hrs)
+export const MAX_CAPACITY = 1_000_000; // max capacity held by one vehicle
+export const MAX_DEMAND = 1_000_000; // max load for one delivery
+export const MAX_BUFFER_TIME = 86_400; // buffer time between deliveries in seconds (24hrs)
 
 /**
  * Latitude must be between -90 and 90
@@ -13,16 +13,13 @@ export const MAX_BUFFER_TIME = 86_400 // buffer time between deliveries in secon
  */
 export const locationSchema = z.object({
   lat: z.number().min(-90).max(90),
-  lng: z.number().min(-180).max(180)
-})
+  lng: z.number().min(-180).max(180),
+});
 
 /**
  * Load schema supports future expansion
  */
 export const loadSchema = z.object({
   type: z.enum(["units", "lbs", "kgs", "cubic_feet"]),
-  value: z
-    .number()
-    .positive()
-    .max(MAX_CAPACITY)
-})
+  value: z.number().positive().max(MAX_CAPACITY),
+});

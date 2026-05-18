@@ -11,7 +11,11 @@ export default function MobileEditPageFooter() {
       <span aria-hidden="true" className={MOBILE_FOOTER_LOGO} />
       <div className={MOBILE_FOOTER_TEXT_WRAPPER}>
         <p className={MOBILE_FOOTER_TEXT_LINE}>
-          Built with <span role="img" aria-label="love">❤️</span> for Humanity.
+          Built with{" "}
+          <span role="img" aria-label="love">
+            ❤️
+          </span>{" "}
+          for Humanity.
         </p>
         <p className={MOBILE_FOOTER_TEXT_LINE}>
           The Benevolent Bandwidth Foundation

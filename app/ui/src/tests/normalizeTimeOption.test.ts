@@ -4,7 +4,8 @@ import { normalizeTimeOption } from "@/app/edit/utils/csvParserUtils";
 describe("normalizeTimeOption", () => {
   it("empty string → ''", () => expect(normalizeTimeOption("")).toBe(""));
   it("whitespace only → ''", () => expect(normalizeTimeOption("   ")).toBe(""));
-  it("unrecognised format → ''", () => expect(normalizeTimeOption("garbage")).toBe(""));
+  it("unrecognised format → ''", () =>
+    expect(normalizeTimeOption("garbage")).toBe(""));
 
   it("pure-integer seconds → snapped time", () => {
     // 32400 s = 540 min = 9:00 AM, already on boundary
@@ -23,7 +24,10 @@ describe("normalizeTimeOption", () => {
     expect(normalizeTimeOption("2:08 AM")).toBe("2:15 AM");
   });
 
-  it("12:00 PM → noon", () => expect(normalizeTimeOption("12:00 PM")).toBe("12:00 PM"));
-  it("12:00 AM → midnight", () => expect(normalizeTimeOption("12:00 AM")).toBe("12:00 AM"));
-  it("5:00 PM → 5:00 PM", () => expect(normalizeTimeOption("5:00 PM")).toBe("5:00 PM"));
+  it("12:00 PM → noon", () =>
+    expect(normalizeTimeOption("12:00 PM")).toBe("12:00 PM"));
+  it("12:00 AM → midnight", () =>
+    expect(normalizeTimeOption("12:00 AM")).toBe("12:00 AM"));
+  it("5:00 PM → 5:00 PM", () =>
+    expect(normalizeTimeOption("5:00 PM")).toBe("5:00 PM"));
 });

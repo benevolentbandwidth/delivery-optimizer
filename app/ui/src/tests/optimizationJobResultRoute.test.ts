@@ -11,7 +11,7 @@ vi.mock("@/lib/solver/deliveryOptimizerClient", () => ({
     (error: unknown) =>
       Boolean(error) &&
       typeof error === "object" &&
-      (error as { source?: unknown }).source === "deliveryoptimizer-api"
+      (error as { source?: unknown }).source === "deliveryoptimizer-api",
   ),
 }));
 
@@ -29,7 +29,7 @@ function request(jobId: string) {
 
 function deliveryOptimizerError(
   status: number,
-  body: unknown
+  body: unknown,
 ): DeliveryOptimizerClientError {
   const error = new Error("upstream error") as DeliveryOptimizerClientError;
   error.source = "deliveryoptimizer-api";
@@ -74,7 +74,7 @@ describe("optimization job result route", () => {
   it("maps upstream conflicts with the shared delivery optimizer error handling", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     mockGetOptimizationJobResult.mockRejectedValue(
-      deliveryOptimizerError(409, { error: "Optimization job has no result." })
+      deliveryOptimizerError(409, { error: "Optimization job has no result." }),
     );
 
     const response = await GET(request("job-789"), context("job-789"));

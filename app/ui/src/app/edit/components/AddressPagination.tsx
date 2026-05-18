@@ -84,7 +84,9 @@ export default function AddressPagination({
           type="button"
           disabled={isFirst}
           onClick={() => setAddressPage(1)}
-          className={isFirst ? PAGINATION_V2_NAV_BTN_DISABLED : PAGINATION_V2_NAV_BTN}
+          className={
+            isFirst ? PAGINATION_V2_NAV_BTN_DISABLED : PAGINATION_V2_NAV_BTN
+          }
           aria-label="First page"
         >
           <svg width="13" height="12" viewBox="0 0 13 12" fill="none">
@@ -99,7 +101,9 @@ export default function AddressPagination({
           type="button"
           disabled={isFirst}
           onClick={() => setAddressPage(addressPage - 1)}
-          className={isFirst ? PAGINATION_V2_NAV_BTN_DISABLED : PAGINATION_V2_NAV_BTN}
+          className={
+            isFirst ? PAGINATION_V2_NAV_BTN_DISABLED : PAGINATION_V2_NAV_BTN
+          }
           aria-label="Previous page"
         >
           <svg width="8" height="12" viewBox="0 0 8 12" fill="none">
@@ -112,7 +116,11 @@ export default function AddressPagination({
 
         {visiblePages.map((n) =>
           n === addressPage ? (
-            <span key={n} className={PAGINATION_V2_PAGE_ACTIVE} aria-current="page">
+            <span
+              key={n}
+              className={PAGINATION_V2_PAGE_ACTIVE}
+              aria-current="page"
+            >
               {n}
             </span>
           ) : (
@@ -125,14 +133,16 @@ export default function AddressPagination({
             >
               {n}
             </button>
-          )
+          ),
         )}
 
         <button
           type="button"
           disabled={isLast}
           onClick={() => setAddressPage(addressPage + 1)}
-          className={isLast ? PAGINATION_V2_NAV_BTN_DISABLED : PAGINATION_V2_NAV_BTN}
+          className={
+            isLast ? PAGINATION_V2_NAV_BTN_DISABLED : PAGINATION_V2_NAV_BTN
+          }
           aria-label="Next page"
         >
           <svg width="8" height="12" viewBox="0 0 8 12" fill="none">
@@ -147,7 +157,9 @@ export default function AddressPagination({
           type="button"
           disabled={isLast}
           onClick={() => setAddressPage(totalAddressPages)}
-          className={isLast ? PAGINATION_V2_NAV_BTN_DISABLED : PAGINATION_V2_NAV_BTN}
+          className={
+            isLast ? PAGINATION_V2_NAV_BTN_DISABLED : PAGINATION_V2_NAV_BTN
+          }
           aria-label="Last page"
         >
           <svg width="13" height="12" viewBox="0 0 13 12" fill="none">

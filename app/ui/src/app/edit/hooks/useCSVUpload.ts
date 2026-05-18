@@ -6,7 +6,11 @@
 import { useCallback, useState } from "react";
 import Papa from "papaparse";
 import type { AddressCard } from "../types/delivery";
-import { resolveColumns, normalizeTimeOption, bufferSecondsToMinutes } from "@/app/edit/utils/csvParserUtils";
+import {
+  resolveColumns,
+  normalizeTimeOption,
+  bufferSecondsToMinutes,
+} from "@/app/edit/utils/csvParserUtils";
 import { hasAtLeastOneLetter } from "@/app/components/AddressGeocoder/utils";
 import { migrateSessionSaveFile } from "@/lib/validation/session.schema";
 import { mapOptimizeRequestToEditState } from "../utils/sessionMapper";
@@ -26,13 +30,16 @@ export function useCSVUpload({ importAddresses }: UseCSVUploadArgs) {
       setCsvError(null);
 
       try {
-        const addresses = await parseAddressUpload(file.name, await file.text());
+        const addresses = await parseAddressUpload(
+          file.name,
+          await file.text(),
+        );
         importAddresses(addresses);
       } catch (err) {
         setCsvError(
           err instanceof Error
             ? err.message
-            : "An unexpected error occurred while processing the upload."
+            : "An unexpected error occurred while processing the upload.",
         );
       } finally {
         event.target.value = "";
@@ -60,7 +67,9 @@ export function parseAddressUpload(
     return parseJsonAddressUpload(content);
   }
 
-  throw new Error("Please upload a .csv file or an exported session .json file.");
+  throw new Error(
+    "Please upload a .csv file or an exported session .json file.",
+  );
 }
 
 function parseCsvAddressUpload(content: string): Promise<AddressCard[]> {

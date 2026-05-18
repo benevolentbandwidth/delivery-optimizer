@@ -1,17 +1,25 @@
 // app/components/AddressGeocoder/VehicleForm.tsx
 
-import React, { useRef } from 'react';
-import { AutocompleteDropdown } from './AutocompleteDropdown';
-import type { VehicleForm, AddressSuggestion } from './types';
+import React, { useRef } from "react";
+import { AutocompleteDropdown } from "./AutocompleteDropdown";
+import type { VehicleForm, AddressSuggestion } from "./types";
 
 interface VehicleFormProps {
   vehicle: VehicleForm;
   index: number;
   canRemove: boolean;
   onRemove: (reactId: string) => void;
-  onFieldChange: (reactId: string, field: keyof VehicleForm, value: string) => void;
-  onAddressChange: (reactId: string, field: 'start' | 'end', value: string) => void;
-  onFocus: (reactId: string, field: 'start' | 'end') => void;
+  onFieldChange: (
+    reactId: string,
+    field: keyof VehicleForm,
+    value: string,
+  ) => void;
+  onAddressChange: (
+    reactId: string,
+    field: "start" | "end",
+    value: string,
+  ) => void;
+  onFocus: (reactId: string, field: "start" | "end") => void;
   onStartKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   onEndKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   // Autocomplete props — independent state per field
@@ -63,21 +71,29 @@ export const VehicleFormComponent: React.FC<VehicleFormProps> = ({
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">ID</label>
+          <label className="block text-xs font-medium text-gray-600 mb-1">
+            ID
+          </label>
           <input
             type="text"
             value={vehicle.id}
-            onChange={(e) => onFieldChange(vehicle._reactId, 'id', e.target.value)}
+            onChange={(e) =>
+              onFieldChange(vehicle._reactId, "id", e.target.value)
+            }
             className="w-full px-2 py-1.5 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="vehicle_1"
           />
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Type</label>
+          <label className="block text-xs font-medium text-gray-600 mb-1">
+            Type
+          </label>
           <select
             value={vehicle.vehicleType}
-            onChange={(e) => onFieldChange(vehicle._reactId, 'vehicleType', e.target.value)}
+            onChange={(e) =>
+              onFieldChange(vehicle._reactId, "vehicleType", e.target.value)
+            }
             className="w-full px-2 py-1.5 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="car">Car</option>
@@ -95,9 +111,11 @@ export const VehicleFormComponent: React.FC<VehicleFormProps> = ({
           <input
             type="text"
             value={vehicle.startAddress}
-            onChange={(e) => onAddressChange(vehicle._reactId, 'start', e.target.value)}
+            onChange={(e) =>
+              onAddressChange(vehicle._reactId, "start", e.target.value)
+            }
             onKeyDown={onStartKeyDown}
-            onFocus={() => onFocus(vehicle._reactId, 'start')}
+            onFocus={() => onFocus(vehicle._reactId, "start")}
             className="w-full px-2 py-1.5 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="123 Main St, San Francisco, CA"
           />
@@ -119,9 +137,11 @@ export const VehicleFormComponent: React.FC<VehicleFormProps> = ({
           <input
             type="text"
             value={vehicle.endAddress}
-            onChange={(e) => onAddressChange(vehicle._reactId, 'end', e.target.value)}
+            onChange={(e) =>
+              onAddressChange(vehicle._reactId, "end", e.target.value)
+            }
             onKeyDown={onEndKeyDown}
-            onFocus={() => onFocus(vehicle._reactId, 'end')}
+            onFocus={() => onFocus(vehicle._reactId, "end")}
             className="w-full px-2 py-1.5 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="123 Main St, San Francisco, CA"
           />
@@ -143,7 +163,9 @@ export const VehicleFormComponent: React.FC<VehicleFormProps> = ({
           <input
             type="number"
             value={vehicle.capacity}
-            onChange={(e) => onFieldChange(vehicle._reactId, 'capacity', e.target.value)}
+            onChange={(e) =>
+              onFieldChange(vehicle._reactId, "capacity", e.target.value)
+            }
             className="w-full px-2 py-1.5 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="200"
             min="1"

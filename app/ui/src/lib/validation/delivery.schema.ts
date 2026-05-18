@@ -1,5 +1,10 @@
-import { z } from "zod"
-import { locationSchema, loadSchema, MAX_DEMAND, MAX_BUFFER_TIME } from "./common.schema"
+import { z } from "zod";
+import {
+  locationSchema,
+  loadSchema,
+  MAX_DEMAND,
+  MAX_BUFFER_TIME,
+} from "./common.schema";
 
 export const deliverySchema = z.object({
   id: z.number().int().nonnegative(),
@@ -14,32 +19,23 @@ export const deliverySchema = z.object({
 
   location: locationSchema,
 
-  bufferTime: z
-    .number()
-    .int()
-    .nonnegative()
-    .max(MAX_BUFFER_TIME)
-    .optional(),
+  bufferTime: z.number().int().nonnegative().max(MAX_BUFFER_TIME).optional(),
 
   demand: loadSchema.extend({
-    value: z.number().positive().max(MAX_DEMAND)
+    value: z.number().positive().max(MAX_DEMAND),
   }),
 
   timeWindows: z
     .array(
-      z.tuple([
-        z.number().int(),
-        z.number().int()
-      ]).refine(
-        ([start, end]) => end > start,
-        {
+      z
+        .tuple([z.number().int(), z.number().int()])
+        .refine(([start, end]) => end > start, {
           message: "timeWindows end must be after start",
-          path: [1]
-        }
-      )
+          path: [1],
+        }),
     )
-    .optional()
-})
+    .optional(),
+});
 
 /**
  * Ensure each ID is unique
@@ -47,17 +43,17 @@ export const deliverySchema = z.object({
 export const deliveriesSchema = z
   .array(deliverySchema)
   .superRefine((deliveries, ctx) => {
-    const seen = new Set<number>()
+    const seen = new Set<number>();
 
     deliveries.forEach((delivery, index) => {
       if (seen.has(delivery.id)) {
         ctx.addIssue({
           code: "custom",
           message: `Duplicate delivery id: ${delivery.id}`,
-          path: [index, "id"]
-        })
+          path: [index, "id"],
+        });
       }
 
-      seen.add(delivery.id)
-    })
-  })
+      seen.add(delivery.id);
+    });
+  });

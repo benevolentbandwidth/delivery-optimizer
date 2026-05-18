@@ -7,9 +7,11 @@
 export const NAVBAR_HEADER =
   "flex flex-col gap-4 md:flex-row md:items-center md:justify-between px-4 sm:px-6 md:px-8 py-4 border-b border-zinc-200";
 
-export const NAVBAR_LOGO_PLACEHOLDER = "bg-zinc-300 px-4 py-2 text-sm font-sans-manrope w-fit";
+export const NAVBAR_LOGO_PLACEHOLDER =
+  "bg-zinc-300 px-4 py-2 text-sm font-sans-manrope w-fit";
 
-export const NAVBAR_ACTIONS_WRAP = "flex flex-wrap items-center gap-2 md:justify-end";
+export const NAVBAR_ACTIONS_WRAP =
+  "flex flex-wrap items-center gap-2 md:justify-end";
 
 export const NAVBAR_ICON_BUTTON =
   "w-11 h-11 bg-zinc-300 rounded-full flex items-center justify-center cursor-pointer hover:bg-zinc-400 transition-colors";
@@ -24,7 +26,10 @@ export const NAVBAR_SOLID_PILL =
 export const GEOCODE_ERROR_LOCKED = "border border-red-500";
 
 /** Invalid vs valid focus/border desktop inputs (Address desktop + all Vehicle fields). */
-export function fieldBorder(invalid: boolean, mode: "desktop" | "mobile" = "desktop"): string {
+export function fieldBorder(
+  invalid: boolean,
+  mode: "desktop" | "mobile" = "desktop",
+): string {
   if (mode === "mobile") {
     if (invalid) {
       return "border-red-500 focus:border-red-500";
@@ -41,12 +46,10 @@ export const EDITING_EXISTING_HIGHLIGHT =
   "border border-blue-200 bg-blue-50 ring-2 ring-blue-200";
 
 /** Composed at module load from EDITING_EXISTING_HIGHLIGHT (Tailwind still scans the template). */
-export const VEHICLE_DESKTOP_EDITING_PANEL =
-  `col-span-full rounded-lg p-2 ${EDITING_EXISTING_HIGHLIGHT}`;
+export const VEHICLE_DESKTOP_EDITING_PANEL = `col-span-full rounded-lg p-2 ${EDITING_EXISTING_HIGHLIGHT}`;
 
 /** Composed at module load from EDITING_EXISTING_HIGHLIGHT (Tailwind still scans the template). */
-export const VEHICLE_MOBILE_EDITING_CARD =
-  `rounded-xl p-4 space-y-3 ${EDITING_EXISTING_HIGHLIGHT}`;
+export const VEHICLE_MOBILE_EDITING_CARD = `rounded-xl p-4 space-y-3 ${EDITING_EXISTING_HIGHLIGHT}`;
 
 export const MOBILE_FIELD_LABEL = "text-sm text-black block mb-1";
 
@@ -107,7 +110,8 @@ export const VEHICLE_LOCKED_CELL =
 export const VEHICLE_CONFIRM_DESKTOP =
   "h-9 px-3 rounded-md border border-blue-300 bg-blue-100 text-blue-800 text-sm font-medium hover:bg-blue-200 transition-colors cursor-pointer";
 
-export const VEHICLE_MOBILE_CARD = "rounded-xl border border-zinc-200 p-4 space-y-3";
+export const VEHICLE_MOBILE_CARD =
+  "rounded-xl border border-zinc-200 p-4 space-y-3";
 
 export const VEHICLE_PILL_FULL_DANGER =
   "w-full h-11 rounded-full border border-zinc-300 text-black text-base font-normal hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors cursor-pointer disabled:opacity-0 disabled:pointer-events-none";
@@ -129,7 +133,8 @@ export const VEHICLE_HEADER_CELL_START =
 export const VEHICLE_HEADER_CELL_CENTER =
   "text-xs lg:text-sm xl:text-base text-black justify-self-center";
 
-export const VEHICLE_GRID_WRAP = "hidden lg:grid gap-x-3 xl:gap-x-4 gap-y-3 items-center";
+export const VEHICLE_GRID_WRAP =
+  "hidden lg:grid gap-x-3 xl:gap-x-4 gap-y-3 items-center";
 
 export const VEHICLE_GRID_INNER = "gap-x-3 xl:gap-x-4 items-center";
 
@@ -146,16 +151,19 @@ export const VEHICLE_AVAILABLE_SEGMENT_WRAPPER = "w-[7.5rem] shrink-0";
 export const VEHICLE_MOBILE_LOCKED_TEXT = "text-base text-black truncate";
 
 /** Text span inside a desktop locked field cell. */
-export const VEHICLE_DESKTOP_LOCKED_TEXT = "text-sm xl:text-base text-black truncate";
+export const VEHICLE_DESKTOP_LOCKED_TEXT =
+  "text-sm xl:text-base text-black truncate";
 
 /** Wrapper div for the AvailableSegmented control in the desktop grid (locked + editing). */
-export const VEHICLE_DESKTOP_AVAILABLE_CELL = "flex items-center justify-center h-11 min-w-0 px-0.5";
+export const VEHICLE_DESKTOP_AVAILABLE_CELL =
+  "flex items-center justify-center h-11 min-w-0 px-0.5";
 
 /** Action button container in the desktop grid (locked + editing). */
 export const VEHICLE_DESKTOP_ACTION_CELL = "flex items-center gap-1";
 
 /** Row wrapping the Available label and segmented control in mobile cards. */
-export const VEHICLE_MOBILE_AVAILABLE_ROW = "flex items-center justify-between gap-3 pt-1";
+export const VEHICLE_MOBILE_AVAILABLE_ROW =
+  "flex items-center justify-between gap-3 pt-1";
 
 /** "Available" label text in mobile cards. */
 export const VEHICLE_MOBILE_AVAILABLE_LABEL = "text-sm text-black";
@@ -212,7 +220,8 @@ export const ADDRESS_CARD_ROOT_BASE =
 
 export const ADDRESS_CARD_EDITING_EXTRA = "lg:rounded-lg";
 
-export const ADDRESS_LOCKED_SURFACE_MD = "h-8 min-h-[2rem] xl:h-9 self-start bg-zinc-300 rounded-lg flex items-center px-2 xl:px-3 overflow-hidden";
+export const ADDRESS_LOCKED_SURFACE_MD =
+  "h-8 min-h-[2rem] xl:h-9 self-start bg-zinc-300 rounded-lg flex items-center px-2 xl:px-3 overflow-hidden";
 
 export const ADDRESS_NOTES_LOCKED_BOX =
   "min-h-0 flex-1 overflow-hidden rounded-lg bg-zinc-300 px-2 py-1.5 xl:px-3 xl:py-2";
@@ -223,14 +232,17 @@ export const ADDRESS_TEXTAREA_EDIT =
 export const ADDRESS_INPUT_DESKTOP_BASE =
   "w-full min-w-0 self-start rounded-lg border h-8 min-h-[2rem] xl:h-9 px-2 xl:px-3 text-xs text-black lg:text-sm focus:outline-none bg-white";
 
-export const MOBILE_ADDRESS_LOCKED_ROW = "h-9 bg-zinc-300 rounded-lg flex items-center px-3 overflow-hidden";
+export const MOBILE_ADDRESS_LOCKED_ROW =
+  "h-9 bg-zinc-300 rounded-lg flex items-center px-3 overflow-hidden";
 
-export const MOBILE_ADDRESS_NOTES_AREA = "min-h-[6rem] bg-zinc-300 rounded-lg flex items-start px-3 py-2 overflow-hidden";
+export const MOBILE_ADDRESS_NOTES_AREA =
+  "min-h-[6rem] bg-zinc-300 rounded-lg flex items-start px-3 py-2 overflow-hidden";
 
 export const MOBILE_ADDRESS_NOTES_TEXTAREA =
   "w-full min-h-[6.5rem] rounded-lg px-3 py-2 text-sm text-black focus:outline-none border border-zinc-300 bg-white focus:border-zinc-400 resize-none leading-6";
 
-export const PILL_ROW_HALF_NEUTRAL = "flex-1 h-10 rounded-full border border-zinc-300 text-black text-sm font-medium hover:bg-zinc-50 cursor-pointer";
+export const PILL_ROW_HALF_NEUTRAL =
+  "flex-1 h-10 rounded-full border border-zinc-300 text-black text-sm font-medium hover:bg-zinc-50 cursor-pointer";
 
 export const PILL_ROW_HALF_DANGER =
   "flex-1 h-10 rounded-full border border-zinc-300 text-black text-sm font-medium hover:bg-red-50 hover:text-red-600 cursor-pointer disabled:opacity-0 disabled:pointer-events-none";
@@ -247,11 +259,13 @@ export const MOBILE_DELETE_TEXT =
 export const ACCORDION_TRIGGER =
   "w-full flex items-start gap-3 p-4 text-left border-b border-zinc-200";
 
-export const ADDRESS_SECTION_TITLE = "text-sm font-semibold text-black mb-3 xl:text-base xl:mb-4";
+export const ADDRESS_SECTION_TITLE =
+  "text-sm font-semibold text-black mb-3 xl:text-base xl:mb-4";
 
 export const ADDRESS_TOOLBAR_MOBILE_WRAP = "flex flex-col gap-3 mb-6 lg:hidden";
 
-export const ADDRESS_TOOLBAR_DESKTOP = "hidden lg:flex items-center gap-3 mb-5 xl:gap-4 xl:mb-6";
+export const ADDRESS_TOOLBAR_DESKTOP =
+  "hidden lg:flex items-center gap-3 mb-5 xl:gap-4 xl:mb-6";
 
 export const ADDRESS_SEARCH_INPUT_DESKTOP =
   "h-9 w-56 shrink-0 rounded-full bg-zinc-100 border border-zinc-300 px-4 text-sm font-normal text-black placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-400 xl:h-11 xl:w-72 xl:px-5 xl:text-base";
@@ -277,7 +291,8 @@ export const ADDRESS_EMPTY_STATE =
 export const ADDRESS_LIST_WRAP =
   "space-y-4 lg:space-y-0 lg:divide-y lg:divide-zinc-300 lg:border lg:border-zinc-300 lg:rounded-xl lg:overflow-visible";
 
-export const PAGINATION_ROW = "flex items-center justify-center gap-2 sm:gap-4 pb-4 md:pb-8 px-2";
+export const PAGINATION_ROW =
+  "flex items-center justify-center gap-2 sm:gap-4 pb-4 md:pb-8 px-2";
 
 export const PAGINATION_ICON_BUTTON =
   "w-11 h-11 bg-zinc-300 rounded-3xl flex items-center justify-center hover:bg-zinc-400 transition-colors cursor-pointer";

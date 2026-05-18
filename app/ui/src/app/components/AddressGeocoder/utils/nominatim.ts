@@ -12,11 +12,11 @@ const MIN_INTERVAL_MS = 1000;
 
 async function throttle(): Promise<void> {
   const wait = MIN_INTERVAL_MS - (Date.now() - lastRequestAt);
-  if (wait > 0) await new Promise(resolve => setTimeout(resolve, wait));
+  if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait));
   lastRequestAt = Date.now();
 }
 
-const NOMINATIM_CONTACT_EMAIL = 'contact@yourcompany.com'; // TODO: Replace
+const NOMINATIM_CONTACT_EMAIL = "contact@yourcompany.com"; // TODO: Replace
 
 export interface NominatimResult {
   lat: string;
@@ -27,24 +27,26 @@ export interface NominatimResult {
 
 /** Geocode a single address. Returns null if nothing was found. */
 export async function geocodeAddress(
-  address: string
+  address: string,
 ): Promise<{ lat: number; lng: number; state: string | null } | null> {
   await throttle();
 
   const params = new URLSearchParams({
     q: address,
-    format: 'json',
-    limit: '1',
-    addressdetails: '1',
+    format: "json",
+    limit: "1",
+    addressdetails: "1",
     email: NOMINATIM_CONTACT_EMAIL,
-    countrycodes: 'us',
+    countrycodes: "us",
   });
 
   const geocodeUrl = `https://nominatim.openstreetmap.org/search?${params}`;
   const response = await fetch(geocodeUrl);
 
   if (!response.ok) {
-    throw new Error(`Nominatim error: ${response.status} ${response.statusText}`);
+    throw new Error(
+      `Nominatim error: ${response.status} ${response.statusText}`,
+    );
   }
 
   const data: NominatimResult[] = await response.json();
@@ -60,7 +62,7 @@ export async function geocodeAddress(
 /** Autocomplete — returns up to `limit` suggestions. */
 export async function autocompleteAddress(
   query: string,
-  limit = 5
+  limit = 5,
 ): Promise<NominatimResult[]> {
   if (query.length < 3) return [];
 
@@ -68,10 +70,10 @@ export async function autocompleteAddress(
 
   const params = new URLSearchParams({
     q: query,
-    format: 'json',
+    format: "json",
     limit: String(limit),
-    addressdetails: '1',
-    countrycodes: 'us',
+    addressdetails: "1",
+    countrycodes: "us",
     email: NOMINATIM_CONTACT_EMAIL,
   });
 
@@ -79,7 +81,9 @@ export async function autocompleteAddress(
   const response = await fetch(autocompleteUrl);
 
   if (!response.ok) {
-    throw new Error(`Nominatim error: ${response.status} ${response.statusText}`);
+    throw new Error(
+      `Nominatim error: ${response.status} ${response.statusText}`,
+    );
   }
 
   return response.json();

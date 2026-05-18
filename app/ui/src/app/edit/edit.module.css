@@ -13,77 +13,78 @@
  *   etc.
  */
 
- .root {
+.root {
   /* ── Teal brand ──────────────────────────────────────────────── */
-  --edit-teal-300:    #57AC91;
-  --edit-teal-500:    #397461;
-  --edit-teal-600:    #267B67;
-  --edit-teal-700:    #265749;
-  --edit-teal-alpha:  #39746126;
+  --edit-teal-300: #57ac91;
+  --edit-teal-500: #397461;
+  --edit-teal-600: #267b67;
+  --edit-teal-700: #265749;
+  --edit-teal-alpha: #39746126;
   --edit-pagination-active-bg: rgba(26, 173, 144, 0.24);
   --edit-pagination-mobile-active-bg: #c3e1d8;
 
   /* ── Stone neutrals (Figma Stone scale) ─────────────────────── */
-  --edit-bg-primary:  #FDFDFC;
-  --edit-stone-50:    #F8F7F5;
-  --edit-stone-200:   #DCDBD8;
-  --edit-stone-500:   #908F8C;
-  --edit-stone-600:   #777673;
-  --edit-stone-700:   #5D5C59;
+  --edit-bg-primary: #fdfdfc;
+  --edit-stone-50: #f8f7f5;
+  --edit-stone-200: #dcdbd8;
+  --edit-stone-500: #908f8c;
+  --edit-stone-600: #777673;
+  --edit-stone-700: #5d5c59;
 
   /* ── Nav ─────────────────────────────────────────────────────── */
-  --edit-container-active:  #D5F2E8;
-  --edit-text-primary:      #272725;
-  --edit-text-secondary:    #464544;
-  
+  --edit-container-active: #d5f2e8;
+  --edit-text-primary: #272725;
+  --edit-text-secondary: #464544;
+
   /* ── Buttons ──────────────────────────────────────────────────── */
-  --edit-btn-primary:       #4CB599;
+  --edit-btn-primary: #4cb599;
 
   --edit-secondary-btn-hover: rgba(0, 0, 0, 0.02);
   --edit-secondary-btn-pressed: rgba(0, 0, 0, 0.04);
 
-  --edit-tertiary-btn-hover: #F6F5F2;
-  --edit-tertiary-btn-pressed: #F6F5F2;
+  --edit-tertiary-btn-hover: #f6f5f2;
+  --edit-tertiary-btn-pressed: #f6f5f2;
 
   /* ── Semantic status ─────────────────────────────────────────── */
-  --edit-container-success: #DAF1DB;
-  --edit-text-success:      #2A7E3B;
-  --edit-required-asterisk: #DA1B0B;
-  --edit-error-border:      #DA1B0B;
-  --edit-error-bg:          #FEF2F2;
-  --edit-footer-logo-bg: url('/b2logo.png') -25.852px -10.077px / 293.436% 265.161% no-repeat;
-  
+  --edit-container-success: #daf1db;
+  --edit-text-success: #2a7e3b;
+  --edit-required-asterisk: #da1b0b;
+  --edit-error-border: #da1b0b;
+  --edit-error-bg: #fef2f2;
+  --edit-footer-logo-bg: url("/b2logo.png") -25.852px -10.077px / 293.436%
+    265.161% no-repeat;
+
   /* ── Delete button ──────────────────────────────────────────── */
-  --edit-btn-delete:    #DA1B0B;
-  --edit-text-invert:   #FDFDFC;
+  --edit-btn-delete: #da1b0b;
+  --edit-text-invert: #fdfdfc;
 
   /* ── Icons ──────────────────────────────────────────────────── */
-  --edit-icon-vehicle:  #1C1B1F;
-  --edit-icon-location: #1C1B1F;
-  --edit-primary-icon:  #3D3D3C;
+  --edit-icon-vehicle: #1c1b1f;
+  --edit-icon-location: #1c1b1f;
+  --edit-primary-icon: #3d3d3c;
 
   /* ── Empty state illustrations ──────────────────────────────── */
-  --edit-empty-state-shadow:       #E8E8E8;
+  --edit-empty-state-shadow: #e8e8e8;
 
   /* Vehicle illustration */
-  --edit-vehicle-body:             #4F46E5;
-  --edit-vehicle-window:           #A5B4FC;
-  --edit-vehicle-accent:           #3730A3;
-  --edit-vehicle-detail:           #C7D2FE;
-  --edit-vehicle-wheel-outer:      #1E1E2E;
-  --edit-vehicle-wheel-mid:        #6B7280;
-  --edit-vehicle-wheel-inner:      #D1D5DB;
-  --edit-vehicle-light:            #FCD34D;
-  --edit-vehicle-back-panel:       #312E81;
+  --edit-vehicle-body: #4f46e5;
+  --edit-vehicle-window: #a5b4fc;
+  --edit-vehicle-accent: #3730a3;
+  --edit-vehicle-detail: #c7d2fe;
+  --edit-vehicle-wheel-outer: #1e1e2e;
+  --edit-vehicle-wheel-mid: #6b7280;
+  --edit-vehicle-wheel-inner: #d1d5db;
+  --edit-vehicle-light: #fcd34d;
+  --edit-vehicle-back-panel: #312e81;
 
   /* Address illustration */
-  --edit-address-accent:           #F97316;
-  --edit-address-on-accent:        #ffffff;
-  --edit-address-card-bg:          #FFF7ED;
-  --edit-address-card-border:      #FED7AA;
-  --edit-address-card-header:      #FFEDD5;
-  --edit-address-card-line-dark:   #E5E7EB;
-  --edit-address-card-line-light:  #F3F4F6;
+  --edit-address-accent: #f97316;
+  --edit-address-on-accent: #ffffff;
+  --edit-address-card-bg: #fff7ed;
+  --edit-address-card-border: #fed7aa;
+  --edit-address-card-header: #ffedd5;
+  --edit-address-card-line-dark: #e5e7eb;
+  --edit-address-card-line-light: #f3f4f6;
 }
 
 /* ── Primary Button Hover and Pressed States Overlay ──────────────────────── */

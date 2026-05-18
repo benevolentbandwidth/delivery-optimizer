@@ -54,8 +54,7 @@ TEST(ObservabilityRegistryTest, RendersPrometheusMetricsWithExpectedFamiliesAndB
   EXPECT_NE(rendered.find("deliveryoptimizer_solver_inflight 1"), std::string::npos);
   EXPECT_NE(rendered.find("deliveryoptimizer_async_job_queue_depth 3"), std::string::npos);
   EXPECT_NE(rendered.find("deliveryoptimizer_async_job_running 1"), std::string::npos);
-  EXPECT_NE(rendered.find("deliveryoptimizer_async_job_workers_healthy 2"),
-            std::string::npos);
+  EXPECT_NE(rendered.find("deliveryoptimizer_async_job_workers_healthy 2"), std::string::npos);
   EXPECT_NE(rendered.find("deliveryoptimizer_solver_queue_wait_seconds_bucket{le=\"0.25\"} 1"),
             std::string::npos);
   EXPECT_NE(rendered.find("deliveryoptimizer_solver_queue_wait_seconds_bucket{le=\"+Inf\"} 1"),
@@ -120,10 +119,8 @@ TEST(ObservabilityRegistryTest, FinalizeAsyncAcceptanceDoesNotIncrementSucceeded
 
   EXPECT_NE(rendered.find("deliveryoptimizer_solver_requests_succeeded_total 0"),
             std::string::npos);
-  EXPECT_NE(rendered.find("deliveryoptimizer_solver_requests_rejected_total 0"),
-            std::string::npos);
-  EXPECT_NE(rendered.find("deliveryoptimizer_solver_requests_failed_total 0"),
-            std::string::npos);
+  EXPECT_NE(rendered.find("deliveryoptimizer_solver_requests_rejected_total 0"), std::string::npos);
+  EXPECT_NE(rendered.find("deliveryoptimizer_solver_requests_failed_total 0"), std::string::npos);
 }
 
 TEST(ObservabilityRegistryTest, AsyncJobCompletionIncrementsSucceededCounter) {

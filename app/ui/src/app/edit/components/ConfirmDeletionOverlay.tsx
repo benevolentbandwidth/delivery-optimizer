@@ -93,10 +93,18 @@ export default function ConfirmDeletionOverlay({
           </p>
         </div>
         <div className={OVERLAY_FOOTER}>
-          <button type="button" onClick={onClose} className={OVERLAY_CANCEL_BTN}>
+          <button
+            type="button"
+            onClick={onClose}
+            className={OVERLAY_CANCEL_BTN}
+          >
             Cancel
           </button>
-          <button type="button" onClick={onConfirm} className={`${OVERLAY_DELETE_BTN} ${styles.primaryBtnOverlay}`}>
+          <button
+            type="button"
+            onClick={onConfirm}
+            className={`${OVERLAY_DELETE_BTN} ${styles.primaryBtnOverlay}`}
+          >
             Delete
           </button>
         </div>

@@ -32,8 +32,13 @@ export default function ErrorPopup({ message, onClose }: ErrorPopupProps) {
   if (!message) return null;
 
   return (
-    <div 
-    className={MODAL_OVERLAY} role="dialog" aria-modal="true" aria-labelledby="error-popup-title" onKeyDown={handleKeyDown}>
+    <div
+      className={MODAL_OVERLAY}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="error-popup-title"
+      onKeyDown={handleKeyDown}
+    >
       <div ref={panelRef} className={MODAL_PANEL}>
         <button
           type="button"
@@ -41,13 +46,30 @@ export default function ErrorPopup({ message, onClose }: ErrorPopupProps) {
           className={ERROR_POPUP_CLOSE_ICON}
           aria-label="Close"
         >
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
-            <path d="M1 1L13 13M13 1L1 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 14 14"
+            fill="none"
+            aria-hidden
+          >
+            <path
+              d="M1 1L13 13M13 1L1 13"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
           </svg>
         </button>
-        <h2 id="error-popup-title" className={MODAL_TITLE}>Something went wrong</h2>
+        <h2 id="error-popup-title" className={MODAL_TITLE}>
+          Something went wrong
+        </h2>
         <p className={MODAL_MESSAGE}>{message}</p>
-        <button type="button" onClick={onClose} className={ERROR_POPUP_DISMISS_BUTTON}>
+        <button
+          type="button"
+          onClick={onClose}
+          className={ERROR_POPUP_DISMISS_BUTTON}
+        >
           Dismiss
         </button>
       </div>

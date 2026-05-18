@@ -206,16 +206,36 @@ export default function WelcomePage() {
             >
               <div className="welcome-card-icon">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                  <circle cx="10" cy="7" r="4" stroke="currentColor" strokeWidth="1.75" />
-                  <path d="M2 21c0-4 3.582-7 8-7" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-                  <path d="M16 19l2 2 4-4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+                  <circle
+                    cx="10"
+                    cy="7"
+                    r="4"
+                    stroke="currentColor"
+                    strokeWidth="1.75"
+                  />
+                  <path
+                    d="M2 21c0-4 3.582-7 8-7"
+                    stroke="currentColor"
+                    strokeWidth="1.75"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M16 19l2 2 4-4"
+                    stroke="currentColor"
+                    strokeWidth="1.75"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
               </div>
               <p className="welcome-card-title">New user</p>
               <p className="welcome-card-desc">
-                Import routes, edit addresses, assign deliveries, monitor fleet routes, and export delivery operations.
+                Import routes, edit addresses, assign deliveries, monitor fleet
+                routes, and export delivery operations.
               </p>
-              <span className="welcome-card-cta" aria-hidden="true">Continue</span>
+              <span className="welcome-card-cta" aria-hidden="true">
+                Continue
+              </span>
             </div>
 
             {/* Returning user — full card is the interactive target */}
@@ -234,24 +254,46 @@ export default function WelcomePage() {
             >
               <div className="welcome-card-icon">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                  <circle cx="10" cy="7" r="4" stroke="currentColor" strokeWidth="1.75" />
-                  <path d="M2 21c0-4 3.582-7 8-7" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-                  <path d="M19 14v6M16 17h6" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+                  <circle
+                    cx="10"
+                    cy="7"
+                    r="4"
+                    stroke="currentColor"
+                    strokeWidth="1.75"
+                  />
+                  <path
+                    d="M2 21c0-4 3.582-7 8-7"
+                    stroke="currentColor"
+                    strokeWidth="1.75"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M19 14v6M16 17h6"
+                    stroke="currentColor"
+                    strokeWidth="1.75"
+                    strokeLinecap="round"
+                  />
                 </svg>
               </div>
               <p className="welcome-card-title">Returning user</p>
               <p className="welcome-card-desc">
-                Pick up where you left off! Upload your save point to resume editing addresses and continue your delivery operations.
+                Pick up where you left off! Upload your save point to resume
+                editing addresses and continue your delivery operations.
               </p>
-              <span className="welcome-card-cta" aria-hidden="true">Continue</span>
+              <span className="welcome-card-cta" aria-hidden="true">
+                Continue
+              </span>
             </div>
           </div>
-          <button
-            className="welcome-back"
-            onClick={() => router.back()}
-          >
+          <button className="welcome-back" onClick={() => router.back()}>
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-              <path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              <path
+                d="M10 3L5 8l5 5"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
             Back
           </button>

@@ -1,10 +1,10 @@
 // app/components/AddressGeocoder/utils/useAddressAutocomplete.ts
-import { useState, useRef, useCallback, useEffect } from 'react';
-import { autocompleteAddress } from '../utils/nominatim';
-import type { AddressSuggestion } from '../types';
+import { useState, useRef, useCallback, useEffect } from "react";
+import { autocompleteAddress } from "../utils/nominatim";
+import type { AddressSuggestion } from "../types";
 
 export const useAddressAutocomplete = (
-  filterFn?: (s: AddressSuggestion) => boolean
+  filterFn?: (s: AddressSuggestion) => boolean,
 ) => {
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -29,22 +29,25 @@ export const useAddressAutocomplete = (
       return;
     }
     try {
-      const raw = await autocompleteAddress(query) as AddressSuggestion[];
+      const raw = (await autocompleteAddress(query)) as AddressSuggestion[];
       const fn = filterFnRef.current;
       const data = fn ? raw.filter(fn) : raw;
       setSuggestions(data);
       setShowSuggestions(data.length > 0);
     } catch (error) {
-      console.error('Error fetching suggestions:', error);
+      console.error("Error fetching suggestions:", error);
       setSuggestions([]);
       setShowSuggestions(false);
     }
   }, []);
 
-  const debouncedFetch = useCallback((query: string) => {
-    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
-    debounceTimerRef.current = setTimeout(() => fetchSuggestions(query), 300);
-  }, [fetchSuggestions]);
+  const debouncedFetch = useCallback(
+    (query: string) => {
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = setTimeout(() => fetchSuggestions(query), 300);
+    },
+    [fetchSuggestions],
+  );
 
   const clearSuggestions = useCallback(() => {
     setSuggestions([]);
@@ -52,33 +55,45 @@ export const useAddressAutocomplete = (
     setSelectedIndex(-1);
   }, []);
 
-  const handleKeyDown = useCallback((
-    e: React.KeyboardEvent<HTMLInputElement>,
-    onSelect: (suggestion: AddressSuggestion) => void
-  ) => {
-    if (!showSuggestions || suggestions.length === 0) return;
-    switch (e.key) {
-      case 'ArrowDown':
-        e.preventDefault();
-        setSelectedIndex(prev => prev < suggestions.length - 1 ? prev + 1 : prev);
-        break;
-      case 'ArrowUp':
-        e.preventDefault();
-        setSelectedIndex(prev => prev > 0 ? prev - 1 : -1);
-        break;
-      case 'Enter':
-        if (selectedIndex >= 0) {
+  const handleKeyDown = useCallback(
+    (
+      e: React.KeyboardEvent<HTMLInputElement>,
+      onSelect: (suggestion: AddressSuggestion) => void,
+    ) => {
+      if (!showSuggestions || suggestions.length === 0) return;
+      switch (e.key) {
+        case "ArrowDown":
           e.preventDefault();
-          onSelect(suggestions[selectedIndex]);
+          setSelectedIndex((prev) =>
+            prev < suggestions.length - 1 ? prev + 1 : prev,
+          );
+          break;
+        case "ArrowUp":
+          e.preventDefault();
+          setSelectedIndex((prev) => (prev > 0 ? prev - 1 : -1));
+          break;
+        case "Enter":
+          if (selectedIndex >= 0) {
+            e.preventDefault();
+            onSelect(suggestions[selectedIndex]);
+            clearSuggestions();
+          }
+          break;
+        case "Escape":
+          e.stopPropagation();
           clearSuggestions();
-        }
-        break;
-      case 'Escape':
-        e.stopPropagation();
-        clearSuggestions();
-        break;
-    }
-  }, [showSuggestions, suggestions, selectedIndex, clearSuggestions]);
+          break;
+      }
+    },
+    [showSuggestions, suggestions, selectedIndex, clearSuggestions],
+  );
 
-  return { suggestions, showSuggestions, selectedIndex, debouncedFetch, clearSuggestions, handleKeyDown };
+  return {
+    suggestions,
+    showSuggestions,
+    selectedIndex,
+    debouncedFetch,
+    clearSuggestions,
+    handleKeyDown,
+  };
 };

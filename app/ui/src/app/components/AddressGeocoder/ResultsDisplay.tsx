@@ -1,14 +1,17 @@
 // app/components/AddressGeocoder/ResultsDisplay.tsx
 
-import React from 'react';
-import type { OptimizedResponse } from '@/app/types/geocoding';
+import React from "react";
+import type { OptimizedResponse } from "@/app/types/geocoding";
 
 interface ResultsDisplayProps {
   results: OptimizedResponse;
   onDownload: () => void;
 }
 
-export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, onDownload }) => {
+export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
+  results,
+  onDownload,
+}) => {
   return (
     <div className="mt-8">
       <div className="flex justify-between items-center mb-4">
@@ -53,7 +56,8 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, onDownl
           </div>
           <div className="mt-4 text-center">
             <p className="text-sm text-gray-700">
-              Generated: {new Date(results.metadata.generatedAt).toLocaleString()}
+              Generated:{" "}
+              {new Date(results.metadata.generatedAt).toLocaleString()}
             </p>
           </div>
         </div>

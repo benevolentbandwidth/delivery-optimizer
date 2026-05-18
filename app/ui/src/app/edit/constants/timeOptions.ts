@@ -13,4 +13,17 @@ export const TIME_OPTIONS: string[] = (() => {
 })();
 
 /** Fixed choices for how long before delivery the driver may arrive. */
-export const TIME_BUFFER_OPTIONS = ["5 min", "10 min", "30 min", "45 min", "1hr", "2hr", "3hr", "4hr", "5hr", "6hr", "7hr", "8hr"];
+export const TIME_BUFFER_OPTIONS = [
+  "5 min",
+  "10 min",
+  "30 min",
+  "45 min",
+  "1hr",
+  "2hr",
+  "3hr",
+  "4hr",
+  "5hr",
+  "6hr",
+  "7hr",
+  "8hr",
+];

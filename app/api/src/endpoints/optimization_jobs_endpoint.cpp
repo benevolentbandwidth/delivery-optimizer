@@ -8,7 +8,6 @@
 
 #include <drogon/drogon.h>
 #include <json/json.h>
-
 #include <memory>
 #include <string>
 #include <string_view>
@@ -56,8 +55,7 @@ namespace {
     return BuildJsonResponse(body, drogon::k503ServiceUnavailable);
   }
 
-  return BuildErrorResponse(drogon::k503ServiceUnavailable,
-                            "Optimization jobs are unavailable.");
+  return BuildErrorResponse(drogon::k503ServiceUnavailable, "Optimization jobs are unavailable.");
 }
 
 [[nodiscard]] Json::Value BuildJobUrls(const std::string& job_id) {
@@ -67,7 +65,8 @@ namespace {
   return urls;
 }
 
-[[nodiscard]] Json::Value BuildJobStatusBody(const deliveryoptimizer::api::OptimizationJobRecord& job) {
+[[nodiscard]] Json::Value
+BuildJobStatusBody(const deliveryoptimizer::api::OptimizationJobRecord& job) {
   Json::Value body{Json::objectValue};
   body["job_id"] = job.job_id;
   body["request_id"] = job.request_id;
@@ -107,9 +106,9 @@ void RegisterOptimizationJobsEndpoints(drogon::HttpAppFramework& app,
                                        std::shared_ptr<ObservabilityRegistry> observability) {
   app.registerHandler(
       "/api/v1/optimization-jobs",
-      [store, runtime, observability](const drogon::HttpRequestPtr& request,
-                                      std::function<void(const drogon::HttpResponsePtr&)>&&
-                                          callback) {
+      [store, runtime,
+       observability](const drogon::HttpRequestPtr& request,
+                      std::function<void(const drogon::HttpResponsePtr&)>&& callback) {
         auto lifecycle = std::make_shared<SolveLifecycle>(CreateSolveLifecycle(request));
 
         if (store == nullptr || runtime == nullptr || !store->IsConfigured() ||
@@ -156,8 +155,8 @@ void RegisterOptimizationJobsEndpoints(drogon::HttpAppFramework& app,
         if (created_job.status != CreateOptimizationJobStatus::kCreated ||
             !created_job.record.has_value()) {
           FinalizeSolveRequest(observability, lifecycle, SolveRequestOutcome::kFailed, 503U);
-          std::move(callback)(BuildErrorResponse(
-              drogon::k503ServiceUnavailable, "Optimization job submission failed."));
+          std::move(callback)(BuildErrorResponse(drogon::k503ServiceUnavailable,
+                                                 "Optimization job submission failed."));
           return;
         }
 
@@ -171,10 +170,10 @@ void RegisterOptimizationJobsEndpoints(drogon::HttpAppFramework& app,
 
   app.registerHandlerViaRegex(
       "^/api/v1/optimization-jobs/([A-Za-z0-9-]+)/result$",
-      [store = store, runtime = runtime](const drogon::HttpRequestPtr& /*request*/,
-                                         std::function<void(const drogon::HttpResponsePtr&)>&&
-                                             callback,
-                                         const std::string& job_id) {
+      [store = store,
+       runtime = runtime](const drogon::HttpRequestPtr& /*request*/,
+                          std::function<void(const drogon::HttpResponsePtr&)>&& callback,
+                          const std::string& job_id) {
         if (store == nullptr || !store->IsConfigured() || runtime == nullptr ||
             !runtime->IsSchemaReady()) {
           std::move(callback)(BuildOptimizationJobsUnavailableResponse(store, runtime));
@@ -194,21 +193,20 @@ void RegisterOptimizationJobsEndpoints(drogon::HttpAppFramework& app,
         }
 
         Json::Value body = BuildJobStatusBody(*job);
-        const auto code =
-            (job->state == OptimizationJobState::kQueued ||
-             job->state == OptimizationJobState::kRunning)
-                ? drogon::k202Accepted
-                : drogon::k409Conflict;
+        const auto code = (job->state == OptimizationJobState::kQueued ||
+                           job->state == OptimizationJobState::kRunning)
+                              ? drogon::k202Accepted
+                              : drogon::k409Conflict;
         std::move(callback)(BuildJsonResponse(body, code));
       },
       {drogon::Get});
 
   app.registerHandlerViaRegex(
       "^/api/v1/optimization-jobs/([A-Za-z0-9-]+)$",
-      [store = store, runtime = runtime](const drogon::HttpRequestPtr& /*request*/,
-                                         std::function<void(const drogon::HttpResponsePtr&)>&&
-                                             callback,
-                                         const std::string& job_id) {
+      [store = store,
+       runtime = runtime](const drogon::HttpRequestPtr& /*request*/,
+                          std::function<void(const drogon::HttpResponsePtr&)>&& callback,
+                          const std::string& job_id) {
         if (store == nullptr || !store->IsConfigured() || runtime == nullptr ||
             !runtime->IsSchemaReady()) {
           std::move(callback)(BuildOptimizationJobsUnavailableResponse(store, runtime));

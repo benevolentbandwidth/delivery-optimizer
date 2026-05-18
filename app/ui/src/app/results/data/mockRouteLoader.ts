@@ -3,7 +3,8 @@
 
 import type { Route, Stop } from "../types";
 
-export interface MockRouteStop { // Defining the shape of a single stop in the mock route
+export interface MockRouteStop {
+  // Defining the shape of a single stop in the mock route
   id: string;
   lat: number;
   lng: number;
@@ -12,11 +13,13 @@ export interface MockRouteStop { // Defining the shape of a single stop in the m
   sequence: number;
 }
 
-export interface MockRouteJson { // Defining shape of mock_route.json file
+export interface MockRouteJson {
+  // Defining shape of mock_route.json file
   stops: MockRouteStop[];
 }
 
-export function mockRouteToRoute(data: MockRouteJson): Route { // Converting the mock route data into a Route object with stops
+export function mockRouteToRoute(data: MockRouteJson): Route {
+  // Converting the mock route data into a Route object with stops
   const stops: Stop[] = data.stops.map((s) => ({
     id: s.id,
     address: s.address,
@@ -34,6 +37,6 @@ export function mockRouteToRoute(data: MockRouteJson): Route { // Converting the
     stops,
     vehicleType: "Van",
     distanceMi: 89,
-    estimatedTimeMinutes: 195, // 3h 15m 
+    estimatedTimeMinutes: 195, // 3h 15m
   };
 }

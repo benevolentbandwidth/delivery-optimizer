@@ -237,11 +237,10 @@ ResolveOptimizationJobStoreConfig(const std::size_t worker_count) {
                                                   "optimization job queue size"),
       .max_attempts = ResolvePositiveSizeOption(kJobMaxAttemptsEnv, kDefaultJobMaxAttempts,
                                                 "optimization job max attempts"),
-      .lease_duration = std::chrono::milliseconds{
-          static_cast<std::chrono::milliseconds::rep>(ResolvePositiveSizeOption(
-              kJobLeaseMsEnv, kDefaultJobLeaseMs, "job lease timeout (ms)"))},
-      .result_ttl = std::chrono::seconds{
-          static_cast<std::chrono::seconds::rep>(ResolvePositiveSizeOption(
+      .lease_duration = std::chrono::milliseconds{static_cast<std::chrono::milliseconds::rep>(
+          ResolvePositiveSizeOption(kJobLeaseMsEnv, kDefaultJobLeaseMs, "job lease timeout (ms)"))},
+      .result_ttl =
+          std::chrono::seconds{static_cast<std::chrono::seconds::rep>(ResolvePositiveSizeOption(
               kJobResultTtlSecondsEnv, kDefaultJobResultTtlSeconds, "job result ttl (seconds)"))},
   };
 }
@@ -251,20 +250,19 @@ ResolveOptimizationJobRuntimeOptions() {
   return deliveryoptimizer::api::OptimizationJobRuntimeOptions{
       .worker_count = ResolvePositiveSizeOption(kJobWorkersEnv, kDefaultJobWorkers,
                                                 "optimization job worker count"),
-      .poll_interval = std::chrono::milliseconds{
-          static_cast<std::chrono::milliseconds::rep>(ResolvePositiveSizeOption(
-              kJobPollMsEnv, kDefaultJobPollMs, "optimization job poll interval (ms)"))},
-      .heartbeat_interval = std::chrono::milliseconds{
-          static_cast<std::chrono::milliseconds::rep>(ResolvePositiveSizeOption(
-              kJobHeartbeatMsEnv, kDefaultJobHeartbeatMs,
-              "optimization job heartbeat interval (ms)"))},
-      .sweep_interval = std::chrono::milliseconds{
-          static_cast<std::chrono::milliseconds::rep>(ResolvePositiveSizeOption(
-              kJobSweepMsEnv, kDefaultJobSweepMs, "optimization job sweep interval (ms)"))},
-      .worker_health_timeout = std::chrono::milliseconds{
-          static_cast<std::chrono::milliseconds::rep>(ResolvePositiveSizeOption(
-              kJobWorkerHealthMsEnv, kDefaultJobWorkerHealthMs,
-              "optimization job worker health timeout (ms)"))},
+      .poll_interval = std::chrono::milliseconds{static_cast<std::chrono::milliseconds::rep>(
+          ResolvePositiveSizeOption(kJobPollMsEnv, kDefaultJobPollMs,
+                                    "optimization job poll interval (ms)"))},
+      .heartbeat_interval = std::chrono::milliseconds{static_cast<std::chrono::milliseconds::rep>(
+          ResolvePositiveSizeOption(kJobHeartbeatMsEnv, kDefaultJobHeartbeatMs,
+                                    "optimization job heartbeat interval (ms)"))},
+      .sweep_interval = std::chrono::milliseconds{static_cast<std::chrono::milliseconds::rep>(
+          ResolvePositiveSizeOption(kJobSweepMsEnv, kDefaultJobSweepMs,
+                                    "optimization job sweep interval (ms)"))},
+      .worker_health_timeout =
+          std::chrono::milliseconds{static_cast<std::chrono::milliseconds::rep>(
+              ResolvePositiveSizeOption(kJobWorkerHealthMsEnv, kDefaultJobWorkerHealthMs,
+                                        "optimization job worker health timeout (ms)"))},
       .start_workers = true,
   };
 }

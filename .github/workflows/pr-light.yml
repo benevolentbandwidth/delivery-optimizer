@@ -1,7 +1,19 @@
-name: pr-light
+name: pr-checks
 on:
   pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
 jobs:
+  pr-description:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: python3 .github/scripts/validate-pr-body.py
   ui:
     runs-on: ubuntu-latest
     defaults:
@@ -16,17 +28,51 @@ jobs:
           cache-dependency-path: app/ui/package-lock.json
       - run: npm ci
       - run: npm run lint
+      - run: npm run format:check
+      - run: npm run typecheck
+      - run: npm run test
       - run: npm run build
-  config:
+  mobile:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app/mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: app/mobile/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+  backend:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: awalsh128/cache-apt-pkgs-action@v1
         with:
-          packages: ninja-build libjsoncpp-dev libdrogon-dev uuid-dev libmariadb-dev libbrotli-dev libhiredis-dev libyaml-cpp-dev libgtest-dev
+          packages: clang-format clang-tidy clangd ninja-build libjsoncpp-dev libdrogon-dev uuid-dev libmariadb-dev libbrotli-dev libhiredis-dev libyaml-cpp-dev libgtest-dev postgresql postgresql-client
           version: 1.0
       - run: cmake --version
       - run: cmake --preset dev
-      - run: cmake --build --preset dev
-      - run: ctest --preset dev --output-on-failure -LE 'e2e|docker'
+      - run: .github/scripts/check-backend-static.sh build/dev
+      - run: cmake --build --preset dev --parallel
+      - run: ctest --preset dev --output-on-failure --no-tests=error -LE 'e2e|docker'
       - run: docker compose -f deploy/compose/docker-compose.arm64.yml --env-file deploy/env/http-server.arm64.env config
+  backend-e2e:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: awalsh128/cache-apt-pkgs-action@v1
+        with:
+          packages: ninja-build libjsoncpp-dev libdrogon-dev uuid-dev libmariadb-dev libbrotli-dev libhiredis-dev libyaml-cpp-dev libgtest-dev postgresql postgresql-client
+          version: 1.0
+      - run: cmake --preset dev
+      - run: cmake --build --preset dev --parallel
+      - run: ctest --preset dev --output-on-failure --no-tests=error -L 'e2e|docker'

@@ -6,9 +6,9 @@
 #include "deliveryoptimizer/api/endpoints/optimization_jobs_endpoint.hpp"
 #include "deliveryoptimizer/api/endpoints/optimize_endpoint.hpp"
 #include "deliveryoptimizer/api/endpoints/osrm_proxy_endpoint.hpp"
+#include "deliveryoptimizer/api/observability.hpp"
 #include "deliveryoptimizer/api/optimization_job_runtime.hpp"
 #include "deliveryoptimizer/api/optimization_job_store.hpp"
-#include "deliveryoptimizer/api/observability.hpp"
 #include "deliveryoptimizer/api/server_options.hpp"
 #include "deliveryoptimizer/api/vroom_runner.hpp"
 
@@ -103,13 +103,12 @@ int RunApiServer() {
       });
 
   RegisterHealthEndpoint(
-      app, observability,
-      [job_store, job_runtime](Json::Value& checks, bool& overall_ready) {
+      app, observability, [job_store, job_runtime](Json::Value& checks, bool& overall_ready) {
         if (job_store == nullptr || !job_store->IsConfigured()) {
           checks["optimization_jobs_db"] = "missing";
           checks["optimization_jobs_db_detail"] = "missing database connection string";
-          checks["optimization_job_workers_expected"] =
-              static_cast<Json::UInt64>(job_runtime == nullptr ? 0U : job_runtime->ExpectedWorkerCount());
+          checks["optimization_job_workers_expected"] = static_cast<Json::UInt64>(
+              job_runtime == nullptr ? 0U : job_runtime->ExpectedWorkerCount());
           checks["optimization_job_workers_healthy"] = 0U;
           overall_ready = false;
           return;
@@ -117,16 +116,16 @@ int RunApiServer() {
 
         std::string detail;
         const bool db_ready = job_store->Ping(&detail);
-        const auto stats = job_runtime == nullptr ? OptimizationJobStoreStats{}
-                                                  : job_runtime->CurrentStats();
+        const auto stats =
+            job_runtime == nullptr ? OptimizationJobStoreStats{} : job_runtime->CurrentStats();
         const std::size_t expected_workers =
             job_runtime == nullptr ? 0U : job_runtime->ExpectedWorkerCount();
         const std::size_t healthy_workers =
             job_runtime == nullptr ? 0U : job_runtime->HealthyWorkerCount();
         const bool schema_ready = job_runtime != nullptr && job_runtime->IsSchemaReady();
-        const std::string schema_detail =
-            job_runtime == nullptr ? "missing optimization job runtime"
-                                   : job_runtime->SchemaStatusDetail();
+        const std::string schema_detail = job_runtime == nullptr
+                                              ? "missing optimization job runtime"
+                                              : job_runtime->SchemaStatusDetail();
         checks["optimization_jobs_db"] = db_ready ? "ok" : "down";
         checks["optimization_jobs_db_detail"] = detail;
         checks["optimization_jobs_schema"] = schema_ready ? "ok" : "down";

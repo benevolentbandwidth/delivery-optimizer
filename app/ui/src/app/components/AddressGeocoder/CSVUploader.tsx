@@ -1,5 +1,5 @@
 // app/components/AddressGeocoder/CSVUploader.tsx
-import React from 'react';
+import React from "react";
 
 interface CSVUploaderProps {
   onUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
@@ -20,10 +20,13 @@ export const CSVUploader: React.FC<CSVUploaderProps> = ({
         Upload CSV File (Optional)
       </label>
       <p className="text-xs text-gray-600 mb-2">
-        CSV Format: type, id, address, buffer_time, demand_value, time_window_start, time_window_end, vehicle_type, capacity_units, start_address, end_address
+        CSV Format: type, id, address, buffer_time, demand_value,
+        time_window_start, time_window_end, vehicle_type, capacity_units,
+        start_address, end_address
       </p>
       <p className="text-xs text-gray-500 mb-2">
-        💡 Time windows: Use seconds from midnight (e.g., 28800 for 8:00 AM) or time format (e.g., &quot;9:00 AM&quot;)
+        💡 Time windows: Use seconds from midnight (e.g., 28800 for 8:00 AM) or
+        time format (e.g., &quot;9:00 AM&quot;)
       </p>
       <input
         type="file"
@@ -33,7 +36,8 @@ export const CSVUploader: React.FC<CSVUploaderProps> = ({
       />
       {fileName && (
         <p className="mt-2 text-sm text-gray-600">
-          Loaded: {fileName} ({deliveryCount} deliveries, {vehicleCount} vehicles)
+          Loaded: {fileName} ({deliveryCount} deliveries, {vehicleCount}{" "}
+          vehicles)
         </p>
       )}
     </div>

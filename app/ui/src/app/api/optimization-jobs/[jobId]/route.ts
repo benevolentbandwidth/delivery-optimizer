@@ -1,23 +1,23 @@
-import { NextResponse } from "next/server"
+import { NextResponse } from "next/server";
 
-import { getOptimizationJobStatus } from "@/lib/solver/deliveryOptimizerClient"
+import { getOptimizationJobStatus } from "@/lib/solver/deliveryOptimizerClient";
 
-import { maybeBuildDeliveryOptimizerErrorResponse } from "../routeHelpers"
+import { maybeBuildDeliveryOptimizerErrorResponse } from "../routeHelpers";
 
-export const runtime = "nodejs"
+export const runtime = "nodejs";
 
 type RouteContext = {
-  params: Promise<{ jobId: string }>
-}
+  params: Promise<{ jobId: string }>;
+};
 
 export async function GET(_req: Request, context: RouteContext) {
-  const { jobId } = await context.params
+  const { jobId } = await context.params;
 
   try {
-    const result = await getOptimizationJobStatus(jobId)
-    return NextResponse.json(result)
+    const result = await getOptimizationJobStatus(jobId);
+    return NextResponse.json(result);
   } catch (error) {
-    console.error(error)
+    console.error(error);
 
     const upstreamError = maybeBuildDeliveryOptimizerErrorResponse(error, {
       badRequest: "Optimization job status request was invalid.",
@@ -26,14 +26,14 @@ export async function GET(_req: Request, context: RouteContext) {
       serviceUnavailable: "Delivery optimizer service unavailable.",
       gatewayTimeout: "Optimization job status timed out.",
       badGateway: "Failed to fetch optimization job status.",
-    })
+    });
     if (upstreamError) {
-      return upstreamError
+      return upstreamError;
     }
 
     return NextResponse.json(
       { error: "Failed to fetch optimization job status." },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   }
 }

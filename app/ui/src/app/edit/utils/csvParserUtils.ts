@@ -1,6 +1,9 @@
 // Normalize the header to a consistent format
 function normalizeHeader(h: string): string {
-  return h.trim().toLowerCase().replace(/[\s\-_.]+/g, "_");
+  return h
+    .trim()
+    .toLowerCase()
+    .replace(/[\s\-_.]+/g, "_");
 }
 
 /** Convert a raw time-buffer string (seconds) to whole minutes. Returns 0 if invalid. */
@@ -9,7 +12,7 @@ export function bufferSecondsToMinutes(raw: string): number {
   if (isNaN(secs) || secs <= 0) return 0;
   return Math.round(secs / 60);
 }
-  
+
 /**
  * Convert a raw time value (seconds-from-midnight or "H:MM AM/PM") into a
  * TIME_OPTIONS-compatible "H:MM AM/PM" string, snapped to the nearest 15 min.
@@ -32,7 +35,7 @@ export function normalizeTimeOption(raw: string): string {
       totalMinutes = h * 60 + m;
     } else {
       return "";
-    } 
+    }
   }
 
   const snapped = Math.round(totalMinutes / 15) * 15;
@@ -43,7 +46,6 @@ export function normalizeTimeOption(raw: string): string {
   return `${hour12}:${m.toString().padStart(2, "0")} ${period}`;
 }
 
-  
 // Column aliases for the CSV file
 const COLUMN_ALIASES: Record<string, string[]> = {
   address: ["address", "delivery_address", "street", "location", "destination"],
@@ -88,7 +90,7 @@ const COLUMN_ALIASES: Record<string, string[]> = {
 
 // Resolve the columns and return a tuple of the canonical column name and the alias
 export function resolveColumns(
-  headers: string[]
+  headers: string[],
 ): Record<string, string | undefined> {
   const normalized = headers.map((h) => [h, normalizeHeader(h)] as const);
   const resolved: Record<string, string | undefined> = {};

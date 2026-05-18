@@ -1,42 +1,40 @@
-import { z } from "zod"
-import { locationSchema, loadSchema } from "./common.schema"
+import { z } from "zod";
+import { locationSchema, loadSchema } from "./common.schema";
 
-export const vehicleSchema = z.object({
-  id: z.number().int().nonnegative(),
+export const vehicleSchema = z
+  .object({
+    id: z.number().int().nonnegative(),
 
-  vehicleType: z.enum(["truck", "car", "bicycle"]),
+    vehicleType: z.enum(["truck", "car", "bicycle"]),
 
-  driverName: z.string().min(1).optional(),
+    driverName: z.string().min(1).optional(),
 
-  startLocation: locationSchema,
+    startLocation: locationSchema,
 
-  endLocation: locationSchema.optional(),
+    endLocation: locationSchema.optional(),
 
-  capacity: loadSchema,
+    capacity: loadSchema,
 
-  departureTime: z
-    .number()
-    .int()
-    .nonnegative()
-    .optional(),
+    departureTime: z.number().int().nonnegative().optional(),
 
-  returnTime: z
-    .number()
-    .int()
-    .nonnegative()
-    .optional()
-}).refine(
-  (data) =>
-    (data.departureTime == null && data.returnTime == null) ||
-    (data.departureTime != null && data.returnTime != null),
-  { message: "departureTime and returnTime must both be set or both omitted", path: ["returnTime"] }
-).refine(
-  (data) =>
-    data.departureTime == null ||
-    data.returnTime == null ||
-    data.returnTime > data.departureTime,
-  { message: "returnTime must be after departureTime", path: ["returnTime"] }
-)
+    returnTime: z.number().int().nonnegative().optional(),
+  })
+  .refine(
+    (data) =>
+      (data.departureTime == null && data.returnTime == null) ||
+      (data.departureTime != null && data.returnTime != null),
+    {
+      message: "departureTime and returnTime must both be set or both omitted",
+      path: ["returnTime"],
+    },
+  )
+  .refine(
+    (data) =>
+      data.departureTime == null ||
+      data.returnTime == null ||
+      data.returnTime > data.departureTime,
+    { message: "returnTime must be after departureTime", path: ["returnTime"] },
+  );
 
 /**
  * Ensure each ID is unique
@@ -44,17 +42,17 @@ export const vehicleSchema = z.object({
 export const vehiclesSchema = z
   .array(vehicleSchema)
   .superRefine((vehicles, ctx) => {
-    const seen = new Set<number>()
+    const seen = new Set<number>();
 
     vehicles.forEach((vehicle, index) => {
       if (seen.has(vehicle.id)) {
         ctx.addIssue({
           code: "custom",
           message: `Duplicate vehicle id: ${vehicle.id}`,
-          path: [index, "id"]
-        })
+          path: [index, "id"],
+        });
       }
 
-      seen.add(vehicle.id)
-    })
-  })
+      seen.add(vehicle.id);
+    });
+  });

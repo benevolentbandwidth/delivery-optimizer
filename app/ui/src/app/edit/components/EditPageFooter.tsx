@@ -4,7 +4,13 @@ export default function EditPageFooter() {
   return (
     <footer className={FOOTER_ROOT}>
       <span aria-hidden="true" className={FOOTER_LOGO} />
-      <p className={FOOTER_TEXT}>Built with <span role="img" aria-label="love">❤️</span> for Humanity. The Benevolent Bandwidth Foundation</p>
+      <p className={FOOTER_TEXT}>
+        Built with{" "}
+        <span role="img" aria-label="love">
+          ❤️
+        </span>{" "}
+        for Humanity. The Benevolent Bandwidth Foundation
+      </p>
     </footer>
   );
 }

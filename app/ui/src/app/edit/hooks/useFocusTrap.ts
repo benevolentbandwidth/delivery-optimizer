@@ -15,7 +15,7 @@ export function useFocusTrap<T extends HTMLElement>(active: boolean) {
     // itself if it is focusable (e.g. a panel with tabIndex={0} and no buttons)
     const focusable = () => {
       const descendants = Array.from<HTMLElement>(
-        container.querySelectorAll(FOCUSABLE_SELECTORS)
+        container.querySelectorAll(FOCUSABLE_SELECTORS),
       );
       return container.matches(FOCUSABLE_SELECTORS)
         ? [container as HTMLElement, ...descendants]

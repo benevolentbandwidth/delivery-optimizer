@@ -15,18 +15,22 @@ export function useAddresses() {
   const [searchQuery, _setSearchQuery] = useState("");
 
   // Fuse.js fuzzy search across recipient identity and stop details.
-  const fuse = useMemo(() => new Fuse(addresses, {
-    keys: ["recipientName", "phoneNumber", "recipientAddress", "notes"],
-    threshold: 0.3,         // 0.0 = exact, 1.0 = match anything
-    ignoreLocation: true,   // don't penalize matches far from string start
-  }), [addresses]);
+  const fuse = useMemo(
+    () =>
+      new Fuse(addresses, {
+        keys: ["recipientName", "phoneNumber", "recipientAddress", "notes"],
+        threshold: 0.3, // 0.0 = exact, 1.0 = match anything
+        ignoreLocation: true, // don't penalize matches far from string start
+      }),
+    [addresses],
+  );
 
   const filteredAddresses = useMemo(
     () =>
       searchQuery.trim() === ""
         ? addresses
         : fuse.search(searchQuery).map((result) => result.item),
-    [addresses, fuse, searchQuery]
+    [addresses, fuse, searchQuery],
   );
 
   const isSearchActive = searchQuery.trim() !== "";
@@ -40,10 +44,13 @@ export function useAddresses() {
     setAddressPage(1);
   }, []);
 
-  const totalAddressPages = Math.max(1, Math.ceil(filteredAddresses.length / addressesPerPage));
+  const totalAddressPages = Math.max(
+    1,
+    Math.ceil(filteredAddresses.length / addressesPerPage),
+  );
   const addressesOnCurrentPage = filteredAddresses.slice(
     (addressPage - 1) * addressesPerPage,
-    addressPage * addressesPerPage
+    addressPage * addressesPerPage,
   );
 
   const setSearchQuery = useCallback((q: string) => {
@@ -61,26 +68,32 @@ export function useAddresses() {
     activeAddress.recipientAddress.trim() !== "" &&
     activeAddress.deliveryQuantity > 0;
 
-  const allAddressesLocked = addresses.length > 0 && addresses.every((a) => a.locked);
+  const allAddressesLocked =
+    addresses.length > 0 && addresses.every((a) => a.locked);
 
   // Merge one field into the matching address by id.
-  const updateAddress = useCallback(<K extends keyof AddressCard>(
-    id: number,
-    key: K,
-    value: AddressCard[K]
-  ) => {
-    setAddresses((prev) =>
-      prev.map((a) =>
-        a.id === id
-          ? {
-              ...a,
-              [key]: value,
-              ...(key === "recipientAddress" ? { cachedLocation: undefined } : {}),
-            }
-          : a
-      )
-    );
-  }, []);
+  const updateAddress = useCallback(
+    <K extends keyof AddressCard>(
+      id: number,
+      key: K,
+      value: AddressCard[K],
+    ) => {
+      setAddresses((prev) =>
+        prev.map((a) =>
+          a.id === id
+            ? {
+                ...a,
+                [key]: value,
+                ...(key === "recipientAddress"
+                  ? { cachedLocation: undefined }
+                  : {}),
+              }
+            : a,
+        ),
+      );
+    },
+    [],
+  );
 
   // Lock any in-progress row, append a new empty row, and jump to its page.
   // All logic runs inside the functional updater so IDs and page are always
@@ -90,20 +103,22 @@ export function useAddresses() {
       if (prev.length === 0) {
         setTouchedIds(new Set());
         setAddressPage(1);
-        return [{
-          id: 1,
-          locked: false,
-          editingExisting: false,
-          recipientName: "",
-          phoneNumber: "",
-          recipientAddress: "",
-          cachedLocation: undefined,
-          timeBuffer: 0,
-          deliveryTimeStart: "",
-          deliveryTimeEnd: "",
-          deliveryQuantity: 0,
-          notes: "",
-        }];
+        return [
+          {
+            id: 1,
+            locked: false,
+            editingExisting: false,
+            recipientName: "",
+            phoneNumber: "",
+            recipientAddress: "",
+            cachedLocation: undefined,
+            timeBuffer: 0,
+            deliveryTimeStart: "",
+            deliveryTimeEnd: "",
+            deliveryQuantity: 0,
+            notes: "",
+          },
+        ];
       }
 
       const active = prev.find((a) => !a.locked);
@@ -124,7 +139,9 @@ export function useAddresses() {
       setAddressPage(Math.ceil((prev.length + 1) / addressesPerPage));
 
       return [
-        ...prev.map((a) => (a.locked ? a : { ...a, locked: true, editingExisting: false })),
+        ...prev.map((a) =>
+          a.locked ? a : { ...a, locked: true, editingExisting: false },
+        ),
         {
           id: newId,
           locked: false,
@@ -143,25 +160,30 @@ export function useAddresses() {
     });
   }, [addressesPerPage]);
 
-  const deleteAddress = useCallback((id: number) => {
-    setAddresses((prev) => {
-      if (prev.length === 0) return prev;
-      const next = prev.filter((a) => a.id !== id);
-      const maxPage = Math.max(1, Math.ceil(next.length / addressesPerPage));
-      setAddressPage((p) => Math.min(p, maxPage));
-      return next;
-    });
-    setTouchedIds((t) => {
-      const next = new Set(t);
-      next.delete(id);
-      return next;
-    });
-  }, [addressesPerPage]);
+  const deleteAddress = useCallback(
+    (id: number) => {
+      setAddresses((prev) => {
+        if (prev.length === 0) return prev;
+        const next = prev.filter((a) => a.id !== id);
+        const maxPage = Math.max(1, Math.ceil(next.length / addressesPerPage));
+        setAddressPage((p) => Math.min(p, maxPage));
+        return next;
+      });
+      setTouchedIds((t) => {
+        const next = new Set(t);
+        next.delete(id);
+        return next;
+      });
+    },
+    [addressesPerPage],
+  );
 
   // Re-open a saved row for editing (shows Confirm in the card).
   const unlockAddress = useCallback((id: number) => {
     setAddresses((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, locked: false, editingExisting: true } : a))
+      prev.map((a) =>
+        a.id === id ? { ...a, locked: false, editingExisting: true } : a,
+      ),
     );
     setTouchedIds((t) => {
       const next = new Set(t);
@@ -175,9 +197,7 @@ export function useAddresses() {
     setAddresses((prev) => {
       const a = prev.find((x) => x.id === id);
       if (!a) return prev;
-      const valid =
-        a.recipientAddress.trim() !== "" &&
-        a.deliveryQuantity > 0;
+      const valid = a.recipientAddress.trim() !== "" && a.deliveryQuantity > 0;
       if (!valid) {
         setTouchedIds((t) => new Set([...t, id]));
         return prev;
@@ -187,7 +207,9 @@ export function useAddresses() {
         next.delete(id);
         return next;
       });
-      return prev.map((x) => (x.id === id ? { ...x, locked: true, editingExisting: false } : x));
+      return prev.map((x) =>
+        x.id === id ? { ...x, locked: true, editingExisting: false } : x,
+      );
     });
   }, []);
 
@@ -199,13 +221,18 @@ export function useAddresses() {
     _setSearchQuery("");
   }, []);
 
-  const cacheAddressLocation = useCallback((id: number, lat: number, lng: number, state?: string | null) => {
-    setAddresses((prev) =>
-      prev.map((address) =>
-        address.id === id ? { ...address, cachedLocation: { lat, lng, state } } : address
-      )
-    );
-  }, []);
+  const cacheAddressLocation = useCallback(
+    (id: number, lat: number, lng: number, state?: string | null) => {
+      setAddresses((prev) =>
+        prev.map((address) =>
+          address.id === id
+            ? { ...address, cachedLocation: { lat, lng, state } }
+            : address,
+        ),
+      );
+    },
+    [],
+  );
   return {
     addresses,
     updateAddress,

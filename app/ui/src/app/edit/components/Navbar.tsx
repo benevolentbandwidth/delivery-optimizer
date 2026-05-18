@@ -33,10 +33,16 @@ export default function Navbar({
       <header className={NAVBAR_V2_ROOT}>
         <span className={NAVBAR_V2_LOGO}>DELIVERY OPTIMIZER</span>
         <div className={NAVBAR_V2_ACTIONS}>
-          <button className={NAVBAR_V2_BTN_OUTLINE} onClick={() => void onImportSession()}>
+          <button
+            className={NAVBAR_V2_BTN_OUTLINE}
+            onClick={() => void onImportSession()}
+          >
             Import Session
           </button>
-          <button className={NAVBAR_V2_BTN_OUTLINE} onClick={() => void onExportSession()}>
+          <button
+            className={NAVBAR_V2_BTN_OUTLINE}
+            onClick={() => void onExportSession()}
+          >
             Export Session
           </button>
           <button

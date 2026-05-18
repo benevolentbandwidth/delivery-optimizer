@@ -1,10 +1,12 @@
 // app/ui/src/app/components/AddressGeocoder/utils/validateGeocodingForms.ts
-import { isValidTime, isStartBeforeEnd } from './timeConversion';
-import { hasAtLeastOneLetter } from '../utils';
-import type { DeliveryForm, VehicleForm } from '../types';
+import { isValidTime, isStartBeforeEnd } from "./timeConversion";
+import { hasAtLeastOneLetter } from "../utils";
+import type { DeliveryForm, VehicleForm } from "../types";
 
 export const useGeocodingValidation = () => {
-  const validateDeliveries = (deliveries: DeliveryForm[]): {
+  const validateDeliveries = (
+    deliveries: DeliveryForm[],
+  ): {
     valid: DeliveryForm[];
     errors: string[];
   } => {
@@ -19,7 +21,9 @@ export const useGeocodingValidation = () => {
       }
 
       if (!hasAtLeastOneLetter(d.address)) {
-        errors.push(`${deliveryName}: Address must contain at least one letter`);
+        errors.push(
+          `${deliveryName}: Address must contain at least one letter`,
+        );
         return false;
       }
 
@@ -30,21 +34,27 @@ export const useGeocodingValidation = () => {
 
       if (d.timeWindowStart && d.timeWindowStart.trim().length > 0) {
         if (!isValidTime(d.timeWindowStart)) {
-          errors.push(`${deliveryName}: Start time must be between 7:00 AM and 9:00 PM`);
+          errors.push(
+            `${deliveryName}: Start time must be between 7:00 AM and 9:00 PM`,
+          );
           isValid = false;
         }
       }
 
       if (d.timeWindowEnd && d.timeWindowEnd.trim().length > 0) {
         if (!isValidTime(d.timeWindowEnd)) {
-          errors.push(`${deliveryName}: End time must be between 7:00 AM and 9:00 PM`);
+          errors.push(
+            `${deliveryName}: End time must be between 7:00 AM and 9:00 PM`,
+          );
           isValid = false;
         }
       }
 
       if (
-        d.timeWindowStart && d.timeWindowStart.trim().length > 0 &&
-        d.timeWindowEnd && d.timeWindowEnd.trim().length > 0
+        d.timeWindowStart &&
+        d.timeWindowStart.trim().length > 0 &&
+        d.timeWindowEnd &&
+        d.timeWindowEnd.trim().length > 0
       ) {
         if (!isStartBeforeEnd(d.timeWindowStart, d.timeWindowEnd)) {
           errors.push(`${deliveryName}: Start time must be before end time`);
@@ -58,7 +68,9 @@ export const useGeocodingValidation = () => {
     return { valid, errors };
   };
 
-  const validateVehicles = (vehicles: VehicleForm[]): {
+  const validateVehicles = (
+    vehicles: VehicleForm[],
+  ): {
     valid: VehicleForm[];
     errors: string[];
   } => {
@@ -69,12 +81,16 @@ export const useGeocodingValidation = () => {
       let isValid = true;
 
       if (!v.startAddress.trim() || !hasAtLeastOneLetter(v.startAddress)) {
-        errors.push(`${vehicleName}: Start address must contain at least one letter`);
+        errors.push(
+          `${vehicleName}: Start address must contain at least one letter`,
+        );
         isValid = false;
       }
 
       if (!v.endAddress.trim() || !hasAtLeastOneLetter(v.endAddress)) {
-        errors.push(`${vehicleName}: End address must contain at least one letter`);
+        errors.push(
+          `${vehicleName}: End address must contain at least one letter`,
+        );
         isValid = false;
       }
 

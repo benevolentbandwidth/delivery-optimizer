@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import type { CSSProperties } from "react";
 import { useFocusTrap } from "../hooks/useFocusTrap";
 import { SUPPORTED_STATES } from "../constants/supportedRegions";
@@ -89,7 +95,7 @@ type AddressOverlayProps = {
 
 export default function AddressOverlay({
   heading,
-  primaryLabel = "Optimize",  // Default label, overwritten by "Confirm" when called by AddressCard
+  primaryLabel = "Optimize", // Default label, overwritten by "Confirm" when called by AddressCard
   initialAddress,
   onClose,
   onSave,
@@ -110,10 +116,16 @@ export default function AddressOverlay({
 
   const stateFilter = useCallback(
     (s: AddressSuggestion) => SUPPORTED_STATES.has(s.address?.state ?? ""),
-    []
+    [],
   );
-  const { suggestions, showSuggestions, selectedIndex, debouncedFetch, clearSuggestions, handleKeyDown: handleAutocompleteKeyDown } =
-    useAddressAutocomplete(stateFilter);
+  const {
+    suggestions,
+    showSuggestions,
+    selectedIndex,
+    debouncedFetch,
+    clearSuggestions,
+    handleKeyDown: handleAutocompleteKeyDown,
+  } = useAddressAutocomplete(stateFilter);
 
   useEffect(() => {
     return () => {
@@ -133,7 +145,8 @@ export default function AddressOverlay({
       blurTimeoutRef.current = null;
     }
     const a = s.address ?? {};
-    const streetLine = [a.house_number, a.road].filter(Boolean).join(" ") || s.display_name;
+    const streetLine =
+      [a.house_number, a.road].filter(Boolean).join(" ") || s.display_name;
     setLine1(streetLine);
     setCity(a.city ?? a.town ?? a.village ?? a.municipality ?? "");
     setState(a.state ?? "");
@@ -167,8 +180,22 @@ export default function AddressOverlay({
     setSubmitted(true);
     const trimmedLine1 = line1.trim();
     const trimmedCity = city.trim();
-    if (!trimmedLine1 || !trimmedCity || !state || zipCode.length !== 5 || !country) return;
-    onSave({ line1: trimmedLine1, line2: line2.trim(), city: trimmedCity, state, zipCode, country });
+    if (
+      !trimmedLine1 ||
+      !trimmedCity ||
+      !state ||
+      zipCode.length !== 5 ||
+      !country
+    )
+      return;
+    onSave({
+      line1: trimmedLine1,
+      line2: line2.trim(),
+      city: trimmedCity,
+      state,
+      zipCode,
+      country,
+    });
   }
 
   return (
@@ -206,16 +233,26 @@ export default function AddressOverlay({
             {/* Address line 1 — full width */}
             <div className={OVERLAY_FULL_FIELD}>
               <label htmlFor="start-loc-line1" className={OVERLAY_LABEL}>
-                Address line 1<span className={OVERLAY_REQUIRED_STAR} aria-hidden="true">*</span>
+                Address line 1
+                <span className={OVERLAY_REQUIRED_STAR} aria-hidden="true">
+                  *
+                </span>
               </label>
               <div className={OVERLAY_AUTOCOMPLETE_INPUT_WRAPPER}>
                 <input
                   ref={line1InputRef}
                   id="start-loc-line1"
                   value={line1}
-                  onChange={(e) => { setLine1(e.target.value); debouncedFetch(e.target.value); }}
-                  onKeyDown={(e) => handleAutocompleteKeyDown(e, handleLine1Select)}
-                  onBlur={() => { blurTimeoutRef.current = setTimeout(clearSuggestions, 150); }}
+                  onChange={(e) => {
+                    setLine1(e.target.value);
+                    debouncedFetch(e.target.value);
+                  }}
+                  onKeyDown={(e) =>
+                    handleAutocompleteKeyDown(e, handleLine1Select)
+                  }
+                  onBlur={() => {
+                    blurTimeoutRef.current = setTimeout(clearSuggestions, 150);
+                  }}
                   placeholder="Street number and name"
                   className={line1Error ? OVERLAY_INPUT_ERROR : OVERLAY_INPUT}
                   aria-required="true"
@@ -252,7 +289,10 @@ export default function AddressOverlay({
             <div className={OVERLAY_ROW}>
               <div className={OVERLAY_FIELD}>
                 <label htmlFor="start-loc-city" className={OVERLAY_LABEL}>
-                  City<span className={OVERLAY_REQUIRED_STAR} aria-hidden="true">*</span>
+                  City
+                  <span className={OVERLAY_REQUIRED_STAR} aria-hidden="true">
+                    *
+                  </span>
                 </label>
                 <input
                   id="start-loc-city"
@@ -268,10 +308,23 @@ export default function AddressOverlay({
 
               <div className={OVERLAY_FIELD}>
                 <label htmlFor="start-loc-state" className={OVERLAY_LABEL}>
-                  State<span className={OVERLAY_REQUIRED_STAR} aria-hidden="true">*</span>
+                  State
+                  <span className={OVERLAY_REQUIRED_STAR} aria-hidden="true">
+                    *
+                  </span>
                 </label>
-                <div className={stateError ? OVERLAY_SELECT_WRAPPER_ERROR : OVERLAY_SELECT_WRAPPER}>
-                  <span className={state ? OVERLAY_SELECT_VALUE : OVERLAY_SELECT_PLACEHOLDER}>
+                <div
+                  className={
+                    stateError
+                      ? OVERLAY_SELECT_WRAPPER_ERROR
+                      : OVERLAY_SELECT_WRAPPER
+                  }
+                >
+                  <span
+                    className={
+                      state ? OVERLAY_SELECT_VALUE : OVERLAY_SELECT_PLACEHOLDER
+                    }
+                  >
                     {state || "Select"}
                   </span>
                   <span className={OVERLAY_SELECT_ICON}>
@@ -285,9 +338,13 @@ export default function AddressOverlay({
                     aria-required="true"
                     aria-invalid={stateError}
                   >
-                    <option value="" disabled>Select</option>
+                    <option value="" disabled>
+                      Select
+                    </option>
                     {[...SUPPORTED_STATES].map((s) => (
-                      <option key={s} value={s}>{s}</option>
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -299,12 +356,17 @@ export default function AddressOverlay({
             <div className={OVERLAY_ROW}>
               <div className={OVERLAY_FIELD}>
                 <label htmlFor="start-loc-zip" className={OVERLAY_LABEL}>
-                  Zip code<span className={OVERLAY_REQUIRED_STAR} aria-hidden="true">*</span>
+                  Zip code
+                  <span className={OVERLAY_REQUIRED_STAR} aria-hidden="true">
+                    *
+                  </span>
                 </label>
                 <input
                   id="start-loc-zip"
                   value={zipCode}
-                  onChange={(e) => setZipCode(e.target.value.replace(/\D/g, "").slice(0, 5))}
+                  onChange={(e) =>
+                    setZipCode(e.target.value.replace(/\D/g, "").slice(0, 5))
+                  }
                   placeholder="Enter"
                   inputMode="numeric"
                   maxLength={5}
@@ -312,15 +374,32 @@ export default function AddressOverlay({
                   aria-required="true"
                   aria-invalid={zipError}
                 />
-                {zipError && <OverlayFieldError message="Zip code must be 5 digits" />}
+                {zipError && (
+                  <OverlayFieldError message="Zip code must be 5 digits" />
+                )}
               </div>
 
               <div className={OVERLAY_FIELD}>
                 <label htmlFor="start-loc-country" className={OVERLAY_LABEL}>
-                  Country/region<span className={OVERLAY_REQUIRED_STAR} aria-hidden="true">*</span>
+                  Country/region
+                  <span className={OVERLAY_REQUIRED_STAR} aria-hidden="true">
+                    *
+                  </span>
                 </label>
-                <div className={countryError ? OVERLAY_SELECT_WRAPPER_ERROR : OVERLAY_SELECT_WRAPPER}>
-                  <span className={country ? OVERLAY_SELECT_VALUE : OVERLAY_SELECT_PLACEHOLDER}>
+                <div
+                  className={
+                    countryError
+                      ? OVERLAY_SELECT_WRAPPER_ERROR
+                      : OVERLAY_SELECT_WRAPPER
+                  }
+                >
+                  <span
+                    className={
+                      country
+                        ? OVERLAY_SELECT_VALUE
+                        : OVERLAY_SELECT_PLACEHOLDER
+                    }
+                  >
                     {country || "Select"}
                   </span>
                   <span className={OVERLAY_SELECT_ICON}>
@@ -334,13 +413,19 @@ export default function AddressOverlay({
                     aria-required="true"
                     aria-invalid={countryError}
                   >
-                    <option value="" disabled>Select</option>
+                    <option value="" disabled>
+                      Select
+                    </option>
                     {COUNTRIES.map((c) => (
-                      <option key={c} value={c}>{c}</option>
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
                     ))}
                   </select>
                 </div>
-                {countryError && <OverlayFieldError message="Enter a valid region" />}
+                {countryError && (
+                  <OverlayFieldError message="Enter a valid region" />
+                )}
               </div>
             </div>
           </div>
@@ -348,10 +433,18 @@ export default function AddressOverlay({
 
         {/* Footer */}
         <div className={OVERLAY_FOOTER}>
-          <button type="button" onClick={onClose} className={OVERLAY_CANCEL_BTN}>
+          <button
+            type="button"
+            onClick={onClose}
+            className={OVERLAY_CANCEL_BTN}
+          >
             Cancel
           </button>
-          <button type="button" onClick={handleSave} className={`${OVERLAY_PRIMARY_BTN} ${styles.primaryBtnOverlay}`}>
+          <button
+            type="button"
+            onClick={handleSave}
+            className={`${OVERLAY_PRIMARY_BTN} ${styles.primaryBtnOverlay}`}
+          >
             {primaryLabel}
           </button>
         </div>

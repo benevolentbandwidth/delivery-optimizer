@@ -10,10 +10,7 @@ import ConfirmDeletionOverlay from "./ConfirmDeletionOverlay";
 import AddressEmptyState from "./AddressEmptyState";
 import AddressRowHeader from "./AddressRowHeader";
 import type { AddressCard as AddressCardType } from "../types/delivery";
-import {
-  ADDRESS_EMPTY_STATE,
-  ADDRESS_TOOLBAR_DESKTOP,
-} from "../formStyles";
+import { ADDRESS_EMPTY_STATE, ADDRESS_TOOLBAR_DESKTOP } from "../formStyles";
 
 import AddressSearchBar from "./AddressSearchBar";
 import {
@@ -39,7 +36,11 @@ type AddressSectionProps = {
   addressesOnCurrentPage: AddressCardType[];
   addressesCount: number;
   addAddress: () => void;
-  updateAddress: <K extends keyof AddressCardType>(id: number, key: K, value: AddressCardType[K]) => void;
+  updateAddress: <K extends keyof AddressCardType>(
+    id: number,
+    key: K,
+    value: AddressCardType[K],
+  ) => void;
   deleteAddress: (id: number) => void;
   unlockAddress: (id: number) => void;
   confirmAddress: (id: number) => void;
@@ -71,8 +72,11 @@ export default function AddressSection({
   onCSVUpload,
 }: AddressSectionProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [addressToDeleteId, setAddressToDeleteId] = useState<number | null>(null);
-  const addEnabled = addressesCount === 0 || allAddressesLocked || activeAddressIsValid;
+  const [addressToDeleteId, setAddressToDeleteId] = useState<number | null>(
+    null,
+  );
+  const addEnabled =
+    addressesCount === 0 || allAddressesLocked || activeAddressIsValid;
 
   function handleDeleteRequest(id: number) {
     setAddressToDeleteId(id);
@@ -82,7 +86,9 @@ export default function AddressSection({
     <section>
       <div className={ADDRESS_SECTION_HEADER}>
         <h2 className={ADDRESS_SECTION_HEADING}>Delivery addresses</h2>
-        <p className={ADDRESS_SECTION_SUBHEADING}>Upload or manually add addresses</p>
+        <p className={ADDRESS_SECTION_SUBHEADING}>
+          Upload or manually add addresses
+        </p>
       </div>
 
       <input
@@ -99,7 +105,11 @@ export default function AddressSection({
 
       {/* Mobile: Search top, buttons right-aligned side-by-side (Figma 8325:7503) */}
       <div className={MOBILE_ADDR_TOOLBAR_ROOT}>
-        <AddressSearchBar value={searchQuery} onChange={setSearchQuery} variant="compact" />
+        <AddressSearchBar
+          value={searchQuery}
+          onChange={setSearchQuery}
+          variant="compact"
+        />
         <div className={MOBILE_ADDR_TOOLBAR_BTN_ROW}>
           <button
             type="button"
@@ -112,7 +122,11 @@ export default function AddressSection({
             type="button"
             disabled={!addEnabled}
             onClick={addAddress}
-            className={addEnabled ? MOBILE_ADDR_TOOLBAR_BTN_ENABLED : MOBILE_ADDR_TOOLBAR_BTN_DISABLED}
+            className={
+              addEnabled
+                ? MOBILE_ADDR_TOOLBAR_BTN_ENABLED
+                : MOBILE_ADDR_TOOLBAR_BTN_DISABLED
+            }
           >
             New address
           </button>
@@ -139,7 +153,11 @@ export default function AddressSection({
           type="button"
           disabled={!addEnabled}
           onClick={addAddress}
-          className={addEnabled ? ADDRESS_BTN_V2_DESKTOP_ENABLED : ADDRESS_BTN_V2_DESKTOP_DISABLED}
+          className={
+            addEnabled
+              ? ADDRESS_BTN_V2_DESKTOP_ENABLED
+              : ADDRESS_BTN_V2_DESKTOP_DISABLED
+          }
         >
           Add address
         </button>
@@ -182,7 +200,8 @@ export default function AddressSection({
           <div className={ADDRESS_LIST_DIVIDER} />
           {addressesCount === 0 ? (
             <AddressEmptyState />
-          ) : searchQuery.trim() !== "" && addressesOnCurrentPage.length === 0 ? (
+          ) : searchQuery.trim() !== "" &&
+            addressesOnCurrentPage.length === 0 ? (
             <div className={ADDRESS_EMPTY_STATE}>No Addresses Found</div>
           ) : (
             addressesOnCurrentPage.map((a) => (

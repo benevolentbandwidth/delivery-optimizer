@@ -1,7 +1,6 @@
 #pragma once
 
 #include <json/json.h>
-
 #include <string>
 
 namespace deliveryoptimizer::api::internal {

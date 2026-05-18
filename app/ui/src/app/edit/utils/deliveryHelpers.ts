@@ -7,9 +7,12 @@ import type { AddressCard } from "../types/delivery";
 
 /** Returns true when at least one delivery-time field has a value. */
 export function deliveryTimeFilled(
-  a: Pick<AddressCard, "deliveryTimeStart" | "deliveryTimeEnd">
+  a: Pick<AddressCard, "deliveryTimeStart" | "deliveryTimeEnd">,
 ): boolean {
-  return (a.deliveryTimeStart?.trim() ?? "") !== "" || (a.deliveryTimeEnd?.trim() ?? "") !== "";
+  return (
+    (a.deliveryTimeStart?.trim() ?? "") !== "" ||
+    (a.deliveryTimeEnd?.trim() ?? "") !== ""
+  );
 }
 
 /** Capitalise the first letter of a string. Safe on empty strings. */

@@ -167,7 +167,15 @@ export default function LandingPage() {
         <div className="landing-bg" />
 
         {/* Navbar wrapped in a white div so it overrides any inherited background */}
-        <div className="landing-navbar-wrap" style={{ background: "#ffffff", borderBottom: "1px solid rgba(0,0,0,0.08)", position: "relative", zIndex: 10 }}>
+        <div
+          className="landing-navbar-wrap"
+          style={{
+            background: "#ffffff",
+            borderBottom: "1px solid rgba(0,0,0,0.08)",
+            position: "relative",
+            zIndex: 10,
+          }}
+        >
           <ShellNavbar />
         </div>
 
@@ -202,14 +210,24 @@ export default function LandingPage() {
                     fill="none"
                     strokeLinejoin="round"
                   />
-                  <circle cx="12" cy="8" r="2" stroke="currentColor" strokeWidth="1.75" fill="none" />
+                  <circle
+                    cx="12"
+                    cy="8"
+                    r="2"
+                    stroke="currentColor"
+                    strokeWidth="1.75"
+                    fill="none"
+                  />
                 </svg>
               </div>
               <p className="landing-card-title">Route manager</p>
               <p className="landing-card-desc">
-                Import routes, edit addresses, assign deliveries, monitor fleet routes, and export delivery operations.
+                Import routes, edit addresses, assign deliveries, monitor fleet
+                routes, and export delivery operations.
               </p>
-              <span className="landing-card-cta" aria-hidden="true">Continue</span>
+              <span className="landing-card-cta" aria-hidden="true">
+                Continue
+              </span>
             </div>
 
             {/* Driver — full card is the interactive target */}
@@ -228,17 +246,50 @@ export default function LandingPage() {
             >
               <div className="landing-card-icon">
                 <svg width="26" height="22" viewBox="0 0 28 24" fill="none">
-                  <rect x="2" y="8" width="16" height="10" rx="2" stroke="currentColor" strokeWidth="1.75" fill="none" />
-                  <path d="M18 11h3l3 3v4h-6" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                  <circle cx="6" cy="19" r="2" stroke="currentColor" strokeWidth="1.75" fill="none" />
-                  <circle cx="21" cy="19" r="2" stroke="currentColor" strokeWidth="1.75" fill="none" />
+                  <rect
+                    x="2"
+                    y="8"
+                    width="16"
+                    height="10"
+                    rx="2"
+                    stroke="currentColor"
+                    strokeWidth="1.75"
+                    fill="none"
+                  />
+                  <path
+                    d="M18 11h3l3 3v4h-6"
+                    stroke="currentColor"
+                    strokeWidth="1.75"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    fill="none"
+                  />
+                  <circle
+                    cx="6"
+                    cy="19"
+                    r="2"
+                    stroke="currentColor"
+                    strokeWidth="1.75"
+                    fill="none"
+                  />
+                  <circle
+                    cx="21"
+                    cy="19"
+                    r="2"
+                    stroke="currentColor"
+                    strokeWidth="1.75"
+                    fill="none"
+                  />
                 </svg>
               </div>
               <p className="landing-card-title">Driver</p>
               <p className="landing-card-desc">
-                View your assigned route, navigate through addresses, update delivery status, and import file from route manager.
+                View your assigned route, navigate through addresses, update
+                delivery status, and import file from route manager.
               </p>
-              <span className="landing-card-cta" aria-hidden="true">Continue</span>
+              <span className="landing-card-cta" aria-hidden="true">
+                Continue
+              </span>
             </div>
           </div>
         </div>

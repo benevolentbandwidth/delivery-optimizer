@@ -25,7 +25,8 @@ function readInitialRoutes(): { routes: Route[]; error: string | null } {
 }
 
 export default function ResultsPage() {
-  const [{ routes: initialRoutes, error: initialError }] = useState(readInitialRoutes);
+  const [{ routes: initialRoutes, error: initialError }] =
+    useState(readInitialRoutes);
   const [routes, setRoutes] = useState<Route[]>(initialRoutes);
   const [error] = useState<string | null>(initialError);
 
@@ -37,30 +38,40 @@ export default function ResultsPage() {
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [pendingPinMove, setPendingPinMove] = useState<PendingPinMove | null>(null);
+  const [pendingPinMove, setPendingPinMove] = useState<PendingPinMove | null>(
+    null,
+  );
 
-  const updateStopNote = useCallback((routeId: string, stopId: string, note: string) => {
-    setRoutes((prev) =>
-      prev.map((route) => {
-        if (route.vehicleId !== routeId) return route;
-        return {
-          ...route,
-          stops: route.stops.map((s) => (s.id === stopId ? { ...s, note } : s)),
-        };
-      })
-    );
-  }, [setRoutes]);
-
-  const handleRouteDistanceUpdate = useCallback((vehicleId: string, distanceMi: number) => {
-    setRoutes((prev) => {
-      const next = prev.map((route) =>
-        route.vehicleId === vehicleId && route.distanceMi !== distanceMi
-          ? { ...route, distanceMi }
-          : route
+  const updateStopNote = useCallback(
+    (routeId: string, stopId: string, note: string) => {
+      setRoutes((prev) =>
+        prev.map((route) => {
+          if (route.vehicleId !== routeId) return route;
+          return {
+            ...route,
+            stops: route.stops.map((s) =>
+              s.id === stopId ? { ...s, note } : s,
+            ),
+          };
+        }),
       );
-      return next.every((r, i) => r === prev[i]) ? prev : next;
-    });
-  }, []);
+    },
+    [setRoutes],
+  );
+
+  const handleRouteDistanceUpdate = useCallback(
+    (vehicleId: string, distanceMi: number) => {
+      setRoutes((prev) => {
+        const next = prev.map((route) =>
+          route.vehicleId === vehicleId && route.distanceMi !== distanceMi
+            ? { ...route, distanceMi }
+            : route,
+        );
+        return next.every((r, i) => r === prev[i]) ? prev : next;
+      });
+    },
+    [],
+  );
 
   const handleEditModeChange = useCallback((value: boolean) => {
     setIsEditMode(value);
@@ -78,10 +89,10 @@ export default function ResultsPage() {
               stops: route.stops.map((s) =>
                 s.id !== pendingPinMove.stopId
                   ? s
-                  : { ...s, lat: pendingPinMove.lat, lng: pendingPinMove.lng }
+                  : { ...s, lat: pendingPinMove.lat, lng: pendingPinMove.lng },
               ),
-            }
-      )
+            },
+      ),
     );
     setPendingPinMove(null);
   }, [pendingPinMove]);
@@ -90,7 +101,7 @@ export default function ResultsPage() {
     (vehicleId: string, stopId: string, lat: number, lng: number) => {
       setPendingPinMove({ vehicleId, stopId, lat, lng });
     },
-    []
+    [],
   );
 
   const cancelPendingPinMove = useCallback(() => setPendingPinMove(null), []);
@@ -109,7 +120,8 @@ export default function ResultsPage() {
             </a>
           </div>
         </div>
-      )} {/* Map container switched to h-screen and added overflow hidden so the page is forced to be exactly one screen tall, whereas before the page was allowed to get taller than browser window leading to a long scroll */}
+      )}{" "}
+      {/* Map container switched to h-screen and added overflow hidden so the page is forced to be exactly one screen tall, whereas before the page was allowed to get taller than browser window leading to a long scroll */}
       <header className="flex items-center gap-2 p-4 shrink-0 border-b border-zinc-200 bg-white">
         <button
           type="button"
@@ -117,11 +129,24 @@ export default function ResultsPage() {
           className="flex h-10 w-10 items-center justify-center rounded-lg border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50"
           aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
         >
-          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          <svg
+            className="h-5 w-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 6h16M4 12h16M4 18h16"
+            />
           </svg>
         </button>
-        <h1 className="text-2xl font-semibold text-zinc-800">Results – Route map</h1>
+        <h1 className="text-2xl font-semibold text-zinc-800">
+          Results – Route map
+        </h1>
         {pendingPinMove != null && (
           <div className="ml-auto flex items-center gap-2">
             <button

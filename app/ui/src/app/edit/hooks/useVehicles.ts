@@ -26,39 +26,42 @@ export function useVehicles() {
   // Vacuously true for an empty list so "Add vehicle" is enabled from the start.
   const allVehiclesLocked = vehicles.every((v) => v.locked);
 
-  const updateVehicle = useCallback(<K extends keyof VehicleRow>(
-    id: number,
-    key: K,
-    value: VehicleRow[K]
-  ) => {
-    setVehicles((prev) =>
-      prev.map((v) =>
-        v.id === id
-          ? {
-              ...v,
-              [key]: value,
-              ...(key === "startLocation" ? { cachedLocation: undefined } : {}),
-            }
-          : v
-      )
-    );
-  }, []);
+  const updateVehicle = useCallback(
+    <K extends keyof VehicleRow>(id: number, key: K, value: VehicleRow[K]) => {
+      setVehicles((prev) =>
+        prev.map((v) =>
+          v.id === id
+            ? {
+                ...v,
+                [key]: value,
+                ...(key === "startLocation"
+                  ? { cachedLocation: undefined }
+                  : {}),
+              }
+            : v,
+        ),
+      );
+    },
+    [],
+  );
 
   const addVehicle = useCallback(() => {
     setVehicles((prev) => {
       const active = prev.find((v) => !v.locked);
       const allLocked = prev.length > 0 && prev.every((v) => v.locked);
-  
+
       if (!allLocked && !(active && isVehicleValid(active))) {
         if (active) setTouchedIds((t) => new Set([...t, active.id]));
         return prev;
       }
-  
+
       setTouchedIds(new Set());
       const newId = prev.reduce((max, v) => Math.max(max, v.id), 0) + 1;
-  
+
       return [
-        ...prev.map((v) => (v.locked ? v : { ...v, locked: true, editingExisting: false })),
+        ...prev.map((v) =>
+          v.locked ? v : { ...v, locked: true, editingExisting: false },
+        ),
         {
           id: newId,
           locked: false,
@@ -77,7 +80,17 @@ export function useVehicles() {
   }, []);
 
   const addVehicleWithDetails = useCallback(
-    (details: Pick<VehicleRow, "name" | "type" | "capacity" | "capacityUnit" | "available" | "departureTime">) => {
+    (
+      details: Pick<
+        VehicleRow,
+        | "name"
+        | "type"
+        | "capacity"
+        | "capacityUnit"
+        | "available"
+        | "departureTime"
+      >,
+    ) => {
       setVehicles((prev) => {
         const newId = prev.reduce((max, v) => Math.max(max, v.id), 0) + 1;
         return [
@@ -99,7 +112,7 @@ export function useVehicles() {
       });
       setTouchedIds(new Set());
     },
-    []
+    [],
   );
 
   const deleteVehicle = useCallback((id: number) => {
@@ -123,13 +136,18 @@ export function useVehicles() {
     setTouchedIds(new Set());
   }, []);
 
-  const cacheVehicleLocation = useCallback((id: number, lat: number, lng: number, state?: string | null) => {
-    setVehicles((prev) =>
-      prev.map((vehicle) =>
-        vehicle.id === id ? { ...vehicle, cachedLocation: { lat, lng, state } } : vehicle
-      )
-    );
-  }, []);
+  const cacheVehicleLocation = useCallback(
+    (id: number, lat: number, lng: number, state?: string | null) => {
+      setVehicles((prev) =>
+        prev.map((vehicle) =>
+          vehicle.id === id
+            ? { ...vehicle, cachedLocation: { lat, lng, state } }
+            : vehicle,
+        ),
+      );
+    },
+    [],
+  );
 
   return {
     vehicles,

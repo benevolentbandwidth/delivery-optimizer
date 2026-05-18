@@ -37,10 +37,7 @@ export default function OptimizingModal({ isOpen }: OptimizingModalProps) {
           This may take a few seconds. Please wait.
         </p>
         <div className={OPTIMIZING_SPINNER_WRAP}>
-          <span
-            className={OPTIMIZING_SPINNER}
-            aria-hidden="true"
-          />
+          <span className={OPTIMIZING_SPINNER} aria-hidden="true" />
         </div>
       </div>
     </div>

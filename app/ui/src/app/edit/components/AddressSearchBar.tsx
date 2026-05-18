@@ -15,7 +15,12 @@ type Props = {
   variant?: "default" | "compact" | "desktop";
 };
 
-export default function AddressSearchBar({ value, onChange, className, variant = "default" }: Props) {
+export default function AddressSearchBar({
+  value,
+  onChange,
+  className,
+  variant = "default",
+}: Props) {
   const baseClass =
     variant === "desktop"
       ? ADDRESS_SEARCH_BAR_DESKTOP

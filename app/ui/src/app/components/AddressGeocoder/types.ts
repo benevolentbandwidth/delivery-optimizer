@@ -28,5 +28,5 @@ export interface DeliveryForm {
 
 export interface ActiveAddressField {
   vehicleId: string;
-  field: 'start' | 'end';
+  field: "start" | "end";
 }
