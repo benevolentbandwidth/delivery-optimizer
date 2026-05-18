@@ -1,7 +1,11 @@
 #include "deliveryoptimizer/api/forecast_optimizer.hpp"
 
+#include <algorithm>
 #include <charconv>
+#include <cmath>
+#include <cstddef>
 #include <cstdlib>
+#include <limits>
 #include <optional>
 #include <string_view>
 
@@ -57,6 +61,14 @@ constexpr double kDefaultWeatherThresholdPercent = 5.0;
   return parsed_value;
 }
 
+[[nodiscard]] int ClampToInt(const long long value) {
+  if (value > static_cast<long long>(std::numeric_limits<int>::max())) {
+    return std::numeric_limits<int>::max();
+  }
+
+  return static_cast<int>(value);
+}
+
 } // namespace
 
 namespace deliveryoptimizer::api {
@@ -72,6 +84,32 @@ WeatherForecastOptions ResolveWeatherForecastOptionsFromEnv() {
       .reoptimize_threshold_percent =
           ParseNonNegativeDouble(std::getenv(kWeatherThresholdPercentEnv.data()))
               .value_or(kDefaultWeatherThresholdPercent),
+  };
+}
+
+WeatherImpactEstimate EstimateWeatherImpact(const WeatherForecastOptions& options,
+                                             const std::size_t stop_count,
+                                             const int baseline_duration_seconds) {
+  const int normalized_stop_count =
+      ClampToInt(static_cast<long long>(std::min<std::size_t>(
+          stop_count, static_cast<std::size_t>(std::numeric_limits<int>::max()))));
+  const int normalized_baseline_seconds = std::max(baseline_duration_seconds, 0);
+  const int configured_delay_per_stop =
+      options.enabled ? std::max(options.weather_delay_seconds_per_stop, 0) : 0;
+  const int weather_delay_seconds =
+      ClampToInt(static_cast<long long>(configured_delay_per_stop) * normalized_stop_count);
+  const int percent_threshold_seconds = ClampToInt(static_cast<long long>(std::ceil(
+      static_cast<double>(normalized_baseline_seconds) *
+      (std::max(options.reoptimize_threshold_percent, 0.0) / 100.0))));
+  const int threshold_seconds =
+      std::max(std::max(options.reoptimize_threshold_seconds, 0), percent_threshold_seconds);
+
+  return WeatherImpactEstimate{
+      .stop_count = normalized_stop_count,
+      .baseline_duration_seconds = normalized_baseline_seconds,
+      .weather_delay_seconds = weather_delay_seconds,
+      .reoptimize_threshold_seconds = threshold_seconds,
+      .should_reoptimize = weather_delay_seconds > 0 && weather_delay_seconds >= threshold_seconds,
   };
 }
 
