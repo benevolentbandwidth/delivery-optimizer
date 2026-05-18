@@ -1,7 +1,7 @@
 import type { DeliveryStop, DriverRoute, OptimizeRequestLike } from "./types";
 
 export function transformSessionToDriverRoute(
-  input: OptimizeRequestLike
+  input: OptimizeRequestLike,
 ): DriverRoute {
   const deliveries = input.deliveries || [];
   const firstVehicle = input.vehicles?.[0];

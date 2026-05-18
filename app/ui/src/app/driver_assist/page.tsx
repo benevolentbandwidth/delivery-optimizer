@@ -32,7 +32,10 @@ function openNavigation(stop: DeliveryStop) {
       ? `${stop.lat},${stop.lng}`
       : encodeURIComponent(stop.address);
 
-  window.open(`https://www.google.com/maps/dir/?api=1&destination=${query}`, "_blank");
+  window.open(
+    `https://www.google.com/maps/dir/?api=1&destination=${query}`,
+    "_blank",
+  );
 }
 
 export default function DriverAssistPwaPage() {
@@ -50,13 +53,15 @@ export default function DriverAssistPwaPage() {
     if (!route) return;
     window.localStorage.setItem(
       STORAGE_KEY,
-      JSON.stringify(createPersistedRouteState(route))
+      JSON.stringify(createPersistedRouteState(route)),
     );
   }, [route]);
 
   const totals = useMemo(() => {
     const stops = route?.stops || [];
-    const completed = stops.filter((stop) => stop.status === "completed").length;
+    const completed = stops.filter(
+      (stop) => stop.status === "completed",
+    ).length;
     const failed = stops.filter((stop) => stop.status === "failed").length;
     const pending = stops.filter((stop) => stop.status === "pending").length;
 
@@ -82,7 +87,7 @@ export default function DriverAssistPwaPage() {
       setError(
         importError instanceof Error
           ? importError.message
-          : "Please upload a valid JSON file."
+          : "Please upload a valid JSON file.",
       );
     } finally {
       setIsImporting(false);
@@ -96,7 +101,7 @@ export default function DriverAssistPwaPage() {
       return {
         ...current,
         stops: current.stops.map((stop) =>
-          stop.id === stopId ? { ...stop, ...changes } : stop
+          stop.id === stopId ? { ...stop, ...changes } : stop,
         ),
       };
     });
@@ -109,7 +114,8 @@ export default function DriverAssistPwaPage() {
     setError(null);
   };
 
-  const pendingStops = route?.stops.filter((stop) => stop.status === "pending") || [];
+  const pendingStops =
+    route?.stops.filter((stop) => stop.status === "pending") || [];
   const completedStops =
     route?.stops.filter((stop) => stop.status !== "pending") || [];
 
@@ -302,23 +308,41 @@ function StopCard({
           ) : null}
 
           {isFailed && stop.failureReason ? (
-            <p style={styles.statusText}>Failure reason: {stop.failureReason}</p>
+            <p style={styles.statusText}>
+              Failure reason: {stop.failureReason}
+            </p>
           ) : null}
 
           {!isDone ? (
             <div style={styles.buttonRow}>
-              <button type="button" style={styles.actionButton} onClick={onComplete}>
+              <button
+                type="button"
+                style={styles.actionButton}
+                onClick={onComplete}
+              >
                 Complete
               </button>
-              <button type="button" style={styles.actionButton} onClick={onNavigate}>
+              <button
+                type="button"
+                style={styles.actionButton}
+                onClick={onNavigate}
+              >
                 Navigate
               </button>
-              <button type="button" style={styles.actionButton} onClick={onReport}>
+              <button
+                type="button"
+                style={styles.actionButton}
+                onClick={onReport}
+              >
                 Report
               </button>
             </div>
           ) : (
-            <button type="button" style={styles.actionButton} onClick={onNavigate}>
+            <button
+              type="button"
+              style={styles.actionButton}
+              onClick={onNavigate}
+            >
               Navigate
             </button>
           )}
