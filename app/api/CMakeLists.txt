@@ -14,6 +14,7 @@ target_sources(
     src/optimization_job_runtime.cpp
     src/optimization_job_store.cpp
     src/observability.cpp
+    src/forecast_optimizer.cpp
     src/optimize_request.cpp
     src/request_context.cpp
     src/solve_admission.cpp
@@ -33,6 +34,7 @@ target_sources(
       include/deliveryoptimizer/api/endpoints/optimization_jobs_endpoint.hpp
       include/deliveryoptimizer/api/endpoints/optimize_endpoint.hpp
       include/deliveryoptimizer/api/endpoints/osrm_proxy_endpoint.hpp
+      include/deliveryoptimizer/api/forecast_optimizer.hpp
       include/deliveryoptimizer/api/internal/json_utils.hpp
       include/deliveryoptimizer/api/optimization_job_runtime.hpp
       include/deliveryoptimizer/api/optimization_job_store.hpp
