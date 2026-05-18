@@ -2,6 +2,7 @@
 
 import type { CSSProperties } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 
 import {
   createPersistedRouteState,
@@ -62,6 +63,10 @@ function openNavigation(stop: DeliveryStop) {
 
 export default function DriverAssistPwaPage() {
   const inputRef = useRef<HTMLInputElement>(null);
+  const topRef = useRef<HTMLDivElement>(null);
+  const remainingRef = useRef<HTMLDivElement>(null);
+  const deliveredRef = useRef<HTMLDivElement>(null);
+  const reportedRef = useRef<HTMLDivElement>(null);
   const [route, setRoute] = useState<DriverRoute | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -152,9 +157,15 @@ export default function DriverAssistPwaPage() {
     setError(null);
   };
 
+  const scrollToSection = (target: React.RefObject<HTMLElement | null>) => {
+    target.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   const pendingStops = route?.stops.filter((stop) => stop.status === "pending") || [];
-  const completedStops =
-    route?.stops.filter((stop) => stop.status !== "pending") || [];
+  const deliveredStops =
+    route?.stops.filter((stop) => stop.status === "completed") || [];
+  const reportedStops =
+    route?.stops.filter((stop) => stop.status === "failed") || [];
 
   if (!route) {
     return (
@@ -187,24 +198,36 @@ export default function DriverAssistPwaPage() {
 
   return (
     <main style={styles.safeArea}>
-      <section style={styles.container}>
+      <section ref={topRef} style={styles.container}>
         <div style={styles.topBar}>
-          <h1 style={styles.appHeader}>driver_assist</h1>
-          <button type="button" style={styles.textButton} onClick={resetRoute}>
-            New route
+          <h1 style={styles.appHeader}>Driver Assist</h1>
+          <button
+            type="button"
+            style={styles.iconButton}
+            onClick={() => scrollToSection(reportedRef)}
+            aria-label="View reported deliveries"
+          >
+            <WarningIcon />
           </button>
         </div>
 
         <section style={styles.summaryCard}>
-          <p style={styles.headerLabel}>Current Route</p>
-          <h2 style={styles.driverName}>{route.driverName}</h2>
-          <p style={styles.routeLabel}>{route.routeLabel}</p>
-
-          <div style={styles.progressHeader}>
-            <span>Progress</span>
-            <span>
-              {totals.completed}/{totals.total} Deliveries Complete
-            </span>
+          <div style={styles.statsRow}>
+            <StatBlock
+              value={totals.total}
+              label="Total"
+              onClick={() => scrollToSection(topRef)}
+            />
+            <StatBlock
+              value={totals.completed}
+              label="Complete"
+              onClick={() => scrollToSection(deliveredRef)}
+            />
+            <StatBlock
+              value={totals.pending}
+              label="Remaining"
+              onClick={() => scrollToSection(remainingRef)}
+            />
           </div>
 
           <div style={styles.progressTrack}>
@@ -215,44 +238,43 @@ export default function DriverAssistPwaPage() {
               }}
             />
           </div>
-
-          <div style={styles.statsRow}>
-            <StatBlock value={totals.pending} label="Remaining" />
-            <StatBlock value={totals.failed} label="Failed" />
-            <StatBlock value={totals.completed} label="Completed" />
-          </div>
         </section>
 
-        {pendingStops.map((stop) => (
-          <StopCard
-            key={stop.id}
-            stop={stop}
-            isOpen={openId === stop.id}
-            onToggle={() => setOpenId(openId === stop.id ? null : stop.id)}
-            onChangeNote={(notes) => updateStop(stop.id, { notes })}
-            onComplete={() => {
-              updateStop(stop.id, {
-                status: "completed",
-                completedAt: new Date().toISOString(),
-              });
-              setOpenId(null);
-            }}
-            onReport={() => {
-              const reason = window.prompt("Reason this delivery failed?");
-              updateStop(stop.id, {
-                status: "failed",
-                failureReason: reason || "No reason provided",
-              });
-              setOpenId(null);
-            }}
-            onNavigate={() => openNavigation(stop)}
-          />
-        ))}
+        <section ref={remainingRef} style={styles.routeSection}>
+          <h2 style={styles.sectionTitle}>Remaining</h2>
 
-        {completedStops.length > 0 ? (
-          <section style={styles.historySection}>
-            <h2 style={styles.historyTitle}>Completed & Failed</h2>
-            {completedStops.map((stop) => (
+          {pendingStops.map((stop) => (
+            <StopCard
+              key={stop.id}
+              stop={stop}
+              isOpen={openId === stop.id}
+              onToggle={() => setOpenId(openId === stop.id ? null : stop.id)}
+              onChangeNote={(notes) => updateStop(stop.id, { notes })}
+              onComplete={() => {
+                updateStop(stop.id, {
+                  status: "completed",
+                  completedAt: new Date().toISOString(),
+                });
+                setOpenId(null);
+              }}
+              onReport={() => {
+                const reason = window.prompt("Reason this delivery failed?");
+                updateStop(stop.id, {
+                  status: "failed",
+                  failureReason: reason || "No reason provided",
+                });
+                setOpenId(null);
+              }}
+              onNavigate={() => openNavigation(stop)}
+            />
+          ))}
+        </section>
+
+        <section ref={deliveredRef} style={styles.historySection}>
+          {deliveredStops.length > 0 ? (
+            <>
+            <h2 style={styles.historyTitle}>Delivered</h2>
+            {deliveredStops.map((stop) => (
               <StopCard
                 key={stop.id}
                 stop={stop}
@@ -264,19 +286,56 @@ export default function DriverAssistPwaPage() {
                 onNavigate={() => openNavigation(stop)}
               />
             ))}
-          </section>
-        ) : null}
+            </>
+          ) : null}
+        </section>
+
+        <section ref={reportedRef} style={styles.historySection}>
+          {reportedStops.length > 0 ? (
+            <>
+              <h2 style={styles.historyTitle}>Incomplete delivery</h2>
+              {reportedStops.map((stop) => (
+                <StopCard
+                  key={stop.id}
+                  stop={stop}
+                  isOpen={openId === stop.id}
+                  onToggle={() => setOpenId(openId === stop.id ? null : stop.id)}
+                  onChangeNote={(notes) => updateStop(stop.id, { notes })}
+                  onComplete={() => undefined}
+                  onReport={() => undefined}
+                  onNavigate={() => openNavigation(stop)}
+                />
+              ))}
+            </>
+          ) : null}
+        </section>
+
+        <DriverFooter />
       </section>
+
+      <div style={styles.finishBar}>
+        <button type="button" style={styles.finishButton} onClick={resetRoute}>
+          Finish
+        </button>
+      </div>
     </main>
   );
 }
 
-function StatBlock({ value, label }: { value: number; label: string }) {
+function StatBlock({
+  value,
+  label,
+  onClick,
+}: {
+  value: number;
+  label: string;
+  onClick: () => void;
+}) {
   return (
-    <div style={styles.statBlock}>
+    <button type="button" style={styles.statBlock} onClick={onClick}>
       <strong style={styles.statNumber}>{value}</strong>
       <span style={styles.statLabel}>{label}</span>
-    </div>
+    </button>
   );
 }
 
@@ -313,26 +372,31 @@ function StopCard({
       }}
     >
       <button type="button" style={styles.cardButton} onClick={onToggle}>
-        <span
-          style={{
-            ...styles.statusCircle,
-            ...(isCompleted ? styles.completedCircle : {}),
-            ...(isFailed ? styles.failedCircle : {}),
-          }}
-        />
         <span style={styles.textBlock}>
-          <strong style={styles.stopText}>Stop {stop.stopNumber}</strong>
-          <span style={styles.nameText}>{stop.customerName}</span>
-          {stop.phoneNumber ? (
-            <span style={styles.phoneText}>{stop.phoneNumber}</span>
-          ) : null}
-          <span style={styles.addressText}>{stop.address}</span>
+          <span style={styles.stopMetaRow}>
+            <span style={styles.stopNumberBadge}>{stop.stopNumber}</span>
+            <span style={styles.stopWindow}>Deliver between 4:00pm - 5:00pm</span>
+          </span>
+          <strong style={styles.addressText}>{stop.address}</strong>
+          <InfoLine icon={<PersonIcon />} text={stop.customerName} />
+          <InfoLine icon={<NoteIcon />} text={stop.notes || "N/A"} />
         </span>
       </button>
 
       {isOpen ? (
         <div style={styles.expandedSection}>
-          <p style={styles.metaText}>Packages: {stop.packageCount}</p>
+          <button type="button" style={styles.primaryActionButton} onClick={onNavigate}>
+            <NavigateIcon />
+            Navigate
+          </button>
+
+          {!isDone ? (
+            <button type="button" style={styles.deliveredButton} onClick={onComplete}>
+              <DeliveredIcon />
+              Delivered
+            </button>
+          ) : null}
+
           <textarea
             style={styles.noteInput}
             value={stop.notes}
@@ -350,14 +414,13 @@ function StopCard({
 
           {!isDone ? (
             <div style={styles.buttonRow}>
-              <button type="button" style={styles.actionButton} onClick={onComplete}>
-                Complete
-              </button>
               <button type="button" style={styles.actionButton} onClick={onNavigate}>
-                Navigate
+                <PhoneIcon />
+                Call
               </button>
               <button type="button" style={styles.actionButton} onClick={onReport}>
-                Report
+                <ReportIcon />
+                Report issue
               </button>
             </div>
           ) : (
@@ -371,15 +434,99 @@ function StopCard({
   );
 }
 
+function InfoLine({ icon, text }: { icon: React.ReactNode; text: string }) {
+  return (
+    <span style={styles.infoLine}>
+      <span style={styles.infoIcon}>{icon}</span>
+      <span style={styles.infoText}>{text}</span>
+    </span>
+  );
+}
+
+function DriverFooter() {
+  return (
+    <footer style={styles.footer}>
+      <Image src="/logo.png" alt="b2 logo" width={25} height={28} style={styles.footerLogo} />
+      <p style={styles.footerText}>Built with ❤️ for Humanity.</p>
+      <p style={styles.footerText}>The Benevolent Bandwidth Foundation</p>
+    </footer>
+  );
+}
+
+function WarningIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M12 4 21 20H3L12 4Z" stroke="currentColor" strokeWidth="1.7" />
+      <path d="M12 9v5" stroke="currentColor" strokeLinecap="round" strokeWidth="1.7" />
+      <circle cx="12" cy="17" r="1" fill="currentColor" />
+    </svg>
+  );
+}
+
+function NavigateIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
+      <path d="m12 7 4 10-4-2-4 2 4-10Z" stroke="currentColor" strokeLinejoin="round" strokeWidth="2" />
+    </svg>
+  );
+}
+
+function DeliveredIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M8 5h8v3h3v11H5V8h3V5Z" stroke="currentColor" strokeLinejoin="round" strokeWidth="1.8" />
+      <path d="m9 13 2 2 4-5" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" />
+    </svg>
+  );
+}
+
+function PhoneIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M8 5 6 7c1 5 6 10 11 11l2-2-4-3-2 2c-2-1-4-3-5-5l2-2-2-3Z" stroke="currentColor" strokeLinejoin="round" strokeWidth="1.8" />
+    </svg>
+  );
+}
+
+function ReportIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M12 7v6" stroke="currentColor" strokeLinecap="round" strokeWidth="1.8" />
+      <circle cx="12" cy="16.5" r="1" fill="currentColor" />
+    </svg>
+  );
+}
+
+function PersonIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="8" r="3" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M5 20c1.2-4 12.8-4 14 0" stroke="currentColor" strokeLinecap="round" strokeWidth="1.8" />
+    </svg>
+  );
+}
+
+function NoteIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M6 4h12v16H6V4Z" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M9 8h6M9 12h6M9 16h4" stroke="currentColor" strokeLinecap="round" strokeWidth="1.8" />
+    </svg>
+  );
+}
+
 const styles: Record<string, CSSProperties> = {
   safeArea: {
-    minHeight: "100svh",
+    minHeight: "100dvh",
     backgroundColor: "#ffffff",
-    color: "#111827",
+    color: "#222222",
     fontFamily: "var(--font-geist-sans), Arial, sans-serif",
+    paddingBottom: "calc(75px + env(safe-area-inset-bottom))",
   },
   uploadScreen: {
-    minHeight: "100svh",
+    minHeight: "100dvh",
     display: "flex",
     flexDirection: "column",
     justifyContent: "center",
@@ -390,10 +537,10 @@ const styles: Record<string, CSSProperties> = {
     display: "none",
   },
   appHeader: {
-    fontSize: 32,
+    fontSize: 14,
     fontWeight: 700,
-    color: "#111827",
-    margin: "0 0 16px",
+    color: "#202020",
+    margin: 0,
   },
   uploadButton: {
     backgroundColor: "#111827",
@@ -413,130 +560,108 @@ const styles: Record<string, CSSProperties> = {
     textAlign: "center",
   },
   container: {
-    maxWidth: 520,
+    width: "100%",
+    maxWidth: "none",
     margin: "0 auto",
-    padding: 16,
+    padding: "24px 12px 22px",
   },
   topBar: {
     display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 16,
+    alignItems: "flex-start",
+    flexDirection: "column",
+    gap: 8,
+    marginBottom: 20,
+    width: "100%",
   },
-  textButton: {
+  iconButton: {
     background: "transparent",
-    border: "1px solid #d1d5db",
-    borderRadius: 8,
-    color: "#111827",
+    border: 0,
+    color: "#202020",
     cursor: "pointer",
-    fontSize: 14,
-    fontWeight: 600,
-    padding: "9px 12px",
+    display: "inline-flex",
+    padding: 0,
   },
   summaryCard: {
-    backgroundColor: "#ffffff",
-    border: "2px solid #4b5563",
-    borderRadius: 8,
     marginBottom: 16,
-    padding: 20,
-  },
-  headerLabel: {
-    color: "#6b7280",
-    fontSize: 18,
-    margin: "0 0 8px",
-  },
-  driverName: {
-    color: "#111827",
-    fontSize: 36,
-    fontWeight: 700,
-    lineHeight: 1.1,
-    margin: 0,
-  },
-  routeLabel: {
-    color: "#374151",
-    fontSize: 18,
-    margin: "4px 0 18px",
-  },
-  progressHeader: {
-    color: "#111827",
-    display: "flex",
-    fontSize: 15,
-    justifyContent: "space-between",
-    marginBottom: 8,
+    width: "100%",
   },
   progressTrack: {
-    backgroundColor: "#e5e7eb",
+    backgroundColor: "#dfdfde",
     borderRadius: 999,
-    height: 12,
-    marginBottom: 18,
+    height: 6,
     overflow: "hidden",
   },
   progressFill: {
-    backgroundColor: "#22c55e",
-    height: 12,
+    backgroundColor: "#73b99f",
+    height: "100%",
   },
   statsRow: {
-    backgroundColor: "#f3f4f6",
-    borderRadius: 8,
+    alignItems: "center",
+    alignSelf: "stretch",
     display: "flex",
-    justifyContent: "space-between",
-    padding: "18px 0",
+    gap: 16,
+    justifyContent: "center",
+    marginBottom: 21,
   },
   statBlock: {
     alignItems: "center",
+    background: "transparent",
+    border: 0,
+    cursor: "pointer",
     display: "flex",
-    flex: 1,
+    flex: "0 0 auto",
     flexDirection: "column",
+    font: "inherit",
+    padding: 0,
   },
   statNumber: {
-    color: "#111827",
-    fontSize: 28,
+    color: "#202020",
+    fontSize: 15,
     fontWeight: 700,
+    lineHeight: 1,
   },
   statLabel: {
-    color: "#4b5563",
-    fontSize: 14,
-    marginTop: 4,
+    color: "#555555",
+    fontSize: 12,
+    marginTop: 7,
+  },
+  sectionTitle: {
+    color: "#202020",
+    fontSize: 13,
+    fontWeight: 700,
+    margin: "0 0 7px",
+  },
+  routeSection: {
+    scrollMarginTop: 16,
   },
   card: {
-    backgroundColor: "#f3f4f6",
+    alignItems: "flex-start",
+    alignSelf: "stretch",
+    backgroundColor: "#FDFDFC",
+    border: "1px solid #DCDBD8",
     borderRadius: 8,
-    marginBottom: 14,
-    padding: 18,
+    display: "flex",
+    flexDirection: "column",
+    gap: 20,
+    marginBottom: 10,
+    padding: 16,
   },
   completedCard: {
-    backgroundColor: "#e5e7eb",
+    opacity: 0.68,
   },
   failedCard: {
-    backgroundColor: "#fee2e2",
+    backgroundColor: "#fff6f6",
   },
   cardButton: {
     alignItems: "flex-start",
     background: "transparent",
     border: 0,
     cursor: "pointer",
-    display: "flex",
-    gap: 12,
+    display: "block",
+    font: "inherit",
     padding: 0,
     textAlign: "left",
     width: "100%",
-  },
-  statusCircle: {
-    backgroundColor: "#ffffff",
-    border: "2px solid #d1d5db",
-    borderRadius: 11,
-    flex: "0 0 22px",
-    height: 22,
-    marginTop: 4,
-    width: 22,
-  },
-  completedCircle: {
-    backgroundColor: "#22c55e",
-    borderColor: "#22c55e",
-  },
-  failedCircle: {
-    backgroundColor: "#ef4444",
-    borderColor: "#ef4444",
   },
   textBlock: {
     display: "flex",
@@ -544,46 +669,76 @@ const styles: Record<string, CSSProperties> = {
     flexDirection: "column",
     minWidth: 0,
   },
-  stopText: {
-    color: "#111827",
-    fontSize: 24,
-    fontWeight: 700,
-    marginBottom: 2,
+  stopMetaRow: {
+    alignItems: "center",
+    display: "flex",
+    gap: 6,
+    marginBottom: 9,
   },
-  nameText: {
-    color: "#6b7280",
-    fontSize: 16,
-    marginBottom: 2,
+  stopNumberBadge: {
+    alignItems: "center",
+    backgroundColor: "#D5F2E8",
+    borderRadius: 2,
+    color: "#285241",
+    display: "inline-flex",
+    fontSize: 10,
+    height: 18,
+    justifyContent: "center",
+    lineHeight: 1,
+    minWidth: 20,
   },
-  phoneText: {
-    color: "#6b7280",
-    fontSize: 15,
-    marginBottom: 4,
+  stopWindow: {
+    color: "#464544",
+    fontFamily: "var(--font-manrope), var(--font-geist-sans), Arial, sans-serif",
+    fontSize: 14,
+    fontStyle: "normal",
+    fontWeight: 600,
+    lineHeight: "normal",
   },
   addressText: {
-    color: "#374151",
-    fontSize: 16,
+    color: "#222222",
+    fontSize: 12,
+    fontWeight: 700,
+    lineHeight: 1.35,
+    marginBottom: 10,
+    overflowWrap: "anywhere",
+  },
+  infoLine: {
+    alignItems: "flex-start",
+    color: "#444444",
+    display: "flex",
+    gap: 7,
+    marginTop: 4,
+  },
+  infoIcon: {
+    color: "#2f3432",
+    display: "inline-flex",
+    flex: "0 0 16px",
+  },
+  infoText: {
+    color: "#444444",
+    flex: 1,
+    fontSize: 12,
+    lineHeight: 1.35,
     overflowWrap: "anywhere",
   },
   expandedSection: {
-    borderTop: "1px solid #e5e7eb",
-    marginTop: 16,
-    paddingTop: 14,
+    marginTop: 13,
+    width: "100%",
   },
   metaText: {
-    color: "#111827",
-    fontSize: 16,
-    margin: "0 0 12px",
+    display: "none",
   },
   noteInput: {
     backgroundColor: "#ffffff",
-    border: "1px solid #d1d5db",
-    borderRadius: 8,
-    color: "#111827",
+    border: "1px solid #dddddd",
+    borderRadius: 5,
+    color: "#222222",
     font: "inherit",
-    marginBottom: 12,
-    minHeight: 72,
-    padding: 12,
+    fontSize: 12,
+    marginBottom: 8,
+    minHeight: 58,
+    padding: 8,
     resize: "vertical",
     width: "100%",
   },
@@ -595,25 +750,105 @@ const styles: Record<string, CSSProperties> = {
   buttonRow: {
     display: "grid",
     gap: 8,
-    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
   },
   actionButton: {
+    alignItems: "center",
     backgroundColor: "#ffffff",
-    border: "1px solid #e5e7eb",
+    border: "1px solid #eeeeee",
     borderRadius: 8,
-    color: "#111827",
+    color: "#222222",
     cursor: "pointer",
-    fontWeight: 600,
-    minHeight: 44,
-    padding: "12px 8px",
+    display: "inline-flex",
+    fontSize: 11,
+    fontWeight: 500,
+    gap: 6,
+    justifyContent: "center",
+    minHeight: 42,
+    padding: "0 8px",
+  },
+  primaryActionButton: {
+    alignItems: "center",
+    alignSelf: "stretch",
+    backgroundColor: "#4CB599",
+    border: 0,
+    borderRadius: 16,
+    color: "#143228",
+    cursor: "pointer",
+    display: "inline-flex",
+    fontSize: 11,
+    fontWeight: 500,
+    gap: 6,
+    justifyContent: "center",
+    marginBottom: 7,
+    padding: "20px 24px",
+    width: "100%",
+  },
+  deliveredButton: {
+    alignItems: "center",
+    backgroundColor: "#ffffff",
+    border: "1px solid #222222",
+    borderRadius: 16,
+    color: "#222222",
+    cursor: "pointer",
+    display: "inline-flex",
+    fontSize: 11,
+    fontWeight: 500,
+    gap: 6,
+    justifyContent: "center",
+    marginBottom: 7,
+    padding: "20px 24px",
+    width: "100%",
   },
   historySection: {
-    marginTop: 8,
+    marginTop: 29,
+    scrollMarginTop: 16,
   },
   historyTitle: {
-    color: "#111827",
-    fontSize: 20,
+    color: "#202020",
+    fontSize: 13,
     fontWeight: 700,
-    margin: "0 0 10px",
+    margin: "0 0 24px",
+  },
+  footer: {
+    marginTop: 36,
+    paddingBottom: 48,
+  },
+  footerLogo: {
+    display: "block",
+    height: 28,
+    objectFit: "contain",
+    width: 25,
+  },
+  footerText: {
+    color: "#202020",
+    fontSize: 12,
+    lineHeight: 1.35,
+    margin: 0,
+  },
+  finishBar: {
+    backgroundColor: "#ffffff",
+    border: "1px solid #dcdcdc",
+    borderBottom: 0,
+    borderTopLeftRadius: 6,
+    borderTopRightRadius: 6,
+    bottom: 0,
+    left: "50%",
+    maxWidth: "none",
+    padding: "10px 12px calc(10px + env(safe-area-inset-bottom))",
+    position: "fixed",
+    transform: "translateX(-50%)",
+    width: "100%",
+  },
+  finishButton: {
+    backgroundColor: "#4CB599",
+    border: 0,
+    borderRadius: 999,
+    color: "#143228",
+    cursor: "pointer",
+    fontSize: 14,
+    fontWeight: 500,
+    height: 41,
+    width: "100%",
   },
 };
