@@ -60,7 +60,10 @@ function openNavigation(stop: DeliveryStop) {
       ? `${stop.lat},${stop.lng}`
       : encodeURIComponent(stop.address);
 
-  window.open(`https://www.google.com/maps/dir/?api=1&destination=${query}`, "_blank");
+  window.open(
+    `https://www.google.com/maps/dir/?api=1&destination=${query}`,
+    "_blank",
+  );
 }
 
 export default function DriverAssistPwaPage() {
@@ -72,7 +75,9 @@ export default function DriverAssistPwaPage() {
   const [route, setRoute] = useState<DriverRoute | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
   const [reportStopId, setReportStopId] = useState<string | null>(null);
-  const [reportReason, setReportReason] = useState<ReportReason>("Customer unavailable");
+  const [reportReason, setReportReason] = useState<ReportReason>(
+    "Customer unavailable",
+  );
   const [reportDetails, setReportDetails] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
@@ -91,7 +96,7 @@ export default function DriverAssistPwaPage() {
         setError(
           importError instanceof Error
             ? importError.message
-            : "Please upload a valid JSON file."
+            : "Please upload a valid JSON file.",
         );
       }
     }
@@ -103,13 +108,15 @@ export default function DriverAssistPwaPage() {
     if (!route) return;
     window.localStorage.setItem(
       STORAGE_KEY,
-      JSON.stringify(createPersistedRouteState(route))
+      JSON.stringify(createPersistedRouteState(route)),
     );
   }, [route]);
 
   const totals = useMemo(() => {
     const stops = route?.stops || [];
-    const completed = stops.filter((stop) => stop.status === "completed").length;
+    const completed = stops.filter(
+      (stop) => stop.status === "completed",
+    ).length;
     const failed = stops.filter((stop) => stop.status === "failed").length;
     const pending = stops.filter((stop) => stop.status === "pending").length;
 
@@ -135,7 +142,7 @@ export default function DriverAssistPwaPage() {
       setError(
         importError instanceof Error
           ? importError.message
-          : "Please upload a valid JSON file."
+          : "Please upload a valid JSON file.",
       );
     } finally {
       setIsImporting(false);
@@ -149,7 +156,7 @@ export default function DriverAssistPwaPage() {
       return {
         ...current,
         stops: current.stops.map((stop) =>
-          stop.id === stopId ? { ...stop, ...changes } : stop
+          stop.id === stopId ? { ...stop, ...changes } : stop,
         ),
       };
     });
@@ -190,7 +197,8 @@ export default function DriverAssistPwaPage() {
     target.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  const pendingStops = route?.stops.filter((stop) => stop.status === "pending") || [];
+  const pendingStops =
+    route?.stops.filter((stop) => stop.status === "pending") || [];
   const deliveredStops =
     route?.stops.filter((stop) => stop.status === "completed") || [];
   const reportedStops =
@@ -295,19 +303,21 @@ export default function DriverAssistPwaPage() {
         <section ref={deliveredRef} style={styles.historySection}>
           {deliveredStops.length > 0 ? (
             <>
-            <h2 style={styles.historyTitle}>Delivered</h2>
-            {deliveredStops.map((stop) => (
-              <StopCard
-                key={stop.id}
-                stop={stop}
-                isOpen={openId === stop.id}
-                onToggle={() => setOpenId(openId === stop.id ? null : stop.id)}
-                onChangeNote={(notes) => updateStop(stop.id, { notes })}
-                onComplete={() => undefined}
-                onReport={() => undefined}
-                onNavigate={() => openNavigation(stop)}
-              />
-            ))}
+              <h2 style={styles.historyTitle}>Delivered</h2>
+              {deliveredStops.map((stop) => (
+                <StopCard
+                  key={stop.id}
+                  stop={stop}
+                  isOpen={openId === stop.id}
+                  onToggle={() =>
+                    setOpenId(openId === stop.id ? null : stop.id)
+                  }
+                  onChangeNote={(notes) => updateStop(stop.id, { notes })}
+                  onComplete={() => undefined}
+                  onReport={() => undefined}
+                  onNavigate={() => openNavigation(stop)}
+                />
+              ))}
             </>
           ) : null}
         </section>
@@ -321,7 +331,9 @@ export default function DriverAssistPwaPage() {
                   key={stop.id}
                   stop={stop}
                   isOpen={openId === stop.id}
-                  onToggle={() => setOpenId(openId === stop.id ? null : stop.id)}
+                  onToggle={() =>
+                    setOpenId(openId === stop.id ? null : stop.id)
+                  }
                   onChangeNote={(notes) => updateStop(stop.id, { notes })}
                   onComplete={() => undefined}
                   onReport={() => undefined}
@@ -408,7 +420,9 @@ function StopCard({
         <span style={styles.textBlock}>
           <span style={styles.stopMetaRow}>
             <span style={styles.stopNumberBadge}>{stop.stopNumber}</span>
-            <span style={styles.stopWindow}>Deliver between 4:00pm - 5:00pm</span>
+            <span style={styles.stopWindow}>
+              Deliver between 4:00pm - 5:00pm
+            </span>
           </span>
           <strong style={styles.addressText}>{stop.address}</strong>
           <InfoLine icon={<PersonIcon />} text={stop.customerName} />
@@ -418,13 +432,21 @@ function StopCard({
 
       {isOpen ? (
         <div style={styles.expandedSection}>
-          <button type="button" style={styles.primaryActionButton} onClick={onNavigate}>
+          <button
+            type="button"
+            style={styles.primaryActionButton}
+            onClick={onNavigate}
+          >
             <NavigateIcon />
             Navigate
           </button>
 
           {!isDone ? (
-            <button type="button" style={styles.deliveredButton} onClick={onComplete}>
+            <button
+              type="button"
+              style={styles.deliveredButton}
+              onClick={onComplete}
+            >
               <DeliveredIcon />
               Delivered
             </button>
@@ -442,22 +464,36 @@ function StopCard({
           ) : null}
 
           {isFailed && stop.failureReason ? (
-            <p style={styles.statusText}>Failure reason: {stop.failureReason}</p>
+            <p style={styles.statusText}>
+              Failure reason: {stop.failureReason}
+            </p>
           ) : null}
 
           {!isDone ? (
             <div style={styles.buttonRow}>
-              <button type="button" style={styles.actionButton} onClick={onNavigate}>
+              <button
+                type="button"
+                style={styles.actionButton}
+                onClick={onNavigate}
+              >
                 <PhoneIcon />
                 Call
               </button>
-              <button type="button" style={styles.actionButton} onClick={onReport}>
+              <button
+                type="button"
+                style={styles.actionButton}
+                onClick={onReport}
+              >
                 <ReportIcon />
                 Report issue
               </button>
             </div>
           ) : (
-            <button type="button" style={styles.actionButton} onClick={onNavigate}>
+            <button
+              type="button"
+              style={styles.actionButton}
+              onClick={onNavigate}
+            >
               Navigate
             </button>
           )}
@@ -479,7 +515,13 @@ function InfoLine({ icon, text }: { icon: React.ReactNode; text: string }) {
 function DriverFooter() {
   return (
     <footer style={styles.footer}>
-      <Image src="/logo.png" alt="b2 logo" width={25} height={28} style={styles.footerLogo} />
+      <Image
+        src="/logo.png"
+        alt="b2 logo"
+        width={25}
+        height={28}
+        style={styles.footerLogo}
+      />
       <p style={styles.footerText}>Built with ❤️ for Humanity.</p>
       <p style={styles.footerText}>The Benevolent Bandwidth Foundation</p>
     </footer>
@@ -530,7 +572,8 @@ function ReportIssueDialog({
         </div>
 
         <p style={styles.reportPrompt}>
-          Select a reason for the delivery issue<span style={styles.required}>*</span>
+          Select a reason for the delivery issue
+          <span style={styles.required}>*</span>
         </p>
 
         <div style={styles.reportOptions}>
@@ -559,10 +602,18 @@ function ReportIssueDialog({
         ) : null}
 
         <div style={styles.reportActions}>
-          <button type="button" style={styles.reportCancelButton} onClick={onCancel}>
+          <button
+            type="button"
+            style={styles.reportCancelButton}
+            onClick={onCancel}
+          >
             Cancel
           </button>
-          <button type="button" style={styles.reportSubmitButton} onClick={onSubmit}>
+          <button
+            type="button"
+            style={styles.reportSubmitButton}
+            onClick={onSubmit}
+          >
             Submit
           </button>
         </div>
@@ -573,9 +624,20 @@ function ReportIssueDialog({
 
 function WarningIcon() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
       <path d="M12 4 21 20H3L12 4Z" stroke="currentColor" strokeWidth="1.7" />
-      <path d="M12 9v5" stroke="currentColor" strokeLinecap="round" strokeWidth="1.7" />
+      <path
+        d="M12 9v5"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="1.7"
+      />
       <circle cx="12" cy="17" r="1" fill="currentColor" />
     </svg>
   );
@@ -583,35 +645,85 @@ function WarningIcon() {
 
 function NavigateIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
       <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
-      <path d="m12 7 4 10-4-2-4 2 4-10Z" stroke="currentColor" strokeLinejoin="round" strokeWidth="2" />
+      <path
+        d="m12 7 4 10-4-2-4 2 4-10Z"
+        stroke="currentColor"
+        strokeLinejoin="round"
+        strokeWidth="2"
+      />
     </svg>
   );
 }
 
 function DeliveredIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M8 5h8v3h3v11H5V8h3V5Z" stroke="currentColor" strokeLinejoin="round" strokeWidth="1.8" />
-      <path d="m9 13 2 2 4-5" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" />
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="M8 5h8v3h3v11H5V8h3V5Z"
+        stroke="currentColor"
+        strokeLinejoin="round"
+        strokeWidth="1.8"
+      />
+      <path
+        d="m9 13 2 2 4-5"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.8"
+      />
     </svg>
   );
 }
 
 function PhoneIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M8 5 6 7c1 5 6 10 11 11l2-2-4-3-2 2c-2-1-4-3-5-5l2-2-2-3Z" stroke="currentColor" strokeLinejoin="round" strokeWidth="1.8" />
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="M8 5 6 7c1 5 6 10 11 11l2-2-4-3-2 2c-2-1-4-3-5-5l2-2-2-3Z"
+        stroke="currentColor"
+        strokeLinejoin="round"
+        strokeWidth="1.8"
+      />
     </svg>
   );
 }
 
 function ReportIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
       <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M12 7v6" stroke="currentColor" strokeLinecap="round" strokeWidth="1.8" />
+      <path
+        d="M12 7v6"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="1.8"
+      />
       <circle cx="12" cy="16.5" r="1" fill="currentColor" />
     </svg>
   );
@@ -619,18 +731,40 @@ function ReportIcon() {
 
 function PersonIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
       <circle cx="12" cy="8" r="3" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M5 20c1.2-4 12.8-4 14 0" stroke="currentColor" strokeLinecap="round" strokeWidth="1.8" />
+      <path
+        d="M5 20c1.2-4 12.8-4 14 0"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="1.8"
+      />
     </svg>
   );
 }
 
 function NoteIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
       <path d="M6 4h12v16H6V4Z" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M9 8h6M9 12h6M9 16h4" stroke="currentColor" strokeLinecap="round" strokeWidth="1.8" />
+      <path
+        d="M9 8h6M9 12h6M9 16h4"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="1.8"
+      />
     </svg>
   );
 }
@@ -807,7 +941,8 @@ const styles: Record<string, CSSProperties> = {
   },
   stopWindow: {
     color: "#464544",
-    fontFamily: "var(--font-manrope), var(--font-geist-sans), Arial, sans-serif",
+    fontFamily:
+      "var(--font-manrope), var(--font-geist-sans), Arial, sans-serif",
     fontSize: 14,
     fontStyle: "normal",
     fontWeight: 600,
