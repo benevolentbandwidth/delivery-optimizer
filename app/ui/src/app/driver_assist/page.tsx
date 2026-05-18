@@ -21,6 +21,8 @@ type UploadedRouteFile = {
   content: string;
 };
 
+type ReportReason = "Customer unavailable" | "Can't access location" | "Other";
+
 function readSavedRoute(): DriverRoute | null {
   if (typeof window === "undefined") return null;
 
@@ -69,6 +71,9 @@ export default function DriverAssistPwaPage() {
   const reportedRef = useRef<HTMLDivElement>(null);
   const [route, setRoute] = useState<DriverRoute | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
+  const [reportStopId, setReportStopId] = useState<string | null>(null);
+  const [reportReason, setReportReason] = useState<ReportReason>("Customer unavailable");
+  const [reportDetails, setReportDetails] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
 
@@ -155,6 +160,30 @@ export default function DriverAssistPwaPage() {
     setRoute(null);
     setOpenId(null);
     setError(null);
+  };
+
+  const openReportDialog = (stopId: string) => {
+    setReportStopId(stopId);
+    setReportReason("Customer unavailable");
+    setReportDetails("");
+  };
+
+  const closeReportDialog = () => {
+    setReportStopId(null);
+    setReportDetails("");
+  };
+
+  const submitReport = () => {
+    if (!reportStopId) return;
+    const reason =
+      reportReason === "Other" ? reportDetails.trim() || "Other" : reportReason;
+
+    updateStop(reportStopId, {
+      status: "failed",
+      failureReason: reason,
+    });
+    setOpenId(null);
+    closeReportDialog();
   };
 
   const scrollToSection = (target: React.RefObject<HTMLElement | null>) => {
@@ -257,14 +286,7 @@ export default function DriverAssistPwaPage() {
                 });
                 setOpenId(null);
               }}
-              onReport={() => {
-                const reason = window.prompt("Reason this delivery failed?");
-                updateStop(stop.id, {
-                  status: "failed",
-                  failureReason: reason || "No reason provided",
-                });
-                setOpenId(null);
-              }}
+              onReport={() => openReportDialog(stop.id)}
               onNavigate={() => openNavigation(stop)}
             />
           ))}
@@ -318,6 +340,17 @@ export default function DriverAssistPwaPage() {
           Finish
         </button>
       </div>
+
+      {reportStopId ? (
+        <ReportIssueDialog
+          reason={reportReason}
+          details={reportDetails}
+          onReasonChange={setReportReason}
+          onDetailsChange={setReportDetails}
+          onCancel={closeReportDialog}
+          onSubmit={submitReport}
+        />
+      ) : null}
     </main>
   );
 }
@@ -450,6 +483,91 @@ function DriverFooter() {
       <p style={styles.footerText}>Built with ❤️ for Humanity.</p>
       <p style={styles.footerText}>The Benevolent Bandwidth Foundation</p>
     </footer>
+  );
+}
+
+function ReportIssueDialog({
+  reason,
+  details,
+  onReasonChange,
+  onDetailsChange,
+  onCancel,
+  onSubmit,
+}: {
+  reason: ReportReason;
+  details: string;
+  onReasonChange: (reason: ReportReason) => void;
+  onDetailsChange: (details: string) => void;
+  onCancel: () => void;
+  onSubmit: () => void;
+}) {
+  const reasons: ReportReason[] = [
+    "Customer unavailable",
+    "Can't access location",
+    "Other",
+  ];
+
+  return (
+    <div style={styles.modalBackdrop} role="presentation">
+      <section
+        aria-modal="true"
+        role="dialog"
+        aria-labelledby="report-issue-title"
+        style={styles.reportDialog}
+      >
+        <div style={styles.reportHeader}>
+          <h2 id="report-issue-title" style={styles.reportTitle}>
+            Report issue
+          </h2>
+          <button
+            type="button"
+            aria-label="Close report issue"
+            style={styles.reportCloseButton}
+            onClick={onCancel}
+          >
+            ×
+          </button>
+        </div>
+
+        <p style={styles.reportPrompt}>
+          Select a reason for the delivery issue<span style={styles.required}>*</span>
+        </p>
+
+        <div style={styles.reportOptions}>
+          {reasons.map((option) => (
+            <label key={option} style={styles.reportOption}>
+              <input
+                type="radio"
+                name="report-reason"
+                value={option}
+                checked={reason === option}
+                onChange={() => onReasonChange(option)}
+                style={styles.reportRadio}
+              />
+              <span>{option}</span>
+            </label>
+          ))}
+        </div>
+
+        {reason === "Other" ? (
+          <textarea
+            style={styles.reportDetails}
+            placeholder="Please provide details"
+            value={details}
+            onChange={(event) => onDetailsChange(event.target.value)}
+          />
+        ) : null}
+
+        <div style={styles.reportActions}>
+          <button type="button" style={styles.reportCancelButton} onClick={onCancel}>
+            Cancel
+          </button>
+          <button type="button" style={styles.reportSubmitButton} onClick={onSubmit}>
+            Submit
+          </button>
+        </div>
+      </section>
+    </div>
   );
 }
 
@@ -850,5 +968,131 @@ const styles: Record<string, CSSProperties> = {
     fontWeight: 500,
     height: 41,
     width: "100%",
+  },
+  modalBackdrop: {
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.2)",
+    bottom: 0,
+    display: "flex",
+    justifyContent: "center",
+    left: 0,
+    padding: 12,
+    position: "fixed",
+    right: 0,
+    top: 0,
+    zIndex: 50,
+  },
+  reportDialog: {
+    alignItems: "flex-start",
+    backgroundColor: "#FDFDFC",
+    borderRadius: 4,
+    boxShadow: "0 8px 24px rgba(0, 0, 0, 0.12)",
+    display: "flex",
+    flexDirection: "column",
+    gap: 8,
+    padding: 24,
+    width: 352,
+    maxWidth: "calc(100vw - 24px)",
+  },
+  reportHeader: {
+    alignItems: "center",
+    display: "flex",
+    justifyContent: "space-between",
+    width: "100%",
+  },
+  reportTitle: {
+    color: "#202020",
+    fontSize: 16,
+    fontWeight: 700,
+    lineHeight: 1.4,
+    margin: 0,
+  },
+  reportCloseButton: {
+    alignItems: "center",
+    background: "transparent",
+    border: 0,
+    color: "#202020",
+    cursor: "pointer",
+    display: "inline-flex",
+    fontSize: 24,
+    height: 28,
+    justifyContent: "center",
+    lineHeight: 1,
+    padding: 0,
+    width: 28,
+  },
+  reportPrompt: {
+    color: "#464544",
+    fontSize: 12,
+    lineHeight: 1.4,
+    margin: "8px 0 0",
+  },
+  required: {
+    color: "#C2410C",
+  },
+  reportOptions: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 8,
+    width: "100%",
+  },
+  reportOption: {
+    alignItems: "center",
+    border: "1px solid #DCDBD8",
+    borderRadius: 4,
+    color: "#464544",
+    cursor: "pointer",
+    display: "flex",
+    fontSize: 12,
+    gap: 8,
+    minHeight: 32,
+    padding: "6px 8px",
+    width: "100%",
+  },
+  reportRadio: {
+    accentColor: "#464544",
+    height: 16,
+    margin: 0,
+    width: 16,
+  },
+  reportDetails: {
+    border: "1px solid #DCDBD8",
+    borderRadius: 4,
+    color: "#202020",
+    font: "inherit",
+    fontSize: 12,
+    minHeight: 72,
+    padding: 8,
+    resize: "vertical",
+    width: "100%",
+  },
+  reportActions: {
+    alignItems: "center",
+    alignSelf: "stretch",
+    display: "flex",
+    gap: 8,
+    justifyContent: "flex-end",
+    marginTop: 4,
+  },
+  reportCancelButton: {
+    backgroundColor: "transparent",
+    border: 0,
+    color: "#202020",
+    cursor: "pointer",
+    fontSize: 12,
+    fontWeight: 500,
+    minHeight: 36,
+    padding: "0 12px",
+  },
+  reportSubmitButton: {
+    backgroundColor: "#4CB599",
+    border: 0,
+    borderRadius: 4,
+    color: "#143228",
+    cursor: "pointer",
+    fontSize: 12,
+    fontWeight: 500,
+    minHeight: 36,
+    padding: "0 16px",
   },
 };
