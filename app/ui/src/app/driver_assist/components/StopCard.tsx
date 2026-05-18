@@ -1,0 +1,125 @@
+import type { DeliveryStop } from "@/lib/driver-route/types";
+
+import { styles } from "../styles";
+import InfoLine from "./InfoLine";
+import {
+  DeliveredIcon,
+  NavigateIcon,
+  NoteIcon,
+  PersonIcon,
+  PhoneIcon,
+  ReportIcon,
+} from "./icons";
+
+type StopCardProps = {
+  stop: DeliveryStop;
+  isOpen: boolean;
+  onToggle: () => void;
+  onChangeNote: (value: string) => void;
+  onComplete: () => void;
+  onReport?: () => void;
+  onNavigate?: () => void;
+};
+
+export default function StopCard({
+  stop,
+  isOpen,
+  onToggle,
+  onChangeNote,
+  onComplete,
+  onReport,
+  onNavigate,
+}: StopCardProps) {
+  const isCompleted = stop.status === "completed";
+  const isFailed = stop.status === "failed";
+  const isDone = isCompleted || isFailed;
+  const completedAtText = stop.completedAt
+    ? new Date(stop.completedAt).toLocaleString()
+    : null;
+
+  return (
+    <article
+      style={{
+        ...styles.card,
+        ...(isCompleted ? styles.completedCard : {}),
+        ...(isFailed ? styles.failedCard : {}),
+      }}
+    >
+      <button type="button" style={styles.cardButton} onClick={onToggle}>
+        <span style={styles.textBlock}>
+          <span style={styles.stopMetaRow}>
+            <span style={styles.stopNumberBadge}>{stop.stopNumber}</span>
+            <span style={styles.stopWindow}>
+              Deliver between 4:00pm - 5:00pm
+            </span>
+          </span>
+          <strong style={styles.addressText}>{stop.address}</strong>
+          <InfoLine icon={<PersonIcon />} text={stop.customerName} />
+          <InfoLine icon={<NoteIcon />} text={stop.notes || "N/A"} />
+        </span>
+      </button>
+
+      {isOpen ? (
+        <div style={styles.expandedSection}>
+          <button
+            type="button"
+            style={styles.primaryActionButton}
+            onClick={onNavigate}
+          >
+            <NavigateIcon />
+            Navigate
+          </button>
+
+          {!isDone ? (
+            <button
+              type="button"
+              style={styles.deliveredButton}
+              onClick={onComplete}
+            >
+              <DeliveredIcon />
+              Delivered
+            </button>
+          ) : null}
+
+          <textarea
+            style={styles.noteInput}
+            value={stop.notes}
+            onChange={(event) => onChangeNote(event.target.value)}
+            placeholder="Add delivery note"
+          />
+
+          {isCompleted && completedAtText ? (
+            <p style={styles.statusText}>Completed at: {completedAtText}</p>
+          ) : null}
+
+          {isFailed && stop.failureReason ? (
+            <p style={styles.statusText}>
+              Failure reason: {stop.failureReason}
+            </p>
+          ) : null}
+
+          {!isDone ? (
+            <div style={styles.buttonRow}>
+              <button
+                type="button"
+                style={styles.actionButton}
+                onClick={onNavigate}
+              >
+                <PhoneIcon />
+                Call
+              </button>
+              <button
+                type="button"
+                style={styles.actionButton}
+                onClick={onReport}
+              >
+                <ReportIcon />
+                Report issue
+              </button>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+    </article>
+  );
+}

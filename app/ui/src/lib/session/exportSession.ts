@@ -8,7 +8,7 @@ export type SessionExportResult =
   | { ok: true; filename: string }
   | { ok: false; error: Error };
 
-function filenameTimestamp(date: Date) {
+export function filenameTimestamp(date: Date) {
   const yyyy = String(date.getUTCFullYear());
   const mm = String(date.getUTCMonth() + 1).padStart(2, "0");
   const dd = String(date.getUTCDate()).padStart(2, "0");
@@ -17,6 +17,34 @@ function filenameTimestamp(date: Date) {
   const ss = String(date.getUTCSeconds()).padStart(2, "0");
 
   return `date_${yyyy}-${mm}-${dd}_time_${hh}-${min}-${ss}`;
+}
+
+export function downloadJsonFile(
+  filename: string,
+  payload: unknown,
+): SessionExportResult {
+  try {
+    const jsonString = JSON.stringify(payload, null, 2);
+
+    const blob = new Blob([jsonString], { type: "application/json" });
+    const objectUrl = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = objectUrl;
+    link.download = filename;
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+
+    return { ok: true, filename };
+  } catch (e) {
+    const error = e instanceof Error ? e : new Error("export error");
+    console.error("failed to export JSON file", error);
+    return { ok: false, error };
+  }
 }
 
 export function buildSessionSave(
@@ -40,22 +68,7 @@ export function downloadSessionSave(
     const now = new Date();
     const saveFile = buildSessionSave(state, now);
     const filename = `routes_${filenameTimestamp(now)}.json`;
-    const jsonString = JSON.stringify(saveFile, null, 2);
-
-    const blob = new Blob([jsonString], { type: "application/json" });
-    const objectUrl = URL.createObjectURL(blob);
-
-    const link = document.createElement("a");
-    link.href = objectUrl;
-    link.download = filename;
-
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-
-    setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
-
-    return { ok: true, filename };
+    return downloadJsonFile(filename, saveFile);
   } catch (e) {
     const error = e instanceof Error ? e : new Error("export error");
     console.error("failed to export session save", error);
