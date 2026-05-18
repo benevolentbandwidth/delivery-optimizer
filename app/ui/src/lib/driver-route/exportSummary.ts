@@ -40,6 +40,8 @@ export function buildRouteSummary(
   route: DriverRoute,
   now: Date = new Date(),
 ): RouteSummaryFile {
+  // The exported file should tell dispatch what finished and what still needs
+  // attention without requiring them to recalculate every stop status.
   const complete = route.stops.filter(
     (stop) => stop.status === "completed",
   ).length;
@@ -56,6 +58,7 @@ export function buildRouteSummary(
       remaining,
     },
     stops: route.stops.map((stop) => ({
+      // Preserve stop-level detail so this JSON can stand on its own later.
       id: stop.id,
       stopNumber: stop.stopNumber,
       customerName: stop.customerName,
@@ -77,6 +80,7 @@ export function buildRouteSummary(
 export function downloadRouteSummary(route: DriverRoute): SessionExportResult {
   const now = new Date();
   const summary = buildRouteSummary(route, now);
+  // Match the app's existing timestamped JSON download convention.
   return downloadJsonFile(
     `route_summary_${filenameTimestamp(now)}.json`,
     summary,

@@ -12,6 +12,7 @@ export type UploadedRouteFile = {
   content: string;
 };
 
+// Saved progress is the driver's working copy of the route.
 export function readSavedRoute(): DriverRoute | null {
   if (typeof window === "undefined") return null;
 
@@ -20,11 +21,13 @@ export function readSavedRoute(): DriverRoute | null {
     if (!saved) return null;
     return parsePersistedRouteState(JSON.parse(saved)).route;
   } catch {
+    // Bad localStorage should not strand the driver on a broken route.
     window.localStorage.removeItem(STORAGE_KEY);
     return null;
   }
 }
 
+// The upload page only needs a short handoff, so sessionStorage is enough.
 export function readUploadedRouteFile(): UploadedRouteFile | null {
   if (typeof window === "undefined") return null;
 
@@ -45,6 +48,7 @@ export function clearUploadedRouteFile() {
   window.sessionStorage.removeItem(UPLOADED_ROUTE_KEY);
 }
 
+// Store the route with a small version wrapper so future shape changes have room.
 export function persistRoute(route: DriverRoute) {
   window.localStorage.setItem(
     STORAGE_KEY,

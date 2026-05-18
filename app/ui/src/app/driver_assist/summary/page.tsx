@@ -20,6 +20,8 @@ export default function DriverAssistSummaryPage() {
   const [exportMessage, setExportMessage] = useState<string | null>(null);
 
   useEffect(() => {
+    // Let the active route page finish its final localStorage write before the
+    // summary reads it back after the Finish tap.
     const timeoutId = window.setTimeout(() => {
       const savedRoute = readSavedRoute();
       setRoute(savedRoute);
@@ -34,6 +36,7 @@ export default function DriverAssistSummaryPage() {
   }, [router]);
 
   const totals = useMemo(() => {
+    // Failed stops count as remaining because they still need office review.
     const stops = route?.stops || [];
     return {
       total: stops.length,
@@ -45,6 +48,8 @@ export default function DriverAssistSummaryPage() {
   const handleExport = () => {
     if (!route) return;
 
+    // Reuse the session export downloader so route summaries behave like the
+    // rest of the app's JSON save/export buttons.
     const result = downloadRouteSummary(route);
     setExportMessage(
       result.ok
@@ -54,6 +59,7 @@ export default function DriverAssistSummaryPage() {
   };
 
   if (!hasCheckedRoute || !route) {
+    // Keep the transition from the driver screen visually quiet.
     return <main style={styles.loadingScreen} aria-label="Loading summary" />;
   }
 
@@ -86,14 +92,20 @@ export default function DriverAssistSummaryPage() {
           ))}
         </section>
 
+        {/* Same footer as the edit flow so the PWA keeps the b2 baseline. */}
         <DriverFooter />
       </section>
 
+      {/* Sticky mobile export action, matching the driver's Finish button. */}
       <div style={styles.exportBar}>
         {exportMessage ? (
           <p style={styles.exportMessage}>{exportMessage}</p>
         ) : null}
-        <button type="button" style={styles.exportButton} onClick={handleExport}>
+        <button
+          type="button"
+          style={styles.exportButton}
+          onClick={handleExport}
+        >
           Export route summary
         </button>
       </div>

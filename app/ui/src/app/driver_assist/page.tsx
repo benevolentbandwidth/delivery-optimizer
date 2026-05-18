@@ -26,6 +26,8 @@ import {
 import { styles } from "./styles";
 
 function openNavigation(stop: DeliveryStop) {
+  // Prefer exact coordinates from the route file; fall back to the address if
+  // the saved JSON came from an older flow without geocoded locations.
   const query =
     stop.lat !== 0 || stop.lng !== 0
       ? `${stop.lat},${stop.lng}`
@@ -56,6 +58,8 @@ export default function DriverAssistPwaPage() {
   const [hasCheckedRoute, setHasCheckedRoute] = useState(false);
 
   useEffect(() => {
+    // The upload page hands off the raw JSON through sessionStorage so this
+    // page can import once, save the driver shape, and avoid bouncing back.
     const uploadedRoute = readUploadedRouteFile();
     let importFailed = false;
 
@@ -79,6 +83,7 @@ export default function DriverAssistPwaPage() {
       }
     }
 
+    // Reloading the PWA should keep the driver exactly where they left off.
     const savedRoute = readSavedRoute();
     setRoute(savedRoute);
     setOpenId(savedRoute?.stops[0]?.id || null);
@@ -90,6 +95,7 @@ export default function DriverAssistPwaPage() {
   }, [router]);
 
   useEffect(() => {
+    // Persist every delivery status/note change so refreshes do not lose work.
     if (!route) return;
     persistRoute(route);
   }, [route]);
@@ -116,6 +122,8 @@ export default function DriverAssistPwaPage() {
     setIsImporting(true);
 
     try {
+      // Direct upload is kept here too, so /driver_assist works even if a
+      // driver lands on it without going through /upload-route first.
       const session = await loadSessionFromFile(file);
       const nextRoute = transformSessionToDriverRoute(session);
       persistRoute(nextRoute);
@@ -133,6 +141,8 @@ export default function DriverAssistPwaPage() {
   };
 
   const updateStop = (stopId: string, changes: Partial<DeliveryStop>) => {
+    // Keep stop updates narrow so notes, status, and failure reasons can share
+    // one path without rebuilding the whole route by hand.
     setRoute((current) => {
       if (!current) return current;
 
@@ -158,6 +168,7 @@ export default function DriverAssistPwaPage() {
 
   const submitReport = () => {
     if (!reportStopId) return;
+    // "Other" only becomes the saved reason once the driver confirms it.
     const reason =
       reportReason === "Other" ? reportDetails.trim() || "Other" : reportReason;
 
@@ -170,6 +181,7 @@ export default function DriverAssistPwaPage() {
   };
 
   const finishRoute = () => {
+    // Save one last time before moving to the export summary screen.
     if (route) {
       persistRoute(route);
     }
@@ -188,6 +200,8 @@ export default function DriverAssistPwaPage() {
     route?.stops.filter((stop) => stop.status === "failed") || [];
 
   if (!hasCheckedRoute || (!route && !error)) {
+    // Empty shell prevents the black-and-white upload screen from flashing
+    // while local/session storage is being checked.
     return <main style={styles.loadingScreen} aria-label="Loading route" />;
   }
 
@@ -264,6 +278,7 @@ export default function DriverAssistPwaPage() {
           </div>
         </section>
 
+        {/* Remaining is the active work queue, so it stays first and expanded. */}
         <section ref={remainingRef} style={styles.routeSection}>
           <h2 style={styles.sectionTitle}>Remaining</h2>
 
@@ -287,6 +302,8 @@ export default function DriverAssistPwaPage() {
           ))}
         </section>
 
+        {/* Delivered and reported stops stay available for review, but without
+            the live completion/report controls. */}
         <section ref={deliveredRef} style={styles.historySection}>
           {deliveredStops.length > 0 ? (
             <>

@@ -70,6 +70,7 @@ const persistedRouteStateSchema = z.object({
 type SessionSaveFile = z.infer<typeof sessionSaveV1Schema>;
 type PersistedRouteState = z.infer<typeof persistedRouteStateSchema>;
 
+// Guard the browser import path before we spend time parsing a file.
 export async function loadSessionFromFile(
   file: Pick<File, "name" | "size" | "type" | "text">,
 ): Promise<OptimizeRequestLike> {
@@ -102,9 +103,12 @@ export function loadSessionFromText(text: string): OptimizeRequestLike {
   }
 
   try {
+    // Preferred route-manager save file shape.
     return parseSessionSaveFile(parsed).data;
   } catch (error) {
     try {
+      // Also accept the raw optimize request shape for test fixtures and
+      // simple hand-authored JSON files.
       return optimizeRequestSchema.parse(parsed);
     } catch {
       throw new Error(
@@ -114,6 +118,7 @@ export function loadSessionFromText(text: string): OptimizeRequestLike {
   }
 }
 
+// Local progress uses a small envelope, separate from imported save files.
 export function createPersistedRouteState(
   route: DriverRoute,
 ): PersistedRouteState {
@@ -137,6 +142,7 @@ function formatValidationError(error: unknown): string | null {
     return error instanceof Error ? error.message : null;
   }
 
+  // Return the first useful location instead of dumping the whole Zod payload.
   const issue = error.issues[0];
   if (!issue) return null;
 

@@ -30,6 +30,7 @@ export default function StopCard({
   onReport,
   onNavigate,
 }: StopCardProps) {
+  // Completed and failed stops are read-only history items in this card.
   const isCompleted = stop.status === "completed";
   const isFailed = stop.status === "failed";
   const isDone = isCompleted || isFailed;
@@ -45,6 +46,7 @@ export default function StopCard({
         ...(isFailed ? styles.failedCard : {}),
       }}
     >
+      {/* The whole summary row toggles details, which is easier on a phone. */}
       <button type="button" style={styles.cardButton} onClick={onToggle}>
         <span style={styles.textBlock}>
           <span style={styles.stopMetaRow}>
@@ -61,6 +63,7 @@ export default function StopCard({
 
       {isOpen ? (
         <div style={styles.expandedSection}>
+          {/* Keep navigation prominent for the active stop. */}
           <button
             type="button"
             style={styles.primaryActionButton}
@@ -70,6 +73,7 @@ export default function StopCard({
             Navigate
           </button>
 
+          {/* Only pending stops can be marked delivered from the driver view. */}
           {!isDone ? (
             <button
               type="button"
@@ -81,6 +85,8 @@ export default function StopCard({
             </button>
           ) : null}
 
+          {/* Notes remain editable after completion so drivers can clean up
+              details before exporting the summary. */}
           <textarea
             style={styles.noteInput}
             value={stop.notes}
@@ -98,6 +104,7 @@ export default function StopCard({
             </p>
           ) : null}
 
+          {/* Call/report are intentionally hidden once a stop is done. */}
           {!isDone ? (
             <div style={styles.buttonRow}>
               <button

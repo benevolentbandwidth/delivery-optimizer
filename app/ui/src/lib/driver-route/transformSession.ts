@@ -3,6 +3,7 @@ import type { DeliveryStop, DriverRoute, OptimizeRequestLike } from "./types";
 export function transformSessionToDriverRoute(
   input: OptimizeRequestLike,
 ): DriverRoute {
+  // The driver PWA only needs the ordered stops and the first assigned driver.
   const deliveries = input.deliveries || [];
   const firstVehicle = input.vehicles?.[0];
 
@@ -15,6 +16,7 @@ export function transformSessionToDriverRoute(
       phoneNumber: delivery.phoneNumber,
       packageCount: delivery.demand?.value ?? 1,
       notes: delivery.notes || "",
+      // A freshly imported route always starts as work to be done.
       status: "pending",
       lat: delivery.location?.lat || 0,
       lng: delivery.location?.lng || 0,
@@ -25,6 +27,7 @@ export function transformSessionToDriverRoute(
 
   return {
     driverName: firstVehicle?.driverName || "driver_assist",
+    // Keep this human-readable; it shows up in exported route summaries.
     routeLabel: `Route ${firstVehicle?.id || "1"} - ${stops.length} stops`,
     stops,
   };
