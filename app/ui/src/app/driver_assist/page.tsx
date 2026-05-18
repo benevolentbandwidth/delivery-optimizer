@@ -3,6 +3,7 @@
 import type { CSSProperties } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 import {
   createPersistedRouteState,
@@ -49,9 +50,18 @@ function readUploadedRouteFile(): UploadedRouteFile | null {
     return { name: parsed.name, content: parsed.content };
   } catch {
     return null;
-  } finally {
-    window.sessionStorage.removeItem(UPLOADED_ROUTE_KEY);
   }
+}
+
+function clearUploadedRouteFile() {
+  window.sessionStorage.removeItem(UPLOADED_ROUTE_KEY);
+}
+
+function persistRoute(route: DriverRoute) {
+  window.localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify(createPersistedRouteState(route)),
+  );
 }
 
 function openNavigation(stop: DeliveryStop) {
@@ -67,6 +77,7 @@ function openNavigation(stop: DeliveryStop) {
 }
 
 export default function DriverAssistPwaPage() {
+  const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const topRef = useRef<HTMLDivElement>(null);
   const remainingRef = useRef<HTMLDivElement>(null);
@@ -81,18 +92,24 @@ export default function DriverAssistPwaPage() {
   const [reportDetails, setReportDetails] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
+  const [hasCheckedRoute, setHasCheckedRoute] = useState(false);
 
   useEffect(() => {
     const uploadedRoute = readUploadedRouteFile();
+    let importFailed = false;
 
     if (uploadedRoute) {
       try {
         const session = loadSessionFromText(uploadedRoute.content);
         const nextRoute = transformSessionToDriverRoute(session);
+        persistRoute(nextRoute);
+        clearUploadedRouteFile();
         setRoute(nextRoute);
         setOpenId(nextRoute.stops[0]?.id || null);
+        setHasCheckedRoute(true);
         return;
       } catch (importError) {
+        importFailed = true;
         setError(
           importError instanceof Error
             ? importError.message
@@ -101,15 +118,19 @@ export default function DriverAssistPwaPage() {
       }
     }
 
-    setRoute(readSavedRoute());
-  }, []);
+    const savedRoute = readSavedRoute();
+    setRoute(savedRoute);
+    setOpenId(savedRoute?.stops[0]?.id || null);
+    setHasCheckedRoute(true);
+
+    if (!savedRoute && !importFailed) {
+      router.replace("/upload-route");
+    }
+  }, [router]);
 
   useEffect(() => {
     if (!route) return;
-    window.localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify(createPersistedRouteState(route)),
-    );
+    persistRoute(route);
   }, [route]);
 
   const totals = useMemo(() => {
@@ -136,6 +157,7 @@ export default function DriverAssistPwaPage() {
     try {
       const session = await loadSessionFromFile(file);
       const nextRoute = transformSessionToDriverRoute(session);
+      persistRoute(nextRoute);
       setRoute(nextRoute);
       setOpenId(nextRoute.stops[0]?.id || null);
     } catch (importError) {
@@ -203,6 +225,10 @@ export default function DriverAssistPwaPage() {
     route?.stops.filter((stop) => stop.status === "completed") || [];
   const reportedStops =
     route?.stops.filter((stop) => stop.status === "failed") || [];
+
+  if (!hasCheckedRoute || (!route && !error)) {
+    return <main style={styles.loadingScreen} aria-label="Loading route" />;
+  }
 
   if (!route) {
     return (
@@ -488,15 +514,7 @@ function StopCard({
                 Report issue
               </button>
             </div>
-          ) : (
-            <button
-              type="button"
-              style={styles.actionButton}
-              onClick={onNavigate}
-            >
-              Navigate
-            </button>
-          )}
+          ) : null}
         </div>
       ) : null}
     </article>
@@ -772,10 +790,14 @@ function NoteIcon() {
 const styles: Record<string, CSSProperties> = {
   safeArea: {
     minHeight: "100dvh",
-    backgroundColor: "#ffffff",
+    backgroundColor: "#fbf5f5",
     color: "#222222",
     fontFamily: "var(--font-geist-sans), Arial, sans-serif",
     paddingBottom: "calc(75px + env(safe-area-inset-bottom))",
+  },
+  loadingScreen: {
+    minHeight: "100dvh",
+    backgroundColor: "#fbf5f5",
   },
   uploadScreen: {
     minHeight: "100dvh",
@@ -784,6 +806,7 @@ const styles: Record<string, CSSProperties> = {
     justifyContent: "center",
     alignItems: "center",
     padding: 24,
+    backgroundColor: "#fbf5f5",
   },
   hiddenInput: {
     display: "none",

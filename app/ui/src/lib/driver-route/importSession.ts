@@ -104,9 +104,13 @@ export function loadSessionFromText(text: string): OptimizeRequestLike {
   try {
     return parseSessionSaveFile(parsed).data;
   } catch (error) {
-    throw new Error(
-      formatValidationError(error) ?? "Invalid save file format.",
-    );
+    try {
+      return optimizeRequestSchema.parse(parsed);
+    } catch {
+      throw new Error(
+        formatValidationError(error) ?? "Invalid save file format.",
+      );
+    }
   }
 }
 

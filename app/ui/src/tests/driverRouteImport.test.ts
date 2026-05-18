@@ -13,7 +13,7 @@ describe("driver route import", () => {
           deliveries: [
             {
               id: 42,
-              recipientName: "Ada Lovelace",
+              recipientName: "Recipient 1",
               phoneNumber: "555-0100",
               address: "12 Compiler Way",
               notes: "Leave near side door",
@@ -21,20 +21,20 @@ describe("driver route import", () => {
               demand: { value: 3 },
             },
           ],
-          vehicles: [{ id: 7, driverName: "Grace Hopper" }],
+          vehicles: [{ id: 7, driverName: "driver1" }],
         },
       }),
     );
 
     expect(transformSessionToDriverRoute(session)).toEqual({
-      driverName: "Grace Hopper",
+      driverName: "driver1",
       routeLabel: "Route 7 - 1 stops",
       stops: [
         {
           id: "42",
           stopNumber: 1,
           address: "12 Compiler Way",
-          customerName: "Ada Lovelace",
+          customerName: "Recipient 1",
           phoneNumber: "555-0100",
           packageCount: 3,
           notes: "Leave near side door",
@@ -52,5 +52,31 @@ describe("driver route import", () => {
     expect(() => loadSessionFromText(JSON.stringify({ version: 1 }))).toThrow(
       'Invalid save file format at "savedAt".',
     );
+  });
+
+  it("also accepts a direct optimize request JSON file", () => {
+    const session = loadSessionFromText(
+      JSON.stringify({
+        deliveries: [
+          {
+            id: 9,
+            recipientName: "Recipient 2",
+            address: "620 G St, Davis, CA 95616",
+            location: { lat: 38.5464, lng: -121.7446 },
+          },
+        ],
+        vehicles: [{ id: 2, driverName: "driver2" }],
+      }),
+    );
+
+    expect(transformSessionToDriverRoute(session)).toMatchObject({
+      driverName: "driver2",
+      stops: [
+        {
+          customerName: "Recipient 2",
+          address: "620 G St, Davis, CA 95616",
+        },
+      ],
+    });
   });
 });
