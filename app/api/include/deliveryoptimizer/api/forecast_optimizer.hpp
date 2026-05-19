@@ -32,4 +32,7 @@ struct WeatherImpactEstimate {
                                                          const WeatherForecastOptions& options,
                                                          int baseline_duration_seconds);
 
+[[nodiscard]] Json::Value BuildWeatherForecastAnnotation(const WeatherForecastOptions& options,
+                                                         const WeatherImpactEstimate& impact);
+
 } // namespace deliveryoptimizer::api

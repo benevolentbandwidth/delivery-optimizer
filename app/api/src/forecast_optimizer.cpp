@@ -135,4 +135,25 @@ Json::Value BuildWeatherAdjustedVroomInput(const OptimizeRequestInput& input,
   return payload;
 }
 
+Json::Value BuildWeatherForecastAnnotation(const WeatherForecastOptions& options,
+                                           const WeatherImpactEstimate& impact) {
+  Json::Value forecast{Json::objectValue};
+  forecast["status"] = options.enabled ? "evaluated" : "disabled";
+  forecast["provider"] = "weather-mvp";
+  forecast["stop_count"] = impact.stop_count;
+  forecast["baseline_duration_seconds"] = impact.baseline_duration_seconds;
+  forecast["weather_delay_seconds"] = impact.weather_delay_seconds;
+  forecast["predicted_duration_seconds"] =
+      impact.baseline_duration_seconds + impact.weather_delay_seconds;
+  forecast["reoptimize_threshold_seconds"] = impact.reoptimize_threshold_seconds;
+
+  Json::Value reoptimization{Json::objectValue};
+  reoptimization["applied"] = impact.should_reoptimize;
+  reoptimization["reason"] =
+      impact.should_reoptimize ? "weather_delay_crossed_threshold" : "weather_delay_below_threshold";
+  forecast["reoptimization"] = std::move(reoptimization);
+
+  return forecast;
+}
+
 } // namespace deliveryoptimizer::api
