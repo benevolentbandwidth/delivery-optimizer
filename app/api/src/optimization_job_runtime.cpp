@@ -1,17 +1,31 @@
 #include "deliveryoptimizer/api/optimization_job_runtime.hpp"
 
 #include "deliveryoptimizer/adapters/json_utils.hpp"
+#include "deliveryoptimizer/api/forecast_optimizer.hpp"
 #include "deliveryoptimizer/api/optimize_request.hpp"
 #include "deliveryoptimizer/api/solve_execution.hpp"
 
 #include <chrono>
 #include <drogon/utils/Utilities.h>
+#include <limits>
 #include <thread>
 
 namespace {
 
 [[nodiscard]] std::string BuildWorkerIdPrefix() {
   return "opt-worker-" + drogon::utils::getUuid();
+}
+
+[[nodiscard]] int EstimateServiceSeconds(const deliveryoptimizer::api::OptimizeRequestInput& input) {
+  std::int64_t total = 0;
+  for (const auto& job : input.jobs) {
+    total += job.service;
+    if (total >= std::numeric_limits<int>::max()) {
+      return std::numeric_limits<int>::max();
+    }
+  }
+
+  return static_cast<int>(total);
 }
 
 } // namespace
@@ -152,9 +166,15 @@ void OptimizationJobRuntime::WorkerLoop(const std::stop_token stop_token,
         }
       }
     } else {
+      const WeatherForecastOptions weather_options = ResolveWeatherForecastOptionsFromEnv();
+      const int baseline_seconds = EstimateServiceSeconds(parsed_request->input);
+      const WeatherImpactEstimate impact = EstimateWeatherImpact(
+          weather_options, parsed_request->input.jobs.size(), baseline_seconds);
+      const Json::Value vroom_input =
+          BuildWeatherAdjustedVroomInput(parsed_request->input, weather_options, baseline_seconds);
       const auto solve_result = BuildSolveExecutionResult(
-          parsed_request->input,
-          ToCoordinatedSolveResult(runner_->Run(BuildVroomInput(parsed_request->input))));
+          parsed_request->input, ToCoordinatedSolveResult(runner_->Run(vroom_input)),
+          BuildWeatherForecastAnnotation(weather_options, impact));
       if (solve_result.response_body.has_value()) {
         if (store_->CompleteJobSuccess(claimed_job->record.job_id, claimed_job->worker_id,
                                        *solve_result.response_body, solve_result.outcome,
