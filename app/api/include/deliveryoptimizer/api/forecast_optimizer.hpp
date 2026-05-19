@@ -1,6 +1,9 @@
 #pragma once
 
+#include "deliveryoptimizer/api/optimize_request.hpp"
+
 #include <cstddef>
+#include <json/json.h>
 
 namespace deliveryoptimizer::api {
 
@@ -24,5 +27,9 @@ struct WeatherImpactEstimate {
 [[nodiscard]] WeatherImpactEstimate EstimateWeatherImpact(const WeatherForecastOptions& options,
                                                           std::size_t stop_count,
                                                           int baseline_duration_seconds);
+
+[[nodiscard]] Json::Value BuildWeatherAdjustedVroomInput(const OptimizeRequestInput& input,
+                                                         const WeatherForecastOptions& options,
+                                                         int baseline_duration_seconds);
 
 } // namespace deliveryoptimizer::api

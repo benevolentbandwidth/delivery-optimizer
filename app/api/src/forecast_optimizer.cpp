@@ -1,5 +1,7 @@
 #include "deliveryoptimizer/api/forecast_optimizer.hpp"
 
+#include "deliveryoptimizer/api/optimize_request.hpp"
+
 #include <algorithm>
 #include <charconv>
 #include <cmath>
@@ -111,6 +113,26 @@ WeatherImpactEstimate EstimateWeatherImpact(const WeatherForecastOptions& option
       .reoptimize_threshold_seconds = threshold_seconds,
       .should_reoptimize = weather_delay_seconds > 0 && weather_delay_seconds >= threshold_seconds,
   };
+}
+
+Json::Value BuildWeatherAdjustedVroomInput(const OptimizeRequestInput& input,
+                                           const WeatherForecastOptions& options,
+                                           const int baseline_duration_seconds) {
+  Json::Value payload = BuildVroomInput(input);
+  const WeatherImpactEstimate impact =
+      EstimateWeatherImpact(options, input.jobs.size(), baseline_duration_seconds);
+  if (!impact.should_reoptimize) {
+    return payload;
+  }
+
+  // Weather delay time so VROOM can still decide the route order before dispatch.
+  for (Json::ArrayIndex index = 0; index < payload["jobs"].size(); ++index) {
+    Json::Value& job = payload["jobs"][index];
+    const int current_service = job["service"].isInt() ? job["service"].asInt() : 0;
+    job["service"] = current_service + options.weather_delay_seconds_per_stop;
+  }
+
+  return payload;
 }
 
 } // namespace deliveryoptimizer::api
