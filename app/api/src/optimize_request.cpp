@@ -579,7 +579,8 @@ Json::Value BuildVroomInput(const OptimizeRequestInput& input) {
 }
 
 Json::Value BuildOptimizeSuccessBody(const OptimizeRequestInput& input,
-                                     const Json::Value& vroom_output) {
+                                     const Json::Value& vroom_output,
+                                     const std::optional<Json::Value>& forecast) {
   Json::Value body{Json::objectValue};
   body["status"] = "ok";
 
@@ -601,6 +602,9 @@ Json::Value BuildOptimizeSuccessBody(const OptimizeRequestInput& input,
   ApplyExternalIdsToUnassigned(unassigned, job_map);
   body["routes"] = std::move(routes);
   body["unassigned"] = std::move(unassigned);
+  if (forecast.has_value()) {
+    body["forecast"] = *forecast;
+  }
 
   return body;
 }
