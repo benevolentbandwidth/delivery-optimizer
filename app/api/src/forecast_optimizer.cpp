@@ -9,6 +9,7 @@
 #include <cstdlib>
 #include <limits>
 #include <optional>
+#include <string>
 #include <string_view>
 
 namespace {
@@ -20,6 +21,9 @@ constexpr std::string_view kWeatherThresholdSecondsEnv =
     "DELIVERYOPTIMIZER_WEATHER_REOPTIMIZE_THRESHOLD_SECONDS";
 constexpr std::string_view kWeatherThresholdPercentEnv =
     "DELIVERYOPTIMIZER_WEATHER_REOPTIMIZE_THRESHOLD_PERCENT";
+constexpr std::string_view kOpenWeatherApiKeyEnv = "OPENWEATHER_API_KEY";
+constexpr std::string_view kOpenWeatherBaseUrlEnv = "OPENWEATHER_BASE_URL";
+constexpr std::string_view kDefaultOpenWeatherBaseUrl = "https://api.openweathermap.org";
 constexpr int kDefaultWeatherThresholdSeconds = 300;
 constexpr double kDefaultWeatherThresholdPercent = 5.0;
 
@@ -63,6 +67,16 @@ constexpr double kDefaultWeatherThresholdPercent = 5.0;
   return parsed_value;
 }
 
+[[nodiscard]] std::string ResolveStringEnvOrDefault(const char* key,
+                                                    const std::string_view fallback) {
+  const char* raw_value = std::getenv(key);
+  if (raw_value == nullptr || *raw_value == '\0') {
+    return std::string{fallback};
+  }
+
+  return std::string{raw_value};
+}
+
 [[nodiscard]] int ClampToInt(const long long value) {
   if (value > static_cast<long long>(std::numeric_limits<int>::max())) {
     return std::numeric_limits<int>::max();
@@ -86,7 +100,14 @@ WeatherForecastOptions ResolveWeatherForecastOptionsFromEnv() {
       .reoptimize_threshold_percent =
           ParseNonNegativeDouble(std::getenv(kWeatherThresholdPercentEnv.data()))
               .value_or(kDefaultWeatherThresholdPercent),
+      .openweather_api_key = ResolveStringEnvOrDefault(kOpenWeatherApiKeyEnv.data(), ""),
+      .openweather_base_url =
+          ResolveStringEnvOrDefault(kOpenWeatherBaseUrlEnv.data(), kDefaultOpenWeatherBaseUrl),
   };
+}
+
+bool IsOpenWeatherConfigured(const WeatherForecastOptions& options) {
+  return options.enabled && !options.openweather_api_key.empty();
 }
 
 WeatherImpactEstimate EstimateWeatherImpact(const WeatherForecastOptions& options,
