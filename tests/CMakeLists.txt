@@ -27,6 +27,7 @@ target_sources(
   deliveryoptimizer_tests
   PRIVATE
     "${CMAKE_SOURCE_DIR}/app/api/src/observability.cpp"
+    "${CMAKE_SOURCE_DIR}/app/api/src/forecast_optimizer.cpp"
     "${CMAKE_SOURCE_DIR}/app/api/src/optimize_request.cpp"
     "${CMAKE_SOURCE_DIR}/app/api/src/solve_admission.cpp"
     "${CMAKE_SOURCE_DIR}/app/api/src/solve_coordinator.cpp"
