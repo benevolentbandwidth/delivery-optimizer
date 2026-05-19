@@ -190,22 +190,28 @@ void RegisterDeliveriesOptimizeEndpoint(drogon::HttpAppFramework& app,
             .jobs = optimize_request_ptr->jobs.size(),
             .vehicles = optimize_request_ptr->vehicles.size(),
         };
+        auto weather_impact =
+            std::make_shared<std::optional<WeatherImpactEstimate>>(std::nullopt);
 
         const SolveAdmissionStatus admission_status = coordinator->Submit(
             request_size,
-            [optimize_request_ptr, weather_options] {
+            [optimize_request_ptr, weather_options, weather_impact] {
               const int baseline_seconds = EstimateServiceSeconds(*optimize_request_ptr);
-              return BuildWeatherAdjustedVroomInput(*optimize_request_ptr, weather_options,
-                                                    baseline_seconds);
+              const WeatherImpactEstimate impact = EstimateRouteWeatherImpact(
+                  weather_options, *optimize_request_ptr, baseline_seconds);
+              *weather_impact = impact;
+              return BuildWeatherAdjustedVroomInput(*optimize_request_ptr, impact);
             },
             [optimize_request_ptr,
              weather_options,
+             weather_impact,
              respond_with_completion](const CoordinatedSolveResult& result) mutable {
               std::optional<Json::Value> forecast;
               if (result.output.has_value()) {
-                const WeatherImpactEstimate impact = EstimateWeatherImpact(
-                    weather_options, optimize_request_ptr->jobs.size(),
-                    EstimateServiceSeconds(*optimize_request_ptr));
+                const WeatherImpactEstimate impact =
+                    weather_impact->value_or(EstimateWeatherImpact(
+                        weather_options, optimize_request_ptr->jobs.size(),
+                        EstimateServiceSeconds(*optimize_request_ptr)));
                 forecast = BuildWeatherForecastAnnotation(weather_options, impact);
               }
               respond_with_completion(BuildSolveExecutionResponse(BuildSolveExecutionResult(

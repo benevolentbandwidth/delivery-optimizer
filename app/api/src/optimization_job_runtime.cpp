@@ -168,10 +168,10 @@ void OptimizationJobRuntime::WorkerLoop(const std::stop_token stop_token,
     } else {
       const WeatherForecastOptions weather_options = ResolveWeatherForecastOptionsFromEnv();
       const int baseline_seconds = EstimateServiceSeconds(parsed_request->input);
-      const WeatherImpactEstimate impact = EstimateWeatherImpact(
-          weather_options, parsed_request->input.jobs.size(), baseline_seconds);
+      const WeatherImpactEstimate impact =
+          EstimateRouteWeatherImpact(weather_options, parsed_request->input, baseline_seconds);
       const Json::Value vroom_input =
-          BuildWeatherAdjustedVroomInput(parsed_request->input, weather_options, baseline_seconds);
+          BuildWeatherAdjustedVroomInput(parsed_request->input, impact);
       const auto solve_result = BuildSolveExecutionResult(
           parsed_request->input, ToCoordinatedSolveResult(runner_->Run(vroom_input)),
           BuildWeatherForecastAnnotation(weather_options, impact));

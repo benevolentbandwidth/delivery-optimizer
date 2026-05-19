@@ -17,25 +17,39 @@ struct WeatherForecastOptions {
   std::string openweather_base_url;
 };
 
+struct OpenWeatherDelayEstimate {
+  bool available{false};
+  int delay_seconds_per_stop{0};
+  std::string source;
+};
+
 struct WeatherImpactEstimate {
   int stop_count{0};
   int baseline_duration_seconds{0};
+  int delay_seconds_per_stop{0};
   int weather_delay_seconds{0};
   int reoptimize_threshold_seconds{300};
   bool should_reoptimize{false};
+  std::string source;
 };
 
 [[nodiscard]] WeatherForecastOptions ResolveWeatherForecastOptionsFromEnv();
 
 [[nodiscard]] bool IsOpenWeatherConfigured(const WeatherForecastOptions& options);
 
+[[nodiscard]] OpenWeatherDelayEstimate FetchOpenWeatherDelayEstimate(
+    const WeatherForecastOptions& options, const Coordinate& coordinate);
+
 [[nodiscard]] WeatherImpactEstimate EstimateWeatherImpact(const WeatherForecastOptions& options,
                                                           std::size_t stop_count,
                                                           int baseline_duration_seconds);
 
+[[nodiscard]] WeatherImpactEstimate EstimateRouteWeatherImpact(const WeatherForecastOptions& options,
+                                                               const OptimizeRequestInput& input,
+                                                               int baseline_duration_seconds);
+
 [[nodiscard]] Json::Value BuildWeatherAdjustedVroomInput(const OptimizeRequestInput& input,
-                                                         const WeatherForecastOptions& options,
-                                                         int baseline_duration_seconds);
+                                                         const WeatherImpactEstimate& impact);
 
 [[nodiscard]] Json::Value BuildWeatherForecastAnnotation(const WeatherForecastOptions& options,
                                                          const WeatherImpactEstimate& impact);
