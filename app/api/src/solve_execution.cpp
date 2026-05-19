@@ -25,14 +25,15 @@ CoordinatedSolveResult ToCoordinatedSolveResult(const VroomRunResult& result) {
 }
 
 SolveExecutionResult BuildSolveExecutionResult(const OptimizeRequestInput& input,
-                                               const CoordinatedSolveResult& result) {
+                                               const CoordinatedSolveResult& result,
+                                               const std::optional<Json::Value>& forecast) {
   switch (result.status) {
   case CoordinatedSolveStatus::kSucceeded:
     if (result.output.has_value()) {
       return SolveExecutionResult{
           .outcome = SolveRequestOutcome::kSucceeded,
           .http_status = 200U,
-          .response_body = BuildOptimizeSuccessBody(input, *result.output),
+          .response_body = BuildOptimizeSuccessBody(input, *result.output, forecast),
           .error_message = {},
       };
     }

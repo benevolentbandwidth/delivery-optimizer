@@ -1,5 +1,6 @@
 #include "deliveryoptimizer/api/endpoints/deliveries_optimize_endpoint.hpp"
 
+#include "deliveryoptimizer/api/forecast_optimizer.hpp"
 #include "deliveryoptimizer/api/observability.hpp"
 #include "deliveryoptimizer/api/optimize_request.hpp"
 #include "deliveryoptimizer/api/solve_coordinator.hpp"
@@ -9,7 +10,9 @@
 #include <cstdint>
 #include <drogon/drogon.h>
 #include <json/json.h>
+#include <limits>
 #include <memory>
+#include <optional>
 #include <string_view>
 #include <trantor/net/EventLoop.h>
 #include <utility>
@@ -17,6 +20,18 @@
 namespace {
 
 using deliveryoptimizer::api::OptimizeRequestInput;
+
+[[nodiscard]] int EstimateServiceSeconds(const OptimizeRequestInput& input) {
+  std::int64_t total = 0;
+  for (const auto& job : input.jobs) {
+    total += job.service;
+    if (total >= std::numeric_limits<int>::max()) {
+      return std::numeric_limits<int>::max();
+    }
+  }
+
+  return static_cast<int>(total);
+}
 
 struct CompletedResponse {
   drogon::HttpResponsePtr response;
@@ -102,13 +117,15 @@ namespace deliveryoptimizer::api {
 void RegisterDeliveriesOptimizeEndpoint(drogon::HttpAppFramework& app,
                                         const SolveAdmissionConfig& admission_config,
                                         std::shared_ptr<ObservabilityRegistry> observability) {
+  const WeatherForecastOptions weather_options = ResolveWeatherForecastOptionsFromEnv();
   auto coordinator = std::make_shared<SolveCoordinator>(
       admission_config, std::make_shared<ProcessVroomRunner>(ResolveVroomRuntimeConfigFromEnv()),
       SolveCoordinatorOptions{}, observability);
 
   app.registerHandler(
       "/api/v1/deliveries/optimize",
-      [coordinator = std::move(coordinator), observability = std::move(observability)](
+      [coordinator = std::move(coordinator), weather_options,
+       observability = std::move(observability)](
           const drogon::HttpRequestPtr& request,
           std::function<void(const drogon::HttpResponsePtr&)>&& callback) {
         auto lifecycle = std::make_shared<SolveLifecycle>(CreateSolveLifecycle(request));
@@ -175,11 +192,24 @@ void RegisterDeliveriesOptimizeEndpoint(drogon::HttpAppFramework& app,
         };
 
         const SolveAdmissionStatus admission_status = coordinator->Submit(
-            request_size, [optimize_request_ptr] { return BuildVroomInput(*optimize_request_ptr); },
+            request_size,
+            [optimize_request_ptr, weather_options] {
+              const int baseline_seconds = EstimateServiceSeconds(*optimize_request_ptr);
+              return BuildWeatherAdjustedVroomInput(*optimize_request_ptr, weather_options,
+                                                    baseline_seconds);
+            },
             [optimize_request_ptr,
+             weather_options,
              respond_with_completion](const CoordinatedSolveResult& result) mutable {
-              respond_with_completion(BuildSolveExecutionResponse(
-                  BuildSolveExecutionResult(*optimize_request_ptr, result)));
+              std::optional<Json::Value> forecast;
+              if (result.output.has_value()) {
+                const WeatherImpactEstimate impact = EstimateWeatherImpact(
+                    weather_options, optimize_request_ptr->jobs.size(),
+                    EstimateServiceSeconds(*optimize_request_ptr));
+                forecast = BuildWeatherForecastAnnotation(weather_options, impact);
+              }
+              respond_with_completion(BuildSolveExecutionResponse(BuildSolveExecutionResult(
+                  *optimize_request_ptr, result, forecast)));
             },
             lifecycle);
         if (admission_status != SolveAdmissionStatus::kAccepted) {

@@ -19,8 +19,9 @@ struct SolveExecutionResult {
   std::string error_message;
 };
 
-[[nodiscard]] SolveExecutionResult BuildSolveExecutionResult(const OptimizeRequestInput& input,
-                                                             const CoordinatedSolveResult& result);
+[[nodiscard]] SolveExecutionResult
+BuildSolveExecutionResult(const OptimizeRequestInput& input, const CoordinatedSolveResult& result,
+                          const std::optional<Json::Value>& forecast = std::nullopt);
 
 [[nodiscard]] CoordinatedSolveResult ToCoordinatedSolveResult(const VroomRunResult& result);
 
