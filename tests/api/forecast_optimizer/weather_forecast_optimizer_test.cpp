@@ -290,6 +290,26 @@ TEST(TrafficForecastOptimizerTest, AboveThresholdTrafficReoptimizes) {
   EXPECT_EQ(impact.traffic_delay_seconds, 180);
   EXPECT_TRUE(impact.should_reoptimize);
 }
+TEST(TrafficForecastOptimizerTest, AboveThresholdTrafficAddsServiceTime) {
+  const auto input = BuildInput();
+  const deliveryoptimizer::api::WeatherImpactEstimate weather{};
+  const deliveryoptimizer::api::TrafficImpact traffic{
+      .baseline_duration_seconds = 900,
+      .traffic_delay_seconds = 180,
+      .traffic_adjusted_duration_seconds = 1080,
+      .reoptimize_threshold_seconds = 100,
+      .should_reoptimize = true,
+      .source = "google_maps",
+  };
+
+  const Json::Value payload =
+      deliveryoptimizer::api::BuildTrafficAdjustedVroomInput(input, weather, traffic);
+
+  ASSERT_TRUE(payload["jobs"].isArray());
+  ASSERT_EQ(payload["jobs"].size(), 2U);
+  EXPECT_EQ(payload["jobs"][0]["service"].asInt(), 270);
+  EXPECT_EQ(payload["jobs"][1]["service"].asInt(), 210);
+}
 TEST(TrafficForecastOptimizerTest, BuildsGoogleTrafficPath) {
   const std::string path = deliveryoptimizer::api::BuildTrafficPath(
       deliveryoptimizer::api::Coordinate{.lon = -121.7405, .lat = 38.5449},
@@ -326,6 +346,31 @@ TEST(TrafficForecastOptimizerTest, IgnoresMissingTrafficDuration) {
   const Json::Value body{Json::objectValue};
 
   EXPECT_FALSE(deliveryoptimizer::api::ReadTrafficDelay(body).has_value());
+}
+TEST(TrafficForecastOptimizerTest, AddsTrafficForecastBlock) {
+  Json::Value forecast{Json::objectValue};
+  const deliveryoptimizer::api::TrafficForecastOptions options{
+      .enabled = true,
+      .reoptimize_threshold_seconds = 100,
+      .reoptimize_threshold_percent = 0.0,
+      .google_maps_api_key = "",
+      .google_maps_base_url = "",
+  };
+  const deliveryoptimizer::api::TrafficImpact impact{
+      .baseline_duration_seconds = 900,
+      .traffic_delay_seconds = 180,
+      .traffic_adjusted_duration_seconds = 1080,
+      .reoptimize_threshold_seconds = 100,
+      .should_reoptimize = true,
+      .source = "google_maps",
+  };
+
+  deliveryoptimizer::api::AddTrafficForecast(forecast, options, impact);
+
+  EXPECT_EQ(forecast["traffic"]["status"].asString(), "evaluated");
+  EXPECT_EQ(forecast["traffic"]["provider"].asString(), "google_maps");
+  EXPECT_EQ(forecast["traffic"]["traffic_delay_seconds"].asInt(), 180);
+  EXPECT_TRUE(forecast["traffic"]["reoptimization"]["applied"].asBool());
 }
 TEST(TrafficForecastOptimizerTest, ReadsTrafficLegsFromVroomSteps) {
   Json::Value output{Json::objectValue};
