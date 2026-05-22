@@ -37,16 +37,16 @@ struct WeatherImpactEstimate {
 
 [[nodiscard]] bool IsOpenWeatherConfigured(const WeatherForecastOptions& options);
 
-[[nodiscard]] OpenWeatherDelayEstimate FetchOpenWeatherDelayEstimate(
-    const WeatherForecastOptions& options, const Coordinate& coordinate);
+[[nodiscard]] OpenWeatherDelayEstimate
+FetchOpenWeatherDelayEstimate(const WeatherForecastOptions& options, const Coordinate& coordinate);
 
 [[nodiscard]] WeatherImpactEstimate EstimateWeatherImpact(const WeatherForecastOptions& options,
                                                           std::size_t stop_count,
                                                           int baseline_duration_seconds);
 
-[[nodiscard]] WeatherImpactEstimate EstimateRouteWeatherImpact(const WeatherForecastOptions& options,
-                                                               const OptimizeRequestInput& input,
-                                                               int baseline_duration_seconds);
+[[nodiscard]] WeatherImpactEstimate
+EstimateRouteWeatherImpact(const WeatherForecastOptions& options, const OptimizeRequestInput& input,
+                           int baseline_duration_seconds);
 
 [[nodiscard]] Json::Value BuildWeatherAdjustedVroomInput(const OptimizeRequestInput& input,
                                                          const WeatherImpactEstimate& impact);

@@ -41,8 +41,7 @@ constexpr double kDefaultWeatherThresholdPercent = 5.0;
   }
 
   const std::string_view value{raw_value};
-  return value == "1" || value == "true" || value == "TRUE" || value == "yes" ||
-         value == "YES";
+  return value == "1" || value == "true" || value == "TRUE" || value == "yes" || value == "YES";
 }
 
 [[nodiscard]] std::optional<int> ParseNonNegativeInt(const char* raw_value) {
@@ -99,8 +98,8 @@ constexpr double kDefaultWeatherThresholdPercent = 5.0;
   return stream.str();
 }
 
-[[nodiscard]] std::string BuildOpenWeatherPath(
-    const deliveryoptimizer::api::Coordinate& coordinate, const std::string& api_key) {
+[[nodiscard]] std::string BuildOpenWeatherPath(const deliveryoptimizer::api::Coordinate& coordinate,
+                                               const std::string& api_key) {
   return "/data/3.0/onecall?lat=" + FormatCoordinate(coordinate.lat) +
          "&lon=" + FormatCoordinate(coordinate.lon) +
          "&exclude=current,minutely,daily,alerts&units=metric&appid=" + api_key;
@@ -237,19 +236,18 @@ OpenWeatherDelayEstimate FetchOpenWeatherDelayEstimate(const WeatherForecastOpti
 }
 
 WeatherImpactEstimate EstimateWeatherImpact(const WeatherForecastOptions& options,
-                                             const std::size_t stop_count,
-                                             const int baseline_duration_seconds) {
-  const int normalized_stop_count =
-      ClampToInt(static_cast<long long>(std::min<std::size_t>(
-          stop_count, static_cast<std::size_t>(std::numeric_limits<int>::max()))));
+                                            const std::size_t stop_count,
+                                            const int baseline_duration_seconds) {
+  const int normalized_stop_count = ClampToInt(static_cast<long long>(std::min<std::size_t>(
+      stop_count, static_cast<std::size_t>(std::numeric_limits<int>::max()))));
   const int normalized_baseline_seconds = std::max(baseline_duration_seconds, 0);
   const int configured_delay_per_stop =
       options.enabled ? std::max(options.weather_delay_seconds_per_stop, 0) : 0;
   const int weather_delay_seconds =
       ClampToInt(static_cast<long long>(configured_delay_per_stop) * normalized_stop_count);
-  const int percent_threshold_seconds = ClampToInt(static_cast<long long>(std::ceil(
-      static_cast<double>(normalized_baseline_seconds) *
-      (std::max(options.reoptimize_threshold_percent, 0.0) / 100.0))));
+  const int percent_threshold_seconds = ClampToInt(static_cast<long long>(
+      std::ceil(static_cast<double>(normalized_baseline_seconds) *
+                (std::max(options.reoptimize_threshold_percent, 0.0) / 100.0))));
   const int threshold_seconds =
       std::max(std::max(options.reoptimize_threshold_seconds, 0), percent_threshold_seconds);
 
