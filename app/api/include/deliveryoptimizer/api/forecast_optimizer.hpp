@@ -7,6 +7,7 @@
 #include <json/json.h>
 #include <optional>
 #include <string>
+#include <vector>
 
 namespace deliveryoptimizer::api {
 
@@ -56,6 +57,18 @@ struct TrafficImpact {
   std::string source;
 };
 
+struct TrafficDelayEstimate {
+  bool available{false};
+  int delay_seconds{0};
+  std::string source;
+};
+
+struct TrafficLeg {
+  Coordinate origin;
+  Coordinate destination;
+  std::chrono::sys_seconds departure_time;
+};
+
 [[nodiscard]] WeatherForecastOptions ResolveWeatherForecastOptionsFromEnv();
 
 [[nodiscard]] TrafficForecastOptions ResolveTrafficForecastOptionsFromEnv();
@@ -74,11 +87,24 @@ ReadOpenWeatherDelay(const Json::Value& body,
                      std::optional<std::chrono::sys_seconds> route_start_time = std::nullopt,
                      std::optional<int> route_duration_seconds = std::nullopt);
 
+[[nodiscard]] bool IsGoogleMapsConfigured(const TrafficForecastOptions& options);
+
 [[nodiscard]] std::string BuildTrafficPath(const Coordinate& origin, const Coordinate& destination,
                                            std::chrono::sys_seconds departure_time,
                                            const std::string& api_key);
 
 [[nodiscard]] std::optional<int> ReadTrafficDelay(const Json::Value& body);
+
+[[nodiscard]] TrafficDelayEstimate FetchTrafficDelay(const TrafficForecastOptions& options,
+                                                     const TrafficLeg& leg);
+
+[[nodiscard]] std::vector<TrafficLeg>
+ReadTrafficLegs(const Json::Value& vroom_output,
+                std::optional<std::chrono::sys_seconds> route_start_time = std::nullopt);
+
+[[nodiscard]] TrafficDelayEstimate
+ReadRouteTraffic(const TrafficForecastOptions& options, const Json::Value& vroom_output,
+                 std::optional<std::chrono::sys_seconds> route_start_time = std::nullopt);
 
 [[nodiscard]] WeatherImpactEstimate EstimateWeatherImpact(const WeatherForecastOptions& options,
                                                           std::size_t stop_count,
