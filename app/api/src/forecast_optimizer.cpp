@@ -41,6 +41,7 @@ constexpr std::string_view kGoogleMapsApiKeyEnv = "GOOGLE_MAPS_API_KEY";
 constexpr std::string_view kGoogleMapsBaseUrlEnv = "GOOGLE_MAPS_BASE_URL";
 constexpr std::string_view kDefaultGoogleMapsBaseUrl = "https://maps.googleapis.com";
 constexpr int kOpenWeatherTimeoutSeconds = 4;
+constexpr int kGoogleMapsTimeoutSeconds = 4;
 constexpr int kDefaultWeatherThresholdSeconds = 300;
 constexpr double kDefaultWeatherThresholdPercent = 5.0;
 constexpr int kDefaultTrafficThresholdSeconds = 300;
@@ -227,6 +228,10 @@ int EstimateServiceSeconds(const OptimizeRequestInput& input) {
   return static_cast<int>(total);
 }
 
+bool IsGoogleMapsConfigured(const TrafficForecastOptions& options) {
+  return options.enabled && !options.google_maps_api_key.empty();
+}
+
 OpenWeatherDelayEstimate
 FetchOpenWeatherDelayEstimate(const WeatherForecastOptions& options, const Coordinate& coordinate,
                               const std::optional<std::chrono::sys_seconds> route_start_time,
@@ -368,6 +373,131 @@ std::optional<int> ReadTrafficDelay(const Json::Value& body) {
   return std::max(leg["duration_in_traffic"]["value"].asInt() - leg["duration"]["value"].asInt(),
                   0);
 }
+
+TrafficDelayEstimate FetchTrafficDelay(const TrafficForecastOptions& options,
+                                       const TrafficLeg& leg) {
+  if (!IsGoogleMapsConfigured(options)) {
+    return TrafficDelayEstimate{
+        .available = false,
+        .delay_seconds = 0,
+        .source = "",
+    };
+  }
+
+  auto client = drogon::HttpClient::newHttpClient(options.google_maps_base_url);
+  auto request = drogon::HttpRequest::newHttpRequest();
+  request->setMethod(drogon::Get);
+  request->setPath(BuildTrafficPath(leg.origin, leg.destination, leg.departure_time,
+                                    options.google_maps_api_key));
+
+  auto promise = std::make_shared<std::promise<TrafficDelayEstimate>>();
+  auto future = promise->get_future();
+  client->sendRequest(
+      request,
+      [promise](const drogon::ReqResult result, const drogon::HttpResponsePtr& response) {
+        if (result != drogon::ReqResult::Ok || response == nullptr ||
+            response->getStatusCode() != drogon::k200OK) {
+          promise->set_value(TrafficDelayEstimate{
+              .available = false,
+              .delay_seconds = 0,
+              .source = "",
+          });
+          return;
+        }
+
+        const auto body = response->getJsonObject();
+        const std::optional<int> delay = body == nullptr ? std::nullopt : ReadTrafficDelay(*body);
+        promise->set_value(TrafficDelayEstimate{
+            .available = delay.has_value(),
+            .delay_seconds = delay.value_or(0),
+            .source = delay.has_value() ? "google_maps" : "",
+        });
+      },
+      kGoogleMapsTimeoutSeconds);
+
+  if (future.wait_for(std::chrono::seconds{kGoogleMapsTimeoutSeconds + 1}) !=
+      std::future_status::ready) {
+    return TrafficDelayEstimate{
+        .available = false,
+        .delay_seconds = 0,
+        .source = "",
+    };
+  }
+
+  return future.get();
+}
+
+std::vector<TrafficLeg>
+ReadTrafficLegs(const Json::Value& vroom_output,
+                const std::optional<std::chrono::sys_seconds> route_start_time) {
+  const Json::Value& routes = vroom_output["routes"];
+  if (!routes.isArray()) {
+    return {};
+  }
+
+  const std::chrono::sys_seconds start_time = route_start_time.value_or(
+      std::chrono::time_point_cast<std::chrono::seconds>(std::chrono::system_clock::now()));
+  std::vector<TrafficLeg> legs;
+  for (const Json::Value& route : routes) {
+    const Json::Value& steps = route["steps"];
+    if (!steps.isArray() || steps.size() < 2U) {
+      continue;
+    }
+
+    for (Json::ArrayIndex index = 1U; index < steps.size(); ++index) {
+      const Json::Value& from = steps[index - 1U];
+      const Json::Value& to = steps[index];
+      const Json::Value& from_location = from["location"];
+      const Json::Value& to_location = to["location"];
+      if (!from_location.isArray() || from_location.size() != 2U || !to_location.isArray() ||
+          to_location.size() != 2U) {
+        continue;
+      }
+
+      const int arrival = from["arrival"].isInt() ? from["arrival"].asInt() : 0;
+      const int service = from["service"].isInt() ? from["service"].asInt() : 0;
+      legs.push_back(TrafficLeg{
+          .origin =
+              Coordinate{.lon = from_location[0U].asDouble(), .lat = from_location[1U].asDouble()},
+          .destination =
+              Coordinate{.lon = to_location[0U].asDouble(), .lat = to_location[1U].asDouble()},
+          .departure_time = start_time + std::chrono::seconds{std::max(arrival + service, 0)},
+      });
+    }
+  }
+
+  return legs;
+}
+
+TrafficDelayEstimate
+ReadRouteTraffic(const TrafficForecastOptions& options, const Json::Value& vroom_output,
+                 const std::optional<std::chrono::sys_seconds> route_start_time) {
+  if (!IsGoogleMapsConfigured(options)) {
+    return TrafficDelayEstimate{
+        .available = false,
+        .delay_seconds = 0,
+        .source = "",
+    };
+  }
+
+  int delay_seconds = 0;
+  bool saw_traffic = false;
+  for (const TrafficLeg& leg : ReadTrafficLegs(vroom_output, route_start_time)) {
+    const TrafficDelayEstimate estimate = FetchTrafficDelay(options, leg);
+    if (!estimate.available) {
+      continue;
+    }
+    delay_seconds += estimate.delay_seconds;
+    saw_traffic = true;
+  }
+
+  return TrafficDelayEstimate{
+      .available = saw_traffic,
+      .delay_seconds = delay_seconds,
+      .source = saw_traffic ? "google_maps" : "",
+  };
+}
+
 WeatherImpactEstimate EstimateWeatherImpact(const WeatherForecastOptions& options,
                                             const std::size_t stop_count,
                                             const int baseline_duration_seconds) {
