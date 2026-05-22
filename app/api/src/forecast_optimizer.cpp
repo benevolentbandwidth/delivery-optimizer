@@ -176,6 +176,26 @@ void SetRouteTimes(const std::optional<std::chrono::sys_seconds> planned_start_t
       *impact.planned_start_time + std::chrono::seconds{impact.weather_adjusted_duration_seconds};
 }
 
+[[nodiscard]] std::chrono::sys_seconds
+ReadLegDeparture(const Json::Value& step,
+                 const std::optional<std::chrono::sys_seconds> route_start_time) {
+  const int arrival = step["arrival"].isInt() ? step["arrival"].asInt() : 0;
+  const int service = step["service"].isInt() ? step["service"].asInt() : 0;
+  const std::chrono::seconds offset{std::max(arrival + service, 0)};
+  if (route_start_time.has_value()) {
+    const std::chrono::seconds route_start_seconds =
+        std::chrono::duration_cast<std::chrono::seconds>(route_start_time->time_since_epoch());
+    if (offset >= route_start_seconds - std::chrono::hours{24}) {
+      return std::chrono::sys_seconds{offset};
+    }
+
+    return *route_start_time + offset;
+  }
+
+  return std::chrono::time_point_cast<std::chrono::seconds>(std::chrono::system_clock::now()) +
+         offset;
+}
+
 } // namespace
 
 namespace deliveryoptimizer::api {
@@ -435,8 +455,6 @@ ReadTrafficLegs(const Json::Value& vroom_output,
     return {};
   }
 
-  const std::chrono::sys_seconds start_time = route_start_time.value_or(
-      std::chrono::time_point_cast<std::chrono::seconds>(std::chrono::system_clock::now()));
   std::vector<TrafficLeg> legs;
   for (const Json::Value& route : routes) {
     const Json::Value& steps = route["steps"];
@@ -454,14 +472,12 @@ ReadTrafficLegs(const Json::Value& vroom_output,
         continue;
       }
 
-      const int arrival = from["arrival"].isInt() ? from["arrival"].asInt() : 0;
-      const int service = from["service"].isInt() ? from["service"].asInt() : 0;
       legs.push_back(TrafficLeg{
           .origin =
               Coordinate{.lon = from_location[0U].asDouble(), .lat = from_location[1U].asDouble()},
           .destination =
               Coordinate{.lon = to_location[0U].asDouble(), .lat = to_location[1U].asDouble()},
-          .departure_time = start_time + std::chrono::seconds{std::max(arrival + service, 0)},
+          .departure_time = ReadLegDeparture(from, route_start_time),
       });
     }
   }
