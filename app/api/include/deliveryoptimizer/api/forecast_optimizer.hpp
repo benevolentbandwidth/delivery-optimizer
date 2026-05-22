@@ -74,6 +74,12 @@ ReadOpenWeatherDelay(const Json::Value& body,
                      std::optional<std::chrono::sys_seconds> route_start_time = std::nullopt,
                      std::optional<int> route_duration_seconds = std::nullopt);
 
+[[nodiscard]] std::string BuildTrafficPath(const Coordinate& origin, const Coordinate& destination,
+                                           std::chrono::sys_seconds departure_time,
+                                           const std::string& api_key);
+
+[[nodiscard]] std::optional<int> ReadTrafficDelay(const Json::Value& body);
+
 [[nodiscard]] WeatherImpactEstimate EstimateWeatherImpact(const WeatherForecastOptions& options,
                                                           std::size_t stop_count,
                                                           int baseline_duration_seconds);

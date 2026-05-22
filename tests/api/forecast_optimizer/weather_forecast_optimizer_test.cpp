@@ -298,3 +298,40 @@ TEST(TrafficForecastOptimizerTest, AboveThresholdTrafficReoptimizes) {
   EXPECT_EQ(impact.traffic_delay_seconds, 180);
   EXPECT_TRUE(impact.should_reoptimize);
 }
+TEST(TrafficForecastOptimizerTest, BuildsGoogleTrafficPath) {
+  const std::string path = deliveryoptimizer::api::BuildTrafficPath(
+      deliveryoptimizer::api::Coordinate{.lon = -121.7405, .lat = 38.5449},
+      deliveryoptimizer::api::Coordinate{.lon = -121.752, .lat = 38.548},
+      std::chrono::sys_seconds{std::chrono::seconds{1800}}, "test-key");
+
+  EXPECT_NE(path.find("/maps/api/distancematrix/json?"), std::string::npos);
+  EXPECT_NE(path.find("origins=38.544900,-121.740500"), std::string::npos);
+  EXPECT_NE(path.find("destinations=38.548000,-121.752000"), std::string::npos);
+  EXPECT_NE(path.find("departure_time=1800"), std::string::npos);
+  EXPECT_NE(path.find("traffic_model=best_guess"), std::string::npos);
+  EXPECT_NE(path.find("key=test-key"), std::string::npos);
+}
+
+TEST(TrafficForecastOptimizerTest, ReadsGoogleTrafficDelay) {
+  Json::Value body{Json::objectValue};
+  body["rows"] = Json::Value{Json::arrayValue};
+  Json::Value row{Json::objectValue};
+  row["elements"] = Json::Value{Json::arrayValue};
+  Json::Value leg{Json::objectValue};
+  leg["status"] = "OK";
+  leg["duration"]["value"] = 600;
+  leg["duration_in_traffic"]["value"] = 780;
+  row["elements"].append(leg);
+  body["rows"].append(row);
+
+  const std::optional<int> delay = deliveryoptimizer::api::ReadTrafficDelay(body);
+
+  ASSERT_TRUE(delay.has_value());
+  EXPECT_EQ(*delay, 180);
+}
+
+TEST(TrafficForecastOptimizerTest, IgnoresMissingTrafficDuration) {
+  const Json::Value body{Json::objectValue};
+
+  EXPECT_FALSE(deliveryoptimizer::api::ReadTrafficDelay(body).has_value());
+}
