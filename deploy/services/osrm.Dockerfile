@@ -64,7 +64,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends gnupg \
     && rm -rf /var/lib/apt/lists/*
 
 COPY deploy/services/osrm-entrypoint.sh /usr/local/bin/osrm-entrypoint.sh
-RUN chmod +x /usr/local/bin/osrm-entrypoint.sh
+RUN sed -i 's/\r$//' /usr/local/bin/osrm-entrypoint.sh \
+    && chmod +x /usr/local/bin/osrm-entrypoint.sh
 
 WORKDIR /data
 EXPOSE 5001

@@ -7,6 +7,11 @@
 #include "deliveryoptimizer/api/optimize_request.hpp"
 
 #include <drogon/drogon.h>
+
+#ifdef GetJob
+#undef GetJob
+#endif
+
 #include <json/json.h>
 #include <memory>
 #include <string>

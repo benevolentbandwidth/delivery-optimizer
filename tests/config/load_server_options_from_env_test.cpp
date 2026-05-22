@@ -10,6 +10,22 @@
 
 namespace {
 
+[[nodiscard]] int SetEnvValue(const char* name, const char* value) {
+#ifdef _WIN32
+  return _putenv_s(name, value);
+#else
+  return setenv(name, value, 1);
+#endif
+}
+
+[[nodiscard]] int UnsetEnvValue(const char* name) {
+#ifdef _WIN32
+  return _putenv_s(name, "");
+#else
+  return unsetenv(name);
+#endif
+}
+
 class ScopedEnvVar {
 public:
   explicit ScopedEnvVar(std::string name) : name_(std::move(name)) {
@@ -20,11 +36,11 @@ public:
 
   ~ScopedEnvVar() {
     if (original_value_.has_value()) {
-      setenv(name_.c_str(), original_value_->c_str(), 1);
+      (void)SetEnvValue(name_.c_str(), original_value_->c_str());
       return;
     }
 
-    unsetenv(name_.c_str());
+    (void)UnsetEnvValue(name_.c_str());
   }
 
   ScopedEnvVar(const ScopedEnvVar&) = delete;
@@ -32,9 +48,9 @@ public:
   ScopedEnvVar(ScopedEnvVar&&) = delete;
   ScopedEnvVar& operator=(ScopedEnvVar&&) = delete;
 
-  void Set(const char* value) const { ASSERT_EQ(setenv(name_.c_str(), value, 1), 0); }
+  void Set(const char* value) const { ASSERT_EQ(SetEnvValue(name_.c_str(), value), 0); }
 
-  void Unset() const { ASSERT_EQ(unsetenv(name_.c_str()), 0); }
+  void Unset() const { ASSERT_EQ(UnsetEnvValue(name_.c_str()), 0); }
 
 private:
   std::string name_;

@@ -50,6 +50,8 @@ TEST(WeatherForecastOptimizerTest, DisabledWeatherHasNoImpact) {
       .weather_delay_seconds_per_stop = 200,
       .reoptimize_threshold_seconds = 100,
       .reoptimize_threshold_percent = 0.0,
+      .openweather_api_key = "",
+      .openweather_base_url = "",
   };
 
   const deliveryoptimizer::api::WeatherImpactEstimate impact =
@@ -66,6 +68,8 @@ TEST(WeatherForecastOptimizerTest, BelowThresholdWeatherDoesNotChangeVroomInput)
       .weather_delay_seconds_per_stop = 30,
       .reoptimize_threshold_seconds = 300,
       .reoptimize_threshold_percent = 0.0,
+      .openweather_api_key = "",
+      .openweather_base_url = "",
   };
 
   const Json::Value payload =
@@ -85,6 +89,8 @@ TEST(WeatherForecastOptimizerTest, AboveThresholdWeatherAddsServiceTime) {
       .weather_delay_seconds_per_stop = 200,
       .reoptimize_threshold_seconds = 100,
       .reoptimize_threshold_percent = 0.0,
+      .openweather_api_key = "",
+      .openweather_base_url = "",
   };
 
   const Json::Value payload =

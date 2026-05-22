@@ -8,22 +8,25 @@
 #include <cerrno>
 #include <chrono>
 #include <cstdlib>
-#include <fcntl.h>
 #include <filesystem>
 #include <fstream>
 #include <limits>
 #include <memory>
-#include <poll.h>
-#include <signal.h>
-#include <spawn.h>
 #include <string>
 #include <string_view>
-#include <sys/wait.h>
-#include <unistd.h>
 #include <utility>
 #include <vector>
 
+#ifndef _WIN32
+#include <fcntl.h>
+#include <poll.h>
+#include <signal.h>
+#include <spawn.h>
+#include <sys/wait.h>
+#include <unistd.h>
+
 extern char** environ; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+#endif
 
 namespace {
 
@@ -33,6 +36,23 @@ constexpr std::string_view kDefaultVroomHost = "osrm";
 constexpr std::string_view kDefaultVroomPort = "5001";
 constexpr std::string_view kDefaultVroomTimeoutSeconds = "30";
 constexpr int kDefaultVroomTimeoutSecondsInt = 30;
+
+#ifdef _WIN32
+
+[[nodiscard]] int ParseTimeoutSeconds(const std::string& value, const int default_timeout_seconds) {
+  errno = 0;
+  char* end = nullptr;
+  const long parsed = std::strtol(value.c_str(), &end, 10);
+  if (errno != 0 || end == value.c_str() || *end != '\0' || parsed <= 0L ||
+      parsed > static_cast<long>(std::numeric_limits<int>::max())) {
+    return default_timeout_seconds;
+  }
+
+  return static_cast<int>(parsed);
+}
+
+#else
+
 constexpr std::string_view kVroomStdoutPath = "/dev/stdout";
 constexpr std::size_t kMaxVroomOutputBytes = 8U * 1024U * 1024U;
 
@@ -401,6 +421,8 @@ MonitorProcessOutput(const pid_t process_id, const int timeout_seconds,
   }
 }
 
+#endif
+
 } // namespace
 
 namespace deliveryoptimizer::api {
@@ -409,6 +431,10 @@ ProcessVroomRunner::ProcessVroomRunner(VroomRuntimeConfig runtime_config)
     : runtime_config_(std::move(runtime_config)) {}
 
 VroomRunResult ProcessVroomRunner::Run(const Json::Value& input_payload) const {
+#ifdef _WIN32
+  (void)input_payload;
+  return VroomRunResult{.status = VroomRunStatus::kFailed, .output = std::nullopt};
+#else
   const auto input_file = ScopedTempFile::Create("deliveryoptimizer-vroom-input-");
   if (!input_file.has_value()) {
     return VroomRunResult{.status = VroomRunStatus::kFailed, .output = std::nullopt};
@@ -477,6 +503,7 @@ VroomRunResult ProcessVroomRunner::Run(const Json::Value& input_payload) const {
       .status = VroomRunStatus::kSuccess,
       .output = std::move(parsed),
   };
+#endif
 }
 
 VroomRuntimeConfig ResolveVroomRuntimeConfigFromEnv() {

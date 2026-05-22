@@ -6,6 +6,11 @@
 #include <drogon/orm/DbClient.h>
 #include <drogon/orm/Exception.h>
 #include <drogon/utils/Utilities.h>
+
+#ifdef GetJob
+#undef GetJob
+#endif
+
 #include <json/json.h>
 #include <optional>
 #include <string>

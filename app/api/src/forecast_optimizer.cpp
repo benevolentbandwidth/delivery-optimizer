@@ -17,6 +17,7 @@
 #include <sstream>
 #include <string>
 #include <string_view>
+#include <utility>
 
 namespace {
 
@@ -98,8 +99,8 @@ constexpr double kDefaultWeatherThresholdPercent = 5.0;
   return stream.str();
 }
 
-[[nodiscard]] std::string BuildOpenWeatherPath(const Coordinate& coordinate,
-                                               const std::string& api_key) {
+[[nodiscard]] std::string BuildOpenWeatherPath(
+    const deliveryoptimizer::api::Coordinate& coordinate, const std::string& api_key) {
   return "/data/3.0/onecall?lat=" + FormatCoordinate(coordinate.lat) +
          "&lon=" + FormatCoordinate(coordinate.lon) +
          "&exclude=current,minutely,daily,alerts&units=metric&appid=" + api_key;
@@ -178,7 +179,11 @@ bool IsOpenWeatherConfigured(const WeatherForecastOptions& options) {
 OpenWeatherDelayEstimate FetchOpenWeatherDelayEstimate(const WeatherForecastOptions& options,
                                                        const Coordinate& coordinate) {
   if (!IsOpenWeatherConfigured(options)) {
-    return OpenWeatherDelayEstimate{.available = false, .delay_seconds_per_stop = 0};
+    return OpenWeatherDelayEstimate{
+        .available = false,
+        .delay_seconds_per_stop = 0,
+        .source = "",
+    };
   }
 
   auto client = drogon::HttpClient::newHttpClient(options.openweather_base_url);
@@ -193,13 +198,21 @@ OpenWeatherDelayEstimate FetchOpenWeatherDelayEstimate(const WeatherForecastOpti
       [promise](const drogon::ReqResult result, const drogon::HttpResponsePtr& response) {
         if (result != drogon::ReqResult::Ok || response == nullptr ||
             response->getStatusCode() != drogon::k200OK) {
-          promise->set_value(OpenWeatherDelayEstimate{.available = false});
+          promise->set_value(OpenWeatherDelayEstimate{
+              .available = false,
+              .delay_seconds_per_stop = 0,
+              .source = "",
+          });
           return;
         }
 
         const auto body = response->getJsonObject();
         if (body == nullptr) {
-          promise->set_value(OpenWeatherDelayEstimate{.available = false});
+          promise->set_value(OpenWeatherDelayEstimate{
+              .available = false,
+              .delay_seconds_per_stop = 0,
+              .source = "",
+          });
           return;
         }
 
@@ -213,7 +226,11 @@ OpenWeatherDelayEstimate FetchOpenWeatherDelayEstimate(const WeatherForecastOpti
 
   if (future.wait_for(std::chrono::seconds{kOpenWeatherTimeoutSeconds + 1}) !=
       std::future_status::ready) {
-    return OpenWeatherDelayEstimate{.available = false};
+    return OpenWeatherDelayEstimate{
+        .available = false,
+        .delay_seconds_per_stop = 0,
+        .source = "",
+    };
   }
 
   return future.get();
