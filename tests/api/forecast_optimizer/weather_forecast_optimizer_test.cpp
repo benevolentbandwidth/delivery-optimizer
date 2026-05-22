@@ -126,7 +126,6 @@ TEST(WeatherForecastOptimizerTest, AboveThresholdWeatherAddsServiceTime) {
   EXPECT_EQ(forecast["weather_delay_seconds"].asInt(), 400);
   EXPECT_TRUE(forecast["reoptimization"]["applied"].asBool());
 }
-
 TEST(WeatherForecastOptimizerTest, ReadsVroomSummaryDuration) {
   Json::Value output{Json::objectValue};
   output["summary"] = Json::Value{Json::objectValue};
@@ -240,4 +239,54 @@ TEST(WeatherForecastOptimizerTest, RefinesForecastWithVroomSummaryDuration) {
   EXPECT_FALSE(forecast.isMember("predicted_duration_seconds"));
   EXPECT_EQ(forecast["planned_start_time"].asInt64(), 600);
   EXPECT_EQ(forecast["estimated_finish_time"].asInt64(), 1960);
+}
+
+TEST(TrafficForecastOptimizerTest, DisabledTrafficHasNoImpact) {
+  const deliveryoptimizer::api::TrafficForecastOptions options{
+      .enabled = false,
+      .reoptimize_threshold_seconds = 100,
+      .reoptimize_threshold_percent = 0.0,
+      .google_maps_api_key = "",
+      .google_maps_base_url = "",
+  };
+
+  const deliveryoptimizer::api::TrafficImpact impact =
+      deliveryoptimizer::api::EstimateTrafficImpact(options, 900, 300, "google_maps");
+
+  EXPECT_EQ(impact.traffic_delay_seconds, 0);
+  EXPECT_FALSE(impact.should_reoptimize);
+  EXPECT_EQ(impact.source, "disabled");
+}
+
+TEST(TrafficForecastOptimizerTest, BelowThresholdTrafficDoesNotReoptimize) {
+  const deliveryoptimizer::api::TrafficForecastOptions options{
+      .enabled = true,
+      .reoptimize_threshold_seconds = 300,
+      .reoptimize_threshold_percent = 0.0,
+      .google_maps_api_key = "",
+      .google_maps_base_url = "",
+  };
+
+  const deliveryoptimizer::api::TrafficImpact impact =
+      deliveryoptimizer::api::EstimateTrafficImpact(options, 900, 120, "google_maps");
+
+  EXPECT_EQ(impact.traffic_delay_seconds, 120);
+  EXPECT_EQ(impact.traffic_adjusted_duration_seconds, 1020);
+  EXPECT_FALSE(impact.should_reoptimize);
+}
+
+TEST(TrafficForecastOptimizerTest, AboveThresholdTrafficReoptimizes) {
+  const deliveryoptimizer::api::TrafficForecastOptions options{
+      .enabled = true,
+      .reoptimize_threshold_seconds = 100,
+      .reoptimize_threshold_percent = 0.0,
+      .google_maps_api_key = "",
+      .google_maps_base_url = "",
+  };
+
+  const deliveryoptimizer::api::TrafficImpact impact =
+      deliveryoptimizer::api::EstimateTrafficImpact(options, 900, 180, "google_maps");
+
+  EXPECT_EQ(impact.traffic_delay_seconds, 180);
+  EXPECT_TRUE(impact.should_reoptimize);
 }
