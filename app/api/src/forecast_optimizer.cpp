@@ -331,6 +331,43 @@ int ReadOpenWeatherDelay(const Json::Value& body,
   return delay_seconds;
 }
 
+std::string BuildTrafficPath(const Coordinate& origin, const Coordinate& destination,
+                             const std::chrono::sys_seconds departure_time,
+                             const std::string& api_key) {
+  const std::string origin_text = FormatCoordinate(origin.lat) + "," + FormatCoordinate(origin.lon);
+  const std::string destination_text =
+      FormatCoordinate(destination.lat) + "," + FormatCoordinate(destination.lon);
+  const auto departure_seconds =
+      std::chrono::duration_cast<std::chrono::seconds>(departure_time.time_since_epoch()).count();
+
+  return "/maps/api/distancematrix/json?origins=" + origin_text +
+         "&destinations=" + destination_text +
+         "&departure_time=" + std::to_string(departure_seconds) +
+         "&traffic_model=best_guess&key=" + api_key;
+}
+
+std::optional<int> ReadTrafficDelay(const Json::Value& body) {
+  const Json::Value& rows = body["rows"];
+  if (!rows.isArray() || rows.empty()) {
+    return std::nullopt;
+  }
+
+  const Json::Value& elements = rows[0]["elements"];
+  if (!elements.isArray() || elements.empty()) {
+    return std::nullopt;
+  }
+
+  const Json::Value& leg = elements[0];
+  if (leg["status"].isString() && leg["status"].asString() != "OK") {
+    return std::nullopt;
+  }
+  if (!leg["duration"]["value"].isInt() || !leg["duration_in_traffic"]["value"].isInt()) {
+    return std::nullopt;
+  }
+
+  return std::max(leg["duration_in_traffic"]["value"].asInt() - leg["duration"]["value"].asInt(),
+                  0);
+}
 WeatherImpactEstimate EstimateWeatherImpact(const WeatherForecastOptions& options,
                                             const std::size_t stop_count,
                                             const int baseline_duration_seconds) {
