@@ -47,6 +47,15 @@ struct WeatherImpactEstimate {
   std::optional<std::chrono::sys_seconds> estimated_finish_time;
 };
 
+struct TrafficImpact {
+  int baseline_duration_seconds{0};
+  int traffic_delay_seconds{0};
+  int traffic_adjusted_duration_seconds{0};
+  int reoptimize_threshold_seconds{300};
+  bool should_reoptimize{false};
+  std::string source;
+};
+
 [[nodiscard]] WeatherForecastOptions ResolveWeatherForecastOptionsFromEnv();
 
 [[nodiscard]] TrafficForecastOptions ResolveTrafficForecastOptionsFromEnv();
@@ -68,6 +77,10 @@ ReadOpenWeatherDelay(const Json::Value& body,
 [[nodiscard]] WeatherImpactEstimate EstimateWeatherImpact(const WeatherForecastOptions& options,
                                                           std::size_t stop_count,
                                                           int baseline_duration_seconds);
+
+[[nodiscard]] TrafficImpact EstimateTrafficImpact(const TrafficForecastOptions& options,
+                                                  int baseline_duration_seconds,
+                                                  int traffic_delay_seconds, std::string source);
 
 [[nodiscard]] WeatherImpactEstimate
 EstimateRouteWeatherImpact(const WeatherForecastOptions& options, const OptimizeRequestInput& input,

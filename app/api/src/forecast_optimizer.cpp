@@ -362,6 +362,28 @@ WeatherImpactEstimate EstimateWeatherImpact(const WeatherForecastOptions& option
   };
 }
 
+TrafficImpact EstimateTrafficImpact(const TrafficForecastOptions& options,
+                                    const int baseline_duration_seconds,
+                                    const int traffic_delay_seconds, std::string source) {
+  const int normalized_baseline_seconds = std::max(baseline_duration_seconds, 0);
+  const int normalized_delay_seconds = options.enabled ? std::max(traffic_delay_seconds, 0) : 0;
+  const int percent_threshold_seconds = ClampToInt(static_cast<long long>(
+      std::ceil(static_cast<double>(normalized_baseline_seconds) *
+                (std::max(options.reoptimize_threshold_percent, 0.0) / 100.0))));
+  const int threshold_seconds =
+      std::max(std::max(options.reoptimize_threshold_seconds, 0), percent_threshold_seconds);
+
+  return TrafficImpact{
+      .baseline_duration_seconds = normalized_baseline_seconds,
+      .traffic_delay_seconds = normalized_delay_seconds,
+      .traffic_adjusted_duration_seconds = normalized_baseline_seconds + normalized_delay_seconds,
+      .reoptimize_threshold_seconds = threshold_seconds,
+      .should_reoptimize =
+          normalized_delay_seconds > 0 && normalized_delay_seconds >= threshold_seconds,
+      .source = options.enabled ? std::move(source) : "disabled",
+  };
+}
+
 WeatherImpactEstimate EstimateRouteWeatherImpact(const WeatherForecastOptions& options,
                                                  const OptimizeRequestInput& input,
                                                  const int baseline_duration_seconds) {
