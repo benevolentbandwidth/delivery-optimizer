@@ -381,6 +381,7 @@ TEST(TrafficForecastOptimizerTest, AddsTrafficForecastBlock) {
   EXPECT_TRUE(forecast["traffic"]["reoptimization"]["applied"].asBool());
 }
 TEST(TrafficForecastOptimizerTest, ReadsTrafficLegsFromVroomSteps) {
+  // These arrivals already include the route start time.
   constexpr int kRouteStart = 1767225600;
 
   Json::Value output{Json::objectValue};
