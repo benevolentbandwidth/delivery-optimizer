@@ -16,7 +16,8 @@ namespace {
   return "opt-worker-" + drogon::utils::getUuid();
 }
 
-[[nodiscard]] int EstimateServiceSeconds(const deliveryoptimizer::api::OptimizeRequestInput& input) {
+[[nodiscard]] int
+EstimateServiceSeconds(const deliveryoptimizer::api::OptimizeRequestInput& input) {
   std::int64_t total = 0;
   for (const auto& job : input.jobs) {
     total += job.service;
@@ -170,8 +171,7 @@ void OptimizationJobRuntime::WorkerLoop(const std::stop_token stop_token,
       const int baseline_seconds = EstimateServiceSeconds(parsed_request->input);
       const WeatherImpactEstimate impact =
           EstimateRouteWeatherImpact(weather_options, parsed_request->input, baseline_seconds);
-      const Json::Value vroom_input =
-          BuildWeatherAdjustedVroomInput(parsed_request->input, impact);
+      const Json::Value vroom_input = BuildWeatherAdjustedVroomInput(parsed_request->input, impact);
       const auto solve_result = BuildSolveExecutionResult(
           parsed_request->input, ToCoordinatedSolveResult(runner_->Run(vroom_input)),
           BuildWeatherForecastAnnotation(weather_options, impact));

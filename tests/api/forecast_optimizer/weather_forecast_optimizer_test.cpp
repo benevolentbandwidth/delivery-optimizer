@@ -72,9 +72,8 @@ TEST(WeatherForecastOptimizerTest, BelowThresholdWeatherDoesNotChangeVroomInput)
       .openweather_base_url = "",
   };
 
-  const Json::Value payload =
-      deliveryoptimizer::api::BuildWeatherAdjustedVroomInput(
-          input, deliveryoptimizer::api::EstimateWeatherImpact(options, input.jobs.size(), 300));
+  const Json::Value payload = deliveryoptimizer::api::BuildWeatherAdjustedVroomInput(
+      input, deliveryoptimizer::api::EstimateWeatherImpact(options, input.jobs.size(), 300));
 
   ASSERT_TRUE(payload["jobs"].isArray());
   ASSERT_EQ(payload["jobs"].size(), 2U);
@@ -93,9 +92,8 @@ TEST(WeatherForecastOptimizerTest, AboveThresholdWeatherAddsServiceTime) {
       .openweather_base_url = "",
   };
 
-  const Json::Value payload =
-      deliveryoptimizer::api::BuildWeatherAdjustedVroomInput(
-          input, deliveryoptimizer::api::EstimateWeatherImpact(options, input.jobs.size(), 300));
+  const Json::Value payload = deliveryoptimizer::api::BuildWeatherAdjustedVroomInput(
+      input, deliveryoptimizer::api::EstimateWeatherImpact(options, input.jobs.size(), 300));
   const deliveryoptimizer::api::WeatherImpactEstimate impact =
       deliveryoptimizer::api::EstimateWeatherImpact(options, input.jobs.size(), 300);
   const Json::Value forecast =

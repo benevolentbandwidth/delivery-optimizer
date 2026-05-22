@@ -312,8 +312,8 @@ Json::Value BuildWeatherForecastAnnotation(const WeatherForecastOptions& options
 
   Json::Value reoptimization{Json::objectValue};
   reoptimization["applied"] = impact.should_reoptimize;
-  reoptimization["reason"] =
-      impact.should_reoptimize ? "weather_delay_crossed_threshold" : "weather_delay_below_threshold";
+  reoptimization["reason"] = impact.should_reoptimize ? "weather_delay_crossed_threshold"
+                                                      : "weather_delay_below_threshold";
   forecast["reoptimization"] = std::move(reoptimization);
 
   return forecast;
