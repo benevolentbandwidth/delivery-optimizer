@@ -32,9 +32,19 @@ constexpr std::string_view kWeatherThresholdPercentEnv =
 constexpr std::string_view kOpenWeatherApiKeyEnv = "OPENWEATHER_API_KEY";
 constexpr std::string_view kOpenWeatherBaseUrlEnv = "OPENWEATHER_BASE_URL";
 constexpr std::string_view kDefaultOpenWeatherBaseUrl = "https://api.openweathermap.org";
+constexpr std::string_view kTrafficEnabledEnv = "DELIVERYOPTIMIZER_TRAFFIC_FORECAST_ENABLED";
+constexpr std::string_view kTrafficThresholdSecondsEnv =
+    "DELIVERYOPTIMIZER_TRAFFIC_REOPTIMIZE_THRESHOLD_SECONDS";
+constexpr std::string_view kTrafficThresholdPercentEnv =
+    "DELIVERYOPTIMIZER_TRAFFIC_REOPTIMIZE_THRESHOLD_PERCENT";
+constexpr std::string_view kGoogleMapsApiKeyEnv = "GOOGLE_MAPS_API_KEY";
+constexpr std::string_view kGoogleMapsBaseUrlEnv = "GOOGLE_MAPS_BASE_URL";
+constexpr std::string_view kDefaultGoogleMapsBaseUrl = "https://maps.googleapis.com";
 constexpr int kOpenWeatherTimeoutSeconds = 4;
 constexpr int kDefaultWeatherThresholdSeconds = 300;
 constexpr double kDefaultWeatherThresholdPercent = 5.0;
+constexpr int kDefaultTrafficThresholdSeconds = 300;
+constexpr double kDefaultTrafficThresholdPercent = 5.0;
 
 [[nodiscard]] bool IsEnabledFlag(const char* raw_value) {
   if (raw_value == nullptr || *raw_value == '\0') {
@@ -183,6 +193,21 @@ WeatherForecastOptions ResolveWeatherForecastOptionsFromEnv() {
       .openweather_api_key = ResolveStringEnvOrDefault(kOpenWeatherApiKeyEnv.data(), ""),
       .openweather_base_url =
           ResolveStringEnvOrDefault(kOpenWeatherBaseUrlEnv.data(), kDefaultOpenWeatherBaseUrl),
+  };
+}
+
+TrafficForecastOptions ResolveTrafficForecastOptionsFromEnv() {
+  return TrafficForecastOptions{
+      .enabled = IsEnabledFlag(std::getenv(kTrafficEnabledEnv.data())),
+      .reoptimize_threshold_seconds =
+          ParseNonNegativeInt(std::getenv(kTrafficThresholdSecondsEnv.data()))
+              .value_or(kDefaultTrafficThresholdSeconds),
+      .reoptimize_threshold_percent =
+          ParseNonNegativeDouble(std::getenv(kTrafficThresholdPercentEnv.data()))
+              .value_or(kDefaultTrafficThresholdPercent),
+      .google_maps_api_key = ResolveStringEnvOrDefault(kGoogleMapsApiKeyEnv.data(), ""),
+      .google_maps_base_url =
+          ResolveStringEnvOrDefault(kGoogleMapsBaseUrlEnv.data(), kDefaultGoogleMapsBaseUrl),
   };
 }
 
