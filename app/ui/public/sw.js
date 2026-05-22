@@ -1,5 +1,10 @@
-const CACHE_NAME = "delivery-optimizer-pwa-v1";
-const APP_SHELL = ["/driver_assist", "/manifest.webmanifest", "/pwa-icon.svg"];
+const CACHE_NAME = "delivery-optimizer-pwa-v2";
+const APP_SHELL = [
+  "/driver_assist",
+  "/manifest.webmanifest",
+  "/pwa-icon.png",
+  "/pwa-icon.svg",
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

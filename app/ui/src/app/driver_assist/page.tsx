@@ -44,6 +44,10 @@ export default function DriverAssistPwaPage() {
   const [openId, setOpenId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
+  const [failureReport, setFailureReport] = useState<{
+    stopId: string;
+    reason: string;
+  } | null>(null);
 
   useEffect(() => {
     setRoute(readSavedRoute());
@@ -116,8 +120,24 @@ export default function DriverAssistPwaPage() {
 
   const pendingStops =
     route?.stops.filter((stop) => stop.status === "pending") || [];
-  const completedStops =
+  const resolvedStops =
     route?.stops.filter((stop) => stop.status !== "pending") || [];
+  const reportStop = failureReport
+    ? route?.stops.find((stop) => stop.id === failureReport.stopId)
+    : null;
+
+  const closeFailureReport = () => setFailureReport(null);
+
+  const submitFailureReport = () => {
+    if (!failureReport) return;
+
+    updateStop(failureReport.stopId, {
+      status: "failed",
+      failureReason: failureReport.reason.trim() || "No reason provided",
+    });
+    setOpenId(null);
+    closeFailureReport();
+  };
 
   if (!route) {
     return (
@@ -201,21 +221,19 @@ export default function DriverAssistPwaPage() {
               setOpenId(null);
             }}
             onReport={() => {
-              const reason = window.prompt("Reason this delivery failed?");
-              updateStop(stop.id, {
-                status: "failed",
-                failureReason: reason || "No reason provided",
+              setFailureReport({
+                stopId: stop.id,
+                reason: stop.failureReason || "",
               });
-              setOpenId(null);
             }}
             onNavigate={() => openNavigation(stop)}
           />
         ))}
 
-        {completedStops.length > 0 ? (
+        {resolvedStops.length > 0 ? (
           <section style={styles.historySection}>
             <h2 style={styles.historyTitle}>Completed & Failed</h2>
-            {completedStops.map((stop) => (
+            {resolvedStops.map((stop) => (
               <StopCard
                 key={stop.id}
                 stop={stop}
@@ -228,6 +246,54 @@ export default function DriverAssistPwaPage() {
               />
             ))}
           </section>
+        ) : null}
+
+        {failureReport ? (
+          <div style={styles.dialogBackdrop}>
+            <section
+              aria-modal="true"
+              role="dialog"
+              style={styles.dialog}
+              aria-labelledby="failure-report-title"
+            >
+              <h2 id="failure-report-title" style={styles.dialogTitle}>
+                Report delivery issue
+              </h2>
+              <p style={styles.dialogText}>
+                {reportStop
+                  ? `${reportStop.customerName} - Stop ${reportStop.stopNumber}`
+                  : "Add a short reason for the failed delivery."}
+              </p>
+              <textarea
+                autoFocus
+                style={styles.noteInput}
+                value={failureReport.reason}
+                onChange={(event) =>
+                  setFailureReport({
+                    ...failureReport,
+                    reason: event.target.value,
+                  })
+                }
+                placeholder="Customer unavailable, blocked entrance, unsafe access..."
+              />
+              <div style={styles.dialogActions}>
+                <button
+                  type="button"
+                  style={styles.secondaryButton}
+                  onClick={closeFailureReport}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  style={styles.primaryButton}
+                  onClick={submitFailureReport}
+                >
+                  Save issue
+                </button>
+              </div>
+            </section>
+          </div>
         ) : null}
       </section>
     </main>
@@ -560,6 +626,7 @@ const styles: Record<string, CSSProperties> = {
     backgroundColor: "#ffffff",
     border: "1px solid #d1d5db",
     borderRadius: 8,
+    boxSizing: "border-box",
     color: "#111827",
     font: "inherit",
     marginBottom: 12,
@@ -596,5 +663,60 @@ const styles: Record<string, CSSProperties> = {
     fontSize: 20,
     fontWeight: 700,
     margin: "0 0 10px",
+  },
+  dialogBackdrop: {
+    alignItems: "center",
+    backgroundColor: "rgba(17, 24, 39, 0.42)",
+    bottom: 0,
+    display: "flex",
+    justifyContent: "center",
+    left: 0,
+    padding: 18,
+    position: "fixed",
+    right: 0,
+    top: 0,
+    zIndex: 20,
+  },
+  dialog: {
+    backgroundColor: "#ffffff",
+    borderRadius: 10,
+    boxShadow: "0 24px 60px rgba(17, 24, 39, 0.24)",
+    maxWidth: 420,
+    padding: 18,
+    width: "100%",
+  },
+  dialogTitle: {
+    color: "#111827",
+    fontSize: 22,
+    fontWeight: 700,
+    margin: "0 0 8px",
+  },
+  dialogText: {
+    color: "#4b5563",
+    fontSize: 15,
+    margin: "0 0 14px",
+  },
+  dialogActions: {
+    display: "grid",
+    gap: 10,
+    gridTemplateColumns: "1fr 1fr",
+  },
+  secondaryButton: {
+    backgroundColor: "#ffffff",
+    border: "1px solid #d1d5db",
+    borderRadius: 8,
+    color: "#111827",
+    cursor: "pointer",
+    fontWeight: 600,
+    minHeight: 44,
+  },
+  primaryButton: {
+    backgroundColor: "#111827",
+    border: "1px solid #111827",
+    borderRadius: 8,
+    color: "#ffffff",
+    cursor: "pointer",
+    fontWeight: 700,
+    minHeight: 44,
   },
 };

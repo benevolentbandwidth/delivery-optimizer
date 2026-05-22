@@ -13,7 +13,7 @@ export function transformSessionToDriverRoute(
       address: delivery.address || "No address provided",
       customerName: delivery.recipientName || `Recipient ${index + 1}`,
       phoneNumber: delivery.phoneNumber,
-      packageCount: delivery.demand?.value || 1,
+      packageCount: delivery.demand?.value ?? 1,
       notes: delivery.notes || "",
       status: "pending",
       lat: delivery.location?.lat || 0,
