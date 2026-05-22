@@ -130,7 +130,14 @@ ReadRouteStartTime(const OptimizeRequestInput& input);
 [[nodiscard]] std::string BuildWeatherAdjustedVroomInputText(const OptimizeRequestInput& input,
                                                              const WeatherImpactEstimate& impact);
 
+[[nodiscard]] Json::Value BuildTrafficAdjustedVroomInput(const OptimizeRequestInput& input,
+                                                         const WeatherImpactEstimate& weather,
+                                                         const TrafficImpact& traffic);
+
 [[nodiscard]] Json::Value BuildWeatherForecastAnnotation(const WeatherForecastOptions& options,
                                                          const WeatherImpactEstimate& impact);
+
+void AddTrafficForecast(Json::Value& forecast, const TrafficForecastOptions& options,
+                        const TrafficImpact& impact);
 
 } // namespace deliveryoptimizer::api

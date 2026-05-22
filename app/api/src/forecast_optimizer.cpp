@@ -618,6 +618,25 @@ std::string BuildWeatherAdjustedVroomInputText(const OptimizeRequestInput& input
   return BuildVroomInputText(input, impact.should_reoptimize ? impact.delay_seconds_per_stop : 0);
 }
 
+Json::Value BuildTrafficAdjustedVroomInput(const OptimizeRequestInput& input,
+                                           const WeatherImpactEstimate& weather,
+                                           const TrafficImpact& traffic) {
+  Json::Value payload = BuildWeatherAdjustedVroomInput(input, weather);
+  if (!traffic.should_reoptimize || input.jobs.empty()) {
+    return payload;
+  }
+
+  const int delay_per_stop = static_cast<int>(std::ceil(
+      static_cast<double>(traffic.traffic_delay_seconds) / static_cast<double>(input.jobs.size())));
+  for (Json::ArrayIndex index = 0; index < payload["jobs"].size(); ++index) {
+    Json::Value& job = payload["jobs"][index];
+    const int current_service = job["service"].isInt() ? job["service"].asInt() : 0;
+    job["service"] = current_service + delay_per_stop;
+  }
+
+  return payload;
+}
+
 Json::Value BuildWeatherForecastAnnotation(const WeatherForecastOptions& options,
                                            const WeatherImpactEstimate& impact) {
   Json::Value forecast{Json::objectValue};
@@ -644,6 +663,24 @@ Json::Value BuildWeatherForecastAnnotation(const WeatherForecastOptions& options
   forecast["reoptimization"] = std::move(reoptimization);
 
   return forecast;
+}
+
+void AddTrafficForecast(Json::Value& forecast, const TrafficForecastOptions& options,
+                        const TrafficImpact& impact) {
+  Json::Value traffic{Json::objectValue};
+  traffic["status"] = options.enabled ? "evaluated" : "disabled";
+  traffic["provider"] = impact.source;
+  traffic["baseline_duration_seconds"] = impact.baseline_duration_seconds;
+  traffic["traffic_delay_seconds"] = impact.traffic_delay_seconds;
+  traffic["traffic_adjusted_duration_seconds"] = impact.traffic_adjusted_duration_seconds;
+  traffic["reoptimize_threshold_seconds"] = impact.reoptimize_threshold_seconds;
+
+  Json::Value reoptimization{Json::objectValue};
+  reoptimization["applied"] = impact.should_reoptimize;
+  reoptimization["reason"] = impact.should_reoptimize ? "traffic_delay_crossed_threshold"
+                                                      : "traffic_delay_below_threshold";
+  traffic["reoptimization"] = std::move(reoptimization);
+  forecast["traffic"] = std::move(traffic);
 }
 
 } // namespace deliveryoptimizer::api

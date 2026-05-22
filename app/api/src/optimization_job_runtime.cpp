@@ -167,6 +167,19 @@ void OptimizationJobRuntime::WorkerLoop(const std::stop_token stop_token,
           final_result = ToCoordinatedSolveResult(
               runner_->Run(BuildWeatherAdjustedVroomInputText(parsed_request->input, impact)));
         }
+        if (final_result.output.has_value()) {
+          const TrafficForecastOptions traffic_options = ResolveTrafficForecastOptionsFromEnv();
+          const TrafficDelayEstimate traffic_delay = ReadRouteTraffic(
+              traffic_options, *final_result.output, ReadRouteStartTime(parsed_request->input));
+          const TrafficImpact traffic = EstimateTrafficImpact(
+              traffic_options, ReadVroomDuration(*final_result.output).value_or(0),
+              traffic_delay.delay_seconds, traffic_delay.source);
+          AddTrafficForecast(*forecast, traffic_options, traffic);
+          if (traffic.should_reoptimize) {
+            final_result = ToCoordinatedSolveResult(runner_->Run(
+                BuildTrafficAdjustedVroomInput(parsed_request->input, impact, traffic)));
+          }
+        }
       }
       const auto solve_result = BuildSolveExecutionResult(
           parsed_request->input, std::move(final_result), std::move(forecast));
