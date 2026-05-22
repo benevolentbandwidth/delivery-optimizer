@@ -19,6 +19,14 @@ struct WeatherForecastOptions {
   std::string openweather_base_url;
 };
 
+struct TrafficForecastOptions {
+  bool enabled{false};
+  int reoptimize_threshold_seconds{300};
+  double reoptimize_threshold_percent{5.0};
+  std::string google_maps_api_key;
+  std::string google_maps_base_url;
+};
+
 struct OpenWeatherDelayEstimate {
   bool available{false};
   int delay_seconds_per_stop{0};
@@ -40,6 +48,8 @@ struct WeatherImpactEstimate {
 };
 
 [[nodiscard]] WeatherForecastOptions ResolveWeatherForecastOptionsFromEnv();
+
+[[nodiscard]] TrafficForecastOptions ResolveTrafficForecastOptionsFromEnv();
 
 [[nodiscard]] bool IsOpenWeatherConfigured(const WeatherForecastOptions& options);
 
