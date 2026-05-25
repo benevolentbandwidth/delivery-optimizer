@@ -49,6 +49,54 @@ function formatContactLine(stop: Stop): string {
   return "—";
 }
 
+function PersonIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 20 20" fill="none" aria-hidden>
+      <path
+        d="M10 10a3.25 3.25 0 1 0 0-6.5 3.25 3.25 0 0 0 0 6.5ZM4.5 16.5v-.75A4.25 4.25 0 0 1 8.75 11.5h2.5A4.25 4.25 0 0 1 15.5 15.75v.75"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function ClockIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 20 20" fill="none" aria-hidden>
+      <circle cx="10" cy="10" r="7.25" stroke="currentColor" strokeWidth="1.5" />
+      <path
+        d="M10 6.25V10l2.5 1.25"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function PackageIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 20 20" fill="none" aria-hidden>
+      <path
+        d="M3.5 7.5 10 4l6.5 3.5v6L10 17l-6.5-3.5v-6Z"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M3.5 7.5 10 11l6.5-3.5M10 11v5.5"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export default function EditableStopItem({
   stop,
   accentColor,
@@ -60,35 +108,37 @@ export default function EditableStopItem({
   const timeText = formatDeliveryWindow(stop);
 
   return (
-    <div
-      className="rounded-lg border border-zinc-200 bg-white p-3 shadow-sm"
-      style={{
-        borderLeftWidth: "4px",
-        borderLeftColor: accentColor,
-        boxShadow: `inset 0 0 0 1px ${accentColor}22`,
-        background: `linear-gradient(to right, ${accentColor}22 0%, #ffffff 34px)`,
-      }}
-    >
-      <div className="flex items-start justify-between gap-2">
-        <span className="min-w-0 text-xs font-semibold text-zinc-800 truncate">
+    <div className="min-w-0 flex-1 rounded-2xl border border-zinc-200 bg-white p-3.5 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <p className="min-w-0 flex-1 text-[14px] font-semibold leading-snug text-zinc-900">
           {stop.address}
-        </span>
+        </p>
         <span
-          className="flex shrink-0 items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium text-white"
-          style={{ backgroundColor: accentColor }}
+          className="flex shrink-0 items-center gap-1 rounded-full border px-2 py-1 text-[12px] font-semibold tabular-nums"
+          style={{
+            borderColor: `${accentColor}55`,
+            backgroundColor: `${accentColor}18`,
+            color: accentColor,
+          }}
         >
-          <span className="sr-only">Packages:</span>
-          <span aria-hidden>📦</span> {stop.capacityUsed ?? "—"}
+          <span className="sr-only">Boxes:</span>
+          <PackageIcon className="h-3.5 w-3.5 opacity-90" />
+          {typeof stop.capacityUsed === "number" ? stop.capacityUsed : "—"}
         </span>
       </div>
-      <div className="mt-1.5 space-y-0.5 text-xs text-zinc-600">
-        <div>
-          <span className="font-medium text-zinc-700">Recipient:</span>{" "}
-          {contactText}
+
+      <div className="mt-3 space-y-2 text-[13px] leading-snug">
+        <div className="flex items-start gap-2">
+          <PersonIcon className="mt-2 h-4 w-4 shrink-0 text-zinc-400" />
+          <div className="min-w-0 flex-1 rounded-lg border border-zinc-200 bg-white px-2.5 py-2 text-zinc-800">
+            {contactText}
+          </div>
         </div>
-        <div>
-          <span className="font-medium text-zinc-700">Delivery:</span>{" "}
-          {timeText}
+        <div className="flex items-start gap-2">
+          <ClockIcon className="mt-2 h-4 w-4 shrink-0 text-zinc-400" />
+          <div className="min-w-0 flex-1 rounded-lg border border-zinc-200 bg-white px-2.5 py-2 text-zinc-700">
+            {timeText}
+          </div>
         </div>
       </div>
 
