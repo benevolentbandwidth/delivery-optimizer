@@ -78,6 +78,25 @@ function ClockIcon({ className }: { className?: string }) {
   );
 }
 
+function NoteDocIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 20 20" fill="none" aria-hidden>
+      <path
+        d="M6.5 3.5h5.5L15.5 7v8.25A1.25 1.25 0 0 1 14.25 16.5h-7.5A1.25 1.25 0 0 1 5.5 15.25v-10.5A1.25 1.25 0 0 1 6.75 3.5h-.25Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M11.5 3.5V7h4"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 function PackageIcon({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 20 20" fill="none" aria-hidden>
@@ -143,34 +162,40 @@ export default function EditableStopItem({
       </div>
 
       {!isEditMode ? (
-        <div className="mt-2 rounded-md border border-zinc-200 bg-white px-2 py-1.5 text-xs text-zinc-600 shadow-sm">
-          <span className="font-medium text-zinc-700">Notes:</span>{" "}
-          {stop.note?.trim() ? (
-            stop.note
-          ) : (
-            <span className="text-zinc-400">No notes</span>
-          )}
+        <div className="mt-3 flex gap-2 rounded-xl border border-zinc-200 bg-zinc-50/80 px-3 py-2.5 text-[13px] text-zinc-700">
+          <NoteDocIcon className="mt-0.5 h-4 w-4 shrink-0 text-zinc-400" />
+          <div>
+            <span className="font-semibold text-zinc-800">Note:</span>{" "}
+            {stop.note?.trim() ? (
+              <span className="text-zinc-700">{stop.note}</span>
+            ) : (
+              <span className="text-zinc-400">No notes</span>
+            )}
+          </div>
         </div>
       ) : (
-        <div className="mt-2">
-          <label className="block text-xs font-medium text-zinc-700">
-            Notes
-          </label>
-          <textarea
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            rows={3}
-            className="mt-1 w-full resize-none rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs text-zinc-800 shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
-            placeholder="Driver notes (e.g., Gate code is 1234)"
-          />
-          <div className="mt-2 flex justify-end">
-            <button
-              type="button"
-              onClick={() => onSaveNote(draft)}
-              className="inline-flex items-center rounded-md bg-amber-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-amber-500"
-            >
-              Save
-            </button>
+        <div className="mt-3 flex gap-2 rounded-xl border border-zinc-200 bg-white px-3 py-2.5">
+          <NoteDocIcon className="mt-1 h-4 w-4 shrink-0 text-zinc-400" />
+          <div className="min-w-0 flex-1">
+            <label className="text-[12px] font-semibold text-zinc-800">
+              Note
+            </label>
+            <textarea
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              rows={3}
+              className="mt-1.5 w-full resize-none rounded-lg border border-zinc-200 bg-zinc-50/50 px-2.5 py-2 text-[13px] text-zinc-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7BCFC2]"
+              placeholder="Driver notes (e.g., Gate code is 1234)"
+            />
+            <div className="mt-2 flex justify-end">
+              <button
+                type="button"
+                onClick={() => onSaveNote(draft)}
+                className="inline-flex items-center rounded-full bg-[#7BCFC2] px-3 py-1.5 text-[12px] font-semibold text-[#1C1B1F] hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-[#7BCFC2]"
+              >
+                Save
+              </button>
+            </div>
           </div>
         </div>
       )}
