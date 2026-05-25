@@ -1,6 +1,11 @@
 // Sidebar: route cards, expand/collapse stops, edit-mode toggle.
 
 import { useMemo, useState } from "react";
+import {
+  B2_FOOTER_TAGLINE,
+  B2_FOUNDATION_NAME,
+  B2_LOGO_MARK,
+} from "@/app/constants/b2Branding";
 import type { Route } from "../types";
 import { routeColorHex } from "../utils/routeColors";
 import EditableStopItem from "./EditableStopItem";
@@ -193,13 +198,13 @@ export default function Sidebar({
         </div>
         <div className="shrink-0 pt-4 text-zinc-700">
           <p className="text-3xl leading-none font-semibold text-[var(--edit-teal-500)]">
-            b²
+            {B2_LOGO_MARK}
           </p>
           <p className="mt-1 text-[12px] leading-5 font-medium text-zinc-800">
-            Built with ❤️ for Humanity.
+            {B2_FOOTER_TAGLINE}
           </p>
           <p className="text-[12px] leading-5 font-medium text-zinc-800">
-            The Benevolent Bandwidth Foundation
+            {B2_FOUNDATION_NAME}
           </p>
         </div>
       </div>

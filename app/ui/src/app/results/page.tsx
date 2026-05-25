@@ -3,7 +3,12 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import styles from "../edit/edit.module.css";
+import designTokens from "../shared/editDesignTokens.module.css";
+import {
+  clearOptimizeResults,
+  OPTIMIZE_RESULTS_STORAGE_KEY,
+  parseStoredRoutes,
+} from "../edit/utils/hasOptimizeResults";
 import EditSidebar from "../edit/components/layout/sidebar/Sidebar";
 import SidebarEditButton from "../edit/components/layout/sidebar/SidebarEditButton";
 import SidebarResultsButton from "../edit/components/layout/sidebar/SidebarResultsButton";
@@ -14,18 +19,16 @@ import type { PendingPinMove, Route } from "./types";
 function readInitialRoutes(): { routes: Route[]; error: string | null } {
   if (typeof window === "undefined") return { routes: [], error: null };
 
-  const stored = sessionStorage.getItem("optimizeResults");
+  const stored = sessionStorage.getItem(OPTIMIZE_RESULTS_STORAGE_KEY);
   if (!stored) return { routes: [], error: null };
 
-  try {
-    const parsed = JSON.parse(stored) as Route[];
-    return { routes: parsed, error: null };
-  } catch {
-    return {
-      routes: [],
-      error: "Route data could not be loaded. Please go back and try again.",
-    };
-  }
+  const parsed = parseStoredRoutes(stored);
+  if (parsed) return { routes: parsed, error: null };
+
+  return {
+    routes: [],
+    error: "Route data could not be loaded. Please go back and try again.",
+  };
 }
 
 export default function ResultsPage() {
@@ -36,7 +39,7 @@ export default function ResultsPage() {
 
   useEffect(() => {
     if (initialRoutes.length > 0) {
-      sessionStorage.removeItem("optimizeResults"); // consume once after successful parse + state update
+      clearOptimizeResults(); // consume once after successful parse + state update
     }
   }, [initialRoutes.length]);
 
@@ -112,7 +115,7 @@ export default function ResultsPage() {
 
   return (
     <main
-      className={`h-screen flex flex-col overflow-hidden font-sans-manrope ${styles.root}`}
+      className={`h-screen flex flex-col overflow-hidden font-sans-manrope ${designTokens.root}`}
     >
       {error && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
@@ -152,10 +155,12 @@ export default function ResultsPage() {
             </svg>
           </button>
           <div className="min-w-0">
-            <span className="block truncate text-sm font-semibold tracking-wide text-zinc-800 uppercase">
+            <span className="block truncate text-xs font-semibold tracking-wide text-zinc-500 uppercase">
               Delivery Optimizer
             </span>
-            <h1 className="sr-only">Results</h1>
+            <h1 className="truncate text-sm font-semibold text-zinc-800">
+              Results
+            </h1>
           </div>
         </div>
 
@@ -172,7 +177,7 @@ export default function ResultsPage() {
               <button
                 type="button"
                 onClick={savePendingPinMove}
-                className="rounded-full border border-zinc-300 bg-white px-3 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-50"
+                className="rounded-full bg-amber-500 px-3 py-1 text-xs font-medium text-white hover:bg-amber-600"
               >
                 Save
               </button>
