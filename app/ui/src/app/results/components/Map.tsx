@@ -44,8 +44,8 @@ function createRoutePinElement(fillColor: string): HTMLElement {
   const wrapper = document.createElement("div");
   wrapper.style.width = `${MARKER_ICON_WIDTH}px`;
   wrapper.style.height = `${MARKER_ICON_HEIGHT}px`;
-  // Advanced marker anchor is the content center; shift so the SVG tip sits on the stop.
-  wrapper.style.transform = "translate(-50%, -50%)";
+  // Anchor bottom-center of the pin on the stop (tip is at y=40 in the SVG).
+  wrapper.style.transform = "translate(-50%, -100%)";
 
   const img = document.createElement("img");
   img.src = markerSvgDataUrl(fillColor);

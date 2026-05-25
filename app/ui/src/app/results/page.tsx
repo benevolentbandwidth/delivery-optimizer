@@ -41,7 +41,7 @@ export default function ResultsPage() {
     }
   }, [initialRoutes.length]);
 
-  const isSidebarOpen = true;
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isEditMode, setIsEditMode] = useState(false);
   const [pendingPinMove, setPendingPinMove] = useState<PendingPinMove | null>(
     null,
@@ -131,6 +131,27 @@ export default function ResultsPage() {
       {/* Map container switched to h-screen and added overflow hidden so the page is forced to be exactly one screen tall, whereas before the page was allowed to get taller than browser window leading to a long scroll */}
       <header className={`${NAVBAR_V2_ROOT} shrink-0 border-b border-zinc-200`}>
         <div className="flex items-center gap-3 min-w-0">
+          <button
+            type="button"
+            onClick={() => setIsSidebarOpen((prev) => !prev)}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50"
+            aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
+          >
+            <svg
+              className="h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 6h16M4 12h16M4 18h16"
+              />
+            </svg>
+          </button>
           <p className={NAVBAR_V2_LOGO}>DELIVERY OPTIMIZER</p>
         </div>
 
