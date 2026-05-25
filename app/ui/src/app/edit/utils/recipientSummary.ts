@@ -1,11 +1,15 @@
 import type { AddressCard } from "../types/delivery";
 
-/** Display string for locked recipient name + phone (middle dot when both set). */
-export function recipientSummary(
-  a: Pick<AddressCard, "recipientName" | "phoneNumber">,
-): string {
-  const n = a.recipientName.trim();
-  const p = a.phoneNumber.trim();
+type RecipientContactFields = Partial<{
+  recipientName: string;
+  addresseeName: string;
+  phoneNumber: string;
+}>;
+
+/** Display string for recipient name + phone (middle dot when both set). */
+export function recipientSummary(a: RecipientContactFields): string {
+  const n = (a.recipientName ?? a.addresseeName ?? "").trim();
+  const p = (a.phoneNumber ?? "").trim();
   if (n && p) return `${n} · ${p}`;
   if (n) return n;
   if (p) return p;

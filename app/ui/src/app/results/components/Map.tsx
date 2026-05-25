@@ -23,15 +23,9 @@ const DAVIS_CENTER = { lat: 38.5449, lng: -121.7405 };
 const MARKER_ICON_WIDTH = 28;
 const MARKER_ICON_HEIGHT = 40;
 
-let markerScaledSize: google.maps.Size | undefined;
-
 function getMarkerScaledSize(): google.maps.Size | undefined {
   if (typeof google === "undefined") return undefined;
-  markerScaledSize ??= new google.maps.Size(
-    MARKER_ICON_WIDTH,
-    MARKER_ICON_HEIGHT,
-  );
-  return markerScaledSize;
+  return new google.maps.Size(MARKER_ICON_WIDTH, MARKER_ICON_HEIGHT);
 }
 
 // fillColor is always a route palette hex from routeColorHex, never user input.

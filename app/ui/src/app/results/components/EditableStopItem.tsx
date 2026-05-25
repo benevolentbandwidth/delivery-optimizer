@@ -3,6 +3,7 @@
 "use client";
 
 import { useState } from "react";
+import { recipientSummary } from "@/app/edit/utils/recipientSummary";
 import type { Stop, TimeWindow } from "../types";
 
 type EditableStopItemProps = {
@@ -40,15 +41,6 @@ function formatDeliveryWindow(stop: Stop): string {
   return formatTimeWindowLine(stop.timeWindow);
 }
 
-function formatContactLine(stop: Stop): string {
-  const name = stop.addresseeName?.trim();
-  const phone = stop.phoneNumber?.trim();
-  if (name && phone) return `${name} · ${phone}`;
-  if (name) return name;
-  if (phone) return phone;
-  return "—";
-}
-
 export default function EditableStopItem({
   stop,
   accentColor,
@@ -56,7 +48,7 @@ export default function EditableStopItem({
   onSaveNote,
 }: EditableStopItemProps) {
   const [draft, setDraft] = useState(stop.note ?? "");
-  const contactText = formatContactLine(stop);
+  const contactText = recipientSummary(stop);
   const timeText = formatDeliveryWindow(stop);
 
   return (
