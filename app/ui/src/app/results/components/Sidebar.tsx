@@ -5,12 +5,16 @@ import { useMemo, useState } from "react";
 import type { Route } from "../types";
 import { routeColorHex } from "../utils/routeColors";
 import EditableStopItem from "./EditableStopItem";
+import RouteCardMenu from "./RouteCardMenu";
 
 type SidebarProps = {
   routes: Route[];
   isEditMode: boolean;
   onEditModeChange: (value: boolean) => void;
   onUpdateStopNote: (routeId: string, stopId: string, note: string) => void;
+  onExportRoute: (vehicleId: string) => void;
+  onDuplicateRoute: (vehicleId: string) => void;
+  onDeleteRoute: (vehicleId: string) => void;
 };
 
 export default function Sidebar({
@@ -18,10 +22,14 @@ export default function Sidebar({
   isEditMode,
   onEditModeChange,
   onUpdateStopNote,
+  onExportRoute,
+  onDuplicateRoute,
+  onDeleteRoute,
 }: SidebarProps) {
   const [expandedRouteIds, setExpandedRouteIds] = useState<Set<string>>(
     () => new Set(),
   );
+  const [openMenuRouteId, setOpenMenuRouteId] = useState<string | null>(null);
 
   const totalStops = useMemo(
     () => routes.reduce((sum, r) => sum + r.stops.length, 0),
@@ -92,13 +100,13 @@ export default function Sidebar({
                         : "border-zinc-300 bg-white"
                     }`}
                   >
-                    <button
-                      type="button"
-                      onClick={() => toggleExpanded(route.vehicleId)}
-                      className="w-full px-4 py-3 text-left hover:bg-zinc-50 transition-colors"
-                      aria-expanded={isExpanded}
-                    >
-                      <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-start gap-1 px-4 py-3 hover:bg-zinc-50 transition-colors">
+                      <button
+                        type="button"
+                        onClick={() => toggleExpanded(route.vehicleId)}
+                        className="min-w-0 flex-1 text-left"
+                        aria-expanded={isExpanded}
+                      >
                         <div className="min-w-0 flex-1">
                           <div className="flex items-start gap-2.5 min-w-0">
                             <span
@@ -211,8 +219,39 @@ export default function Sidebar({
                             <span>{route.vehicleType ?? "Vehicle"}</span>
                           </p>
                         </div>
-                        <div className="mt-0.5 flex items-center gap-3 text-zinc-400">
-                          <span className="text-[20px] leading-none">…</span>
+                      </button>
+
+                      <div className="flex shrink-0 items-center gap-1 pt-0.5">
+                        <RouteCardMenu
+                          routeLabel={`Route ${idx + 1}, ${route.driverName}`}
+                          isOpen={openMenuRouteId === route.vehicleId}
+                          onOpenChange={(open) =>
+                            setOpenMenuRouteId(open ? route.vehicleId : null)
+                          }
+                          onExport={() => onExportRoute(route.vehicleId)}
+                          onDuplicate={() => onDuplicateRoute(route.vehicleId)}
+                          onDelete={() => {
+                            onDeleteRoute(route.vehicleId);
+                            setExpandedRouteIds((prev) => {
+                              const next = new Set(prev);
+                              next.delete(route.vehicleId);
+                              return next;
+                            });
+                            if (openMenuRouteId === route.vehicleId) {
+                              setOpenMenuRouteId(null);
+                            }
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => toggleExpanded(route.vehicleId)}
+                          className="flex h-9 w-9 items-center justify-center rounded-lg text-zinc-500 hover:bg-zinc-200/80"
+                          aria-label={
+                            isExpanded
+                              ? `Collapse route ${idx + 1}`
+                              : `Expand route ${idx + 1}`
+                          }
+                        >
                           <svg
                             className={`h-[22px] w-[22px] shrink-0 transition-transform ${
                               isExpanded ? "rotate-90" : "rotate-0"
@@ -227,9 +266,9 @@ export default function Sidebar({
                               clipRule="evenodd"
                             />
                           </svg>
-                        </div>
+                        </button>
                       </div>
-                    </button>
+                    </div>
 
                     {isExpanded && (
                       <div className="border-t border-zinc-200 bg-white px-4 pb-4 pt-1">

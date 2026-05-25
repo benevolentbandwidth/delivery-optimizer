@@ -13,6 +13,7 @@ import ExportRoutesModal from "./components/ExportRoutesModal";
 import MapComponent from "./components/Map";
 import Sidebar from "./components/Sidebar";
 import type { PendingPinMove, Route } from "./types";
+import { downloadRoutesAsJsonFiles } from "./utils/downloadRouteJson";
 
 function readInitialRoutes(): { routes: Route[]; error: string | null } {
   if (typeof window === "undefined") return { routes: [], error: null };
@@ -128,6 +129,52 @@ export default function ResultsPage() {
     setExportWarningOpen(false);
   }, [handleEditModeChange]);
 
+  const handleExportSingleRoute = useCallback(
+    (vehicleId: string) => {
+      if (isEditMode || pendingPinMove != null) {
+        setExportWarningOpen(true);
+        return;
+      }
+      const routeIndex = routes.findIndex((r) => r.vehicleId === vehicleId);
+      if (routeIndex === -1) return;
+      downloadRoutesAsJsonFiles(routes, (_, i) => i === routeIndex);
+    },
+    [routes, isEditMode, pendingPinMove],
+  );
+
+  const handleDuplicateRoute = useCallback((vehicleId: string) => {
+    setRoutes((prev) => {
+      const routeIndex = prev.findIndex((r) => r.vehicleId === vehicleId);
+      if (routeIndex === -1) return prev;
+      const source = prev[routeIndex]!;
+      const suffix = Date.now().toString(36);
+      const copy: Route = {
+        ...source,
+        vehicleId: `${source.vehicleId}-copy-${suffix}`,
+        driverName: `${source.driverName} (copy)`,
+        stops: source.stops.map((stop, stopIndex) => ({
+          ...stop,
+          id: `${stop.id}-copy-${suffix}-${stopIndex}`,
+        })),
+      };
+      return [
+        ...prev.slice(0, routeIndex + 1),
+        copy,
+        ...prev.slice(routeIndex + 1),
+      ];
+    });
+  }, []);
+
+  const handleDeleteRoute = useCallback(
+    (vehicleId: string) => {
+      setRoutes((prev) => prev.filter((r) => r.vehicleId !== vehicleId));
+      if (pendingPinMove?.vehicleId === vehicleId) {
+        setPendingPinMove(null);
+      }
+    },
+    [pendingPinMove],
+  );
+
   return (
     <main
       className={`h-screen flex flex-col overflow-hidden font-sans-manrope ${styles.root}`}
@@ -202,6 +249,9 @@ export default function ResultsPage() {
             isEditMode={isEditMode}
             onEditModeChange={handleEditModeChange}
             onUpdateStopNote={updateStopNote}
+            onExportRoute={handleExportSingleRoute}
+            onDuplicateRoute={handleDuplicateRoute}
+            onDeleteRoute={handleDeleteRoute}
           />
         </div>
         <div className="flex-1 min-w-0 min-h-0 flex flex-col">

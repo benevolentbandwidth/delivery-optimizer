@@ -16,8 +16,9 @@ import {
   Marker,
   useGoogleMap,
 } from "@react-google-maps/api";
-import type { PendingPinMove, Route } from "../types";
+import type { HoveredStopInfo, PendingPinMove, Route, Stop } from "../types";
 import { routeColorHex } from "../utils/routeColors";
+import MapStopHoverOverlay from "./MapStopHoverOverlay";
 
 const DAVIS_CENTER = { lat: 38.5449, lng: -121.7405 };
 const MARKER_ICON_WIDTH = 28;
@@ -305,10 +306,51 @@ type AdvancedMarkersProps = {
     lat: number,
     lng: number,
   ) => void;
+  onStopHover: (info: HoveredStopInfo) => void;
+  onStopHoverEnd: () => void;
 };
 
 function stopKey(vehicleId: string, stopId: string): string {
   return `${vehicleId}:${stopId}`;
+}
+
+function hoverInfoForStop(
+  routeIndex: number,
+  route: Route,
+  stop: Stop,
+  pendingPinMove: PendingPinMove | null,
+): HoveredStopInfo {
+  const atPending =
+    pendingPinMove != null &&
+    pendingPinMove.vehicleId === route.vehicleId &&
+    pendingPinMove.stopId === stop.id;
+  return {
+    routeIndex,
+    stop,
+    lat: atPending ? pendingPinMove.lat : stop.lat,
+    lng: atPending ? pendingPinMove.lng : stop.lng,
+  };
+}
+
+function bindAdvancedMarkerHover(
+  marker: google.maps.marker.AdvancedMarkerElement,
+  info: HoveredStopInfo,
+  onStopHover: (info: HoveredStopInfo) => void,
+  onStopHoverEnd: () => void,
+): () => void {
+  const show = () => onStopHover(info);
+  const hide = () => onStopHoverEnd();
+  const overListener = marker.addListener("mouseover", show);
+  const outListener = marker.addListener("mouseout", hide);
+  const el = marker.element;
+  el?.addEventListener("mouseenter", show);
+  el?.addEventListener("mouseleave", hide);
+  return () => {
+    google.maps.event.removeListener(overListener);
+    google.maps.event.removeListener(outListener);
+    el?.removeEventListener("mouseenter", show);
+    el?.removeEventListener("mouseleave", hide);
+  };
 }
 
 function AdvancedMarkers({
@@ -317,12 +359,22 @@ function AdvancedMarkers({
   isEditMode,
   pendingPinMove,
   onPendingPinMove,
+  onStopHover,
+  onStopHoverEnd,
 }: AdvancedMarkersProps) {
   const markersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
   const markerByStopKeyRef = useRef<
     Record<string, google.maps.marker.AdvancedMarkerElement>
   >({});
+  const hoverCleanupRef = useRef<(() => void)[]>([]);
   const pendingPinMoveRef = useRef(pendingPinMove);
+  const onStopHoverRef = useRef(onStopHover);
+  const onStopHoverEndRef = useRef(onStopHoverEnd);
+
+  useEffect(() => {
+    onStopHoverRef.current = onStopHover;
+    onStopHoverEndRef.current = onStopHoverEnd;
+  }, [onStopHover, onStopHoverEnd]);
 
   useEffect(() => {
     pendingPinMoveRef.current = pendingPinMove;
@@ -365,6 +417,22 @@ function AdvancedMarkers({
               if (!ll) return;
               onPendingPinMove(route.vehicleId, stop.id, ll.lat, ll.lng);
             });
+            m.addListener("dragstart", () => {
+              onStopHoverEndRef.current();
+            });
+
+            const hoverCleanup = bindAdvancedMarkerHover(
+              m,
+              hoverInfoForStop(
+                routeIndex,
+                route,
+                stop,
+                pendingPinMoveRef.current,
+              ),
+              (info) => onStopHoverRef.current(info),
+              () => onStopHoverEndRef.current(),
+            );
+            hoverCleanupRef.current.push(hoverCleanup);
 
             markers.push(m);
             markerByStopKeyRef.current[stopKey(route.vehicleId, stop.id)] = m;
@@ -372,6 +440,8 @@ function AdvancedMarkers({
         });
 
         if (cancelled) {
+          hoverCleanupRef.current.forEach((cleanup) => cleanup());
+          hoverCleanupRef.current = [];
           markers.forEach((m) => {
             google.maps.event.clearInstanceListeners(m);
             m.map = null;
@@ -393,6 +463,8 @@ function AdvancedMarkers({
 
     return () => {
       cancelled = true;
+      hoverCleanupRef.current.forEach((cleanup) => cleanup());
+      hoverCleanupRef.current = [];
       markersRef.current.forEach((m) => {
         google.maps.event.clearInstanceListeners(m);
         m.map = null;
@@ -434,6 +506,33 @@ export default function MapComponent({
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? "";
   const mapId = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID || undefined;
   const [map, setMap] = useState<google.maps.Map | null>(null);
+  const [hoveredStop, setHoveredStop] = useState<HoveredStopInfo | null>(null);
+
+  const handleStopHover = useCallback((info: HoveredStopInfo) => {
+    setHoveredStop(info);
+  }, []);
+
+  const handleStopHoverEnd = useCallback(() => {
+    setHoveredStop(null);
+  }, []);
+
+  const displayedHoveredStop = useMemo((): HoveredStopInfo | null => {
+    if (!hoveredStop) return null;
+    if (!pendingPinMove) return hoveredStop;
+    const route = routes[hoveredStop.routeIndex];
+    if (
+      !route ||
+      pendingPinMove.vehicleId !== route.vehicleId ||
+      pendingPinMove.stopId !== hoveredStop.stop.id
+    ) {
+      return hoveredStop;
+    }
+    return {
+      ...hoveredStop,
+      lat: pendingPinMove.lat,
+      lng: pendingPinMove.lng,
+    };
+  }, [hoveredStop, pendingPinMove, routes]);
 
   const onMapLoad = useCallback(
     (mapInstance: google.maps.Map) => {
@@ -476,7 +575,7 @@ export default function MapComponent({
   }
 
   return (
-    <div className="w-full h-full rounded-lg">
+    <div className="relative h-full w-full rounded-lg">
       <LoadScriptNext
         googleMapsApiKey={apiKey}
         mapIds={mapId ? [mapId] : undefined}
@@ -495,6 +594,7 @@ export default function MapComponent({
             pendingPinMove={pendingPinMove}
             onRouteDistanceUpdate={onRouteDistanceUpdate}
           />
+          <MapStopHoverOverlay hovered={displayedHoveredStop} />
           {mapId && (
             <AdvancedMarkers
               map={map}
@@ -502,6 +602,8 @@ export default function MapComponent({
               isEditMode={isEditMode}
               pendingPinMove={pendingPinMove}
               onPendingPinMove={onPendingPinMove}
+              onStopHover={handleStopHover}
+              onStopHoverEnd={handleStopHoverEnd}
             />
           )}
           {!mapId &&
