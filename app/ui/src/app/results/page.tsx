@@ -8,6 +8,8 @@ import styles from "../edit/edit.module.css";
 import EditSidebar from "../edit/components/layout/sidebar/Sidebar";
 import SidebarEditButton from "../edit/components/layout/sidebar/SidebarEditButton";
 import SidebarResultsButton from "../edit/components/layout/sidebar/SidebarResultsButton";
+import ExportEditWarningModal from "./components/ExportEditWarningModal";
+import ExportRoutesModal from "./components/ExportRoutesModal";
 import MapComponent from "./components/Map";
 import Sidebar from "./components/Sidebar";
 import type { PendingPinMove, Route } from "./types";
@@ -46,6 +48,8 @@ export default function ResultsPage() {
   const [pendingPinMove, setPendingPinMove] = useState<PendingPinMove | null>(
     null,
   );
+  const [exportOpen, setExportOpen] = useState(false);
+  const [exportWarningOpen, setExportWarningOpen] = useState(false);
 
   const updateStopNote = useCallback(
     (routeId: string, stopId: string, note: string) => {
@@ -111,10 +115,33 @@ export default function ResultsPage() {
 
   const cancelPendingPinMove = useCallback(() => setPendingPinMove(null), []);
 
+  const handleExportClick = useCallback(() => {
+    if (isEditMode || pendingPinMove != null) {
+      setExportWarningOpen(true);
+      return;
+    }
+    setExportOpen(true);
+  }, [isEditMode, pendingPinMove]);
+
+  const handleDoneEditingForExport = useCallback(() => {
+    handleEditModeChange(false);
+    setExportWarningOpen(false);
+  }, [handleEditModeChange]);
+
   return (
     <main
       className={`h-screen flex flex-col overflow-hidden font-sans-manrope ${styles.root}`}
     >
+      <ExportRoutesModal
+        isOpen={exportOpen}
+        onClose={() => setExportOpen(false)}
+        routes={routes}
+      />
+      <ExportEditWarningModal
+        isOpen={exportWarningOpen}
+        onClose={() => setExportWarningOpen(false)}
+        onDoneEditing={handleDoneEditingForExport}
+      />
       {error && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm w-80 space-y-4">
@@ -153,7 +180,9 @@ export default function ResultsPage() {
           </button>
           <button
             type="button"
-            className="h-9 px-6 rounded-[80px] bg-[var(--edit-teal-500)] font-medium text-[14px] leading-5 text-[var(--edit-foreground)] whitespace-nowrap hover:opacity-90 transition-opacity"
+            onClick={handleExportClick}
+            disabled={routes.length === 0}
+            className="h-9 px-6 rounded-[80px] bg-[var(--edit-teal-500)] font-medium text-[14px] leading-5 text-[var(--edit-foreground)] whitespace-nowrap hover:opacity-90 transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
           >
             Export
           </button>
