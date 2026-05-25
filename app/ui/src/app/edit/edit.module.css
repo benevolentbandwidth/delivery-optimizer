@@ -16,7 +16,9 @@
 .root {
   /* ── Teal brand ──────────────────────────────────────────────── */
   --edit-teal-300: #57ac91;
+  --edit-teal-400: #6ab39d;
   --edit-teal-500: #397461;
+  --edit-foreground: #272725;
   --edit-teal-600: #267b67;
   --edit-teal-700: #265749;
   --edit-teal-alpha: #39746126;
