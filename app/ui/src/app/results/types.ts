@@ -23,9 +23,8 @@ export interface Stop {
   note: string; // driver notes for the stop
   addresseeName?: string; // name of person at address
   phoneNumber?: string; // phone number of person at address
-  /** When both set (from delivery window picks), displayed as “start – end” on results */
-  deliveryWindowStart?: string;
-  deliveryWindowEnd?: string;
+  /** Delivery window from edit form; start and end are always set together */
+  deliveryWindow?: { start: string; end: string };
 }
 
 // Data that a single route contains (one driver, their stops in order, and the path to draw for the route)

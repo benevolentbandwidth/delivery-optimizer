@@ -69,17 +69,14 @@ export function vroomToRoutes(
         sequence: idx + 1,
         capacityUsed: step.load?.[0] ?? 0,
         timeWindow: {
-          kind: inferTimeWindowKind(
-            address?.deliveryTimeStart,
-            address?.deliveryTimeEnd,
-          ),
+          kind: inferTimeWindowKind(winStart, winEnd),
           time: arrivalTimeStr,
         },
         note: address?.notes ?? "",
         addresseeName: address?.recipientName?.trim() || undefined,
         phoneNumber: address?.phoneNumber?.trim() || undefined,
         ...(winStart && winEnd
-          ? { deliveryWindowStart: winStart, deliveryWindowEnd: winEnd }
+          ? { deliveryWindow: { start: winStart, end: winEnd } }
           : {}),
       };
     });

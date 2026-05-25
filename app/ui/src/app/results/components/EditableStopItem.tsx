@@ -36,19 +36,17 @@ export default function EditableStopItem({
       </div>
       <div className="mt-1.5 space-y-0.5 text-xs text-zinc-600">
         <div>
-          <span className="font-medium text-zinc-700">
-            Name of addressed to:
-          </span>{" "}
+          <span className="font-medium text-zinc-700">Addressee:</span>{" "}
           {stop.addresseeName ?? "—"}
         </div>
         <div>
           <span className="font-medium text-zinc-700">Phone:</span>{" "}
           {stop.phoneNumber ?? "—"}
         </div>
-        {stop.deliveryWindowStart && stop.deliveryWindowEnd ? (
+        {stop.deliveryWindow ? (
           <div>
             <span className="font-medium text-zinc-700">Delivery window:</span>{" "}
-            {stop.deliveryWindowStart} – {stop.deliveryWindowEnd}
+            {stop.deliveryWindow.start} – {stop.deliveryWindow.end}
           </div>
         ) : null}
         <div>

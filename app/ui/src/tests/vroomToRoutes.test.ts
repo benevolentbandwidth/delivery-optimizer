@@ -197,8 +197,29 @@ describe("vroomToRoutes", () => {
     const stop = route.stops[0];
     expect(stop.addresseeName).toBe("Jane Doe");
     expect(stop.phoneNumber).toBe("555-123-4567");
-    expect(stop.deliveryWindowStart).toBe("9:00 AM");
-    expect(stop.deliveryWindowEnd).toBe("11:00 AM");
+    expect(stop.deliveryWindow).toEqual({
+      start: "9:00 AM",
+      end: "11:00 AM",
+    });
+  });
+
+  it("trims delivery window fields for kind and deliveryWindow", () => {
+    const [route] = vroomToRoutes(
+      SINGLE_STOP,
+      [makeVehicle(1)],
+      [
+        makeAddress(1, {
+          deliveryTimeStart: " 9:00 AM",
+          deliveryTimeEnd: "11:00 AM ",
+        }),
+      ],
+    );
+    const stop = route.stops[0];
+    expect(stop.timeWindow.kind).toBe("at");
+    expect(stop.deliveryWindow).toEqual({
+      start: "9:00 AM",
+      end: "11:00 AM",
+    });
   });
 
   it("arrival wraps via % 86400 — 86400 + 32400 still shows 9:00 AM", () => {
