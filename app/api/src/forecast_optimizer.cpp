@@ -125,11 +125,15 @@ constexpr double kDefaultWeatherThresholdPercent = 5.0;
 
   const Json::Value& weather = hour["weather"];
   if (weather.isArray()) {
+    bool has_thunder = false;
     for (const Json::Value& condition : weather) {
       const int condition_id = condition["id"].isInt() ? condition["id"].asInt() : 0;
       if (condition_id >= 200 && condition_id < 300) {
-        delay_seconds += 240;
+        has_thunder = true;
       }
+    }
+    if (has_thunder) {
+      delay_seconds += 240;
     }
   }
 
