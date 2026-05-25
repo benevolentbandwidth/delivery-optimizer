@@ -3,7 +3,7 @@
 
 export const dynamic = "force-dynamic";
 
-import { useState, useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import ShellNavbar from "@/app/components/ShellNavbar";
 import { formatSize } from "@/app/utils/routeUtils";
@@ -15,7 +15,7 @@ export default function UploadRoutePage() {
   const router = useRouter();
   const [isDragging, setIsDragging] = useState(false);
   const [file, setFile] = useState<File | null>(null);
-  const [isProcessing] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const dragDepth = useRef(0);
   const inputRef = useRef<HTMLInputElement>(null);
