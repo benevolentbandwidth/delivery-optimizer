@@ -3,7 +3,11 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import styles from "../edit/edit.module.css";
+import designTokens from "../shared/editDesignTokens.module.css";
+import {
+  clearOptimizeResults,
+  OPTIMIZE_RESULTS_STORAGE_KEY,
+} from "../edit/utils/hasOptimizeResults";
 import EditSidebar from "../edit/components/layout/sidebar/Sidebar";
 import SidebarEditButton from "../edit/components/layout/sidebar/SidebarEditButton";
 import SidebarResultsButton from "../edit/components/layout/sidebar/SidebarResultsButton";
@@ -14,7 +18,7 @@ import type { PendingPinMove, Route } from "./types";
 function readInitialRoutes(): { routes: Route[]; error: string | null } {
   if (typeof window === "undefined") return { routes: [], error: null };
 
-  const stored = sessionStorage.getItem("optimizeResults");
+  const stored = sessionStorage.getItem(OPTIMIZE_RESULTS_STORAGE_KEY);
   if (!stored) return { routes: [], error: null };
 
   try {
@@ -36,7 +40,7 @@ export default function ResultsPage() {
 
   useEffect(() => {
     if (initialRoutes.length > 0) {
-      sessionStorage.removeItem("optimizeResults"); // consume once after successful parse + state update
+      clearOptimizeResults(); // consume once after successful parse + state update
     }
   }, [initialRoutes.length]);
 
@@ -112,7 +116,7 @@ export default function ResultsPage() {
 
   return (
     <main
-      className={`h-screen flex flex-col overflow-hidden font-sans-manrope ${styles.root}`}
+      className={`h-screen flex flex-col overflow-hidden font-sans-manrope ${designTokens.root}`}
     >
       {error && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">

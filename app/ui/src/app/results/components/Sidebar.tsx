@@ -61,6 +61,7 @@ export default function Sidebar({
         </div>
         <button
           type="button"
+          aria-pressed={isEditMode}
           onClick={() => onEditModeChange(!isEditMode)}
           className="h-9 shrink-0 rounded-[80px] border border-zinc-900 bg-white px-4 text-sm font-semibold text-zinc-900 hover:bg-zinc-50"
         >
@@ -196,7 +197,7 @@ export default function Sidebar({
             b²
           </p>
           <p className="mt-1 text-[12px] leading-5 font-medium text-zinc-800">
-            Built with ❤️ for Humanity.
+            Built with <span aria-hidden="true">❤️</span> for Humanity.
           </p>
           <p className="text-[12px] leading-5 font-medium text-zinc-800">
             The Benevolent Bandwidth Foundation
