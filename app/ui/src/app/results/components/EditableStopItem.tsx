@@ -3,6 +3,7 @@
 "use client";
 
 import { useState } from "react";
+import { recipientSummary } from "@/app/edit/utils/recipientSummary";
 import type { Stop, TimeWindow } from "../types";
 
 type EditableStopItemProps = {
@@ -30,7 +31,8 @@ function formatTimeWindowLine(tw: TimeWindow | undefined): string {
   const label = formatTime12h(tw.time);
   if (tw.kind === "by") return `By ${label}`;
   if (tw.kind === "at") return label;
-  return `From ${label}`;
+  if (tw.kind === "from") return `From ${label}`;
+  return label;
 }
 
 function formatDeliveryWindow(stop: Stop): string {
@@ -38,15 +40,6 @@ function formatDeliveryWindow(stop: Stop): string {
   const b = stop.deliveryWindowEnd?.trim();
   if (a && b) return `${formatTime12h(a)} – ${formatTime12h(b)}`;
   return formatTimeWindowLine(stop.timeWindow);
-}
-
-function formatContactLine(stop: Stop): string {
-  const name = stop.addresseeName?.trim();
-  const phone = stop.phoneNumber?.trim();
-  if (name && phone) return `${name} · ${phone}`;
-  if (name) return name;
-  if (phone) return phone;
-  return "—";
 }
 
 function PersonIcon({ className }: { className?: string }) {
@@ -129,7 +122,7 @@ export default function EditableStopItem({
   onSaveNote,
 }: EditableStopItemProps) {
   const [draft, setDraft] = useState(stop.note ?? "");
-  const contactText = formatContactLine(stop);
+  const contactText = recipientSummary(stop);
   const timeText = formatDeliveryWindow(stop);
 
   return (
@@ -190,14 +183,14 @@ export default function EditableStopItem({
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               rows={3}
-              className="mt-1.5 w-full resize-none rounded-lg border border-zinc-200 bg-zinc-50/50 px-2.5 py-2 text-[13px] text-zinc-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7BCFC2]"
+              className="mt-1.5 w-full resize-none rounded-lg border border-zinc-200 bg-zinc-50/50 px-2.5 py-2 text-[13px] text-zinc-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--edit-teal-300)]"
               placeholder="Driver notes (e.g., Gate code is 1234)"
             />
             <div className="mt-2 flex justify-end">
               <button
                 type="button"
                 onClick={() => onSaveNote(draft)}
-                className="inline-flex items-center rounded-full bg-[#7BCFC2] px-3 py-1.5 text-[12px] font-semibold text-[#1C1B1F] hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-[#7BCFC2]"
+                className="inline-flex items-center rounded-full bg-[var(--edit-teal-300)] px-3 py-1.5 text-[12px] font-semibold text-[var(--edit-text-primary)] hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-[var(--edit-teal-300)]"
               >
                 Save
               </button>

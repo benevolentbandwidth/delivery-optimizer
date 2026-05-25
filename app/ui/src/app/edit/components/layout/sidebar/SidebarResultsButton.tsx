@@ -59,9 +59,9 @@ export default function SidebarResultsButton() {
   }
 
   return (
-    <span className={SIDEBAR_NAV_ITEM_DISABLED} aria-disabled="true">
+    <button type="button" disabled className={SIDEBAR_NAV_ITEM_DISABLED}>
       <span className={SIDEBAR_NAV_PILL_INACTIVE}>{SIDEBAR_RESULTS_ICON}</span>
       <span className={SIDEBAR_NAV_LABEL_INACTIVE}>Results</span>
-    </span>
+    </button>
   );
 }
