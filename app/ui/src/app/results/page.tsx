@@ -41,7 +41,7 @@ export default function ResultsPage() {
     }
   }, [initialRoutes.length]);
 
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const isSidebarOpen = true;
   const [isEditMode, setIsEditMode] = useState(false);
   const [pendingPinMove, setPendingPinMove] = useState<PendingPinMove | null>(
     null,
