@@ -4,9 +4,9 @@
 
 import { useCallback, useEffect, useState } from "react";
 import styles from "../edit/edit.module.css";
-import EditSidebar from "../edit/components/Sidebar/Sidebar";
-import SidebarEditButton from "../edit/components/Sidebar/SidebarEditButton";
-import SidebarResultsButton from "../edit/components/Sidebar/SidebarResultsButton";
+import EditSidebar from "../edit/components/layout/sidebar/Sidebar";
+import SidebarEditButton from "../edit/components/layout/sidebar/SidebarEditButton";
+import SidebarResultsButton from "../edit/components/layout/sidebar/SidebarResultsButton";
 import MapComponent from "./components/Map";
 import Sidebar from "./components/Sidebar";
 import type { PendingPinMove, Route } from "./types";

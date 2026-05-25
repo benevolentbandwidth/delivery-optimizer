@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { readHasOptimizeResults } from "../../utils/hasOptimizeResults";
+import { readHasOptimizeResults } from "../../../utils/hasOptimizeResults";
 import {
   SIDEBAR_NAV_ITEM_ACTIVE,
   SIDEBAR_NAV_ITEM_DISABLED,
