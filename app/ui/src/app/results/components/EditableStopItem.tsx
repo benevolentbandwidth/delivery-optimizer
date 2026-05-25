@@ -66,7 +66,13 @@ function PersonIcon({ className }: { className?: string }) {
 function ClockIcon({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 20 20" fill="none" aria-hidden>
-      <circle cx="10" cy="10" r="7.25" stroke="currentColor" strokeWidth="1.5" />
+      <circle
+        cx="10"
+        cy="10"
+        r="7.25"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      />
       <path
         d="M10 6.25V10l2.5 1.25"
         stroke="currentColor"
