@@ -37,6 +37,8 @@ export default function StopCard({
   const completedAtText = stop.completedAt
     ? new Date(stop.completedAt).toLocaleString()
     : null;
+  const packageText =
+    stop.packageCount === 1 ? "1 package" : `${stop.packageCount} packages`;
 
   return (
     <article
@@ -51,9 +53,7 @@ export default function StopCard({
         <span style={styles.textBlock}>
           <span style={styles.stopMetaRow}>
             <span style={styles.stopNumberBadge}>{stop.stopNumber}</span>
-            <span style={styles.stopWindow}>
-              Deliver between 4:00pm - 5:00pm
-            </span>
+            <span style={styles.stopWindow}>{packageText}</span>
           </span>
           <strong style={styles.addressText}>{stop.address}</strong>
           <InfoLine icon={<PersonIcon />} text={stop.customerName} />
