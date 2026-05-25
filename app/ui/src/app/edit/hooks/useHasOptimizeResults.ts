@@ -1,15 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { readHasOptimizeResults } from "../utils/hasOptimizeResults";
 
-/** Session storage flag for optimized routes; read once after mount. */
+/** True when sessionStorage has optimized routes (client only). */
 export function useHasOptimizeResults(): boolean {
-  const [hasResults, setHasResults] = useState(false);
-
-  useEffect(() => {
-    setHasResults(readHasOptimizeResults());
-  }, []);
-
-  return hasResults;
+  return useSyncExternalStore(
+    () => () => {},
+    readHasOptimizeResults,
+    () => false,
+  );
 }

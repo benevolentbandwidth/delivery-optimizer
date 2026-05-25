@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { NAVBAR_V2_LOGO, NAVBAR_V2_ROOT } from "../edit/formStyles.v2";
 import styles from "../edit/edit.module.css";
 import MobileSidebar from "../edit/components/layout/sidebar/MobileSidebar";
@@ -20,22 +20,29 @@ import {
 import type { PendingPinMove, Route } from "./types";
 import { downloadRoutesAsJsonFiles } from "./utils/downloadRouteJson";
 
+function readInitialRoutes(): { routes: Route[]; error: string | null } {
+  if (typeof window === "undefined") return { routes: [], error: null };
+
+  const stored = sessionStorage.getItem("optimizeResults");
+  if (!stored) return { routes: [], error: null };
+
+  try {
+    const parsed = JSON.parse(stored) as Route[];
+    sessionStorage.removeItem("optimizeResults");
+    return { routes: parsed, error: null };
+  } catch {
+    return {
+      routes: [],
+      error: "Route data could not be loaded. Please go back and try again.",
+    };
+  }
+}
+
 export default function ResultsPage() {
-  const [routes, setRoutes] = useState<Route[]>([]);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const stored = sessionStorage.getItem("optimizeResults");
-    if (!stored) return;
-
-    try {
-      const parsed = JSON.parse(stored) as Route[];
-      setRoutes(parsed);
-      sessionStorage.removeItem("optimizeResults");
-    } catch {
-      setError("Route data could not be loaded. Please go back and try again.");
-    }
-  }, []);
+  const [{ routes: initialRoutes, error: initialError }] =
+    useState(readInitialRoutes);
+  const [routes, setRoutes] = useState<Route[]>(initialRoutes);
+  const [error] = useState<string | null>(initialError);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSheetExpanded, setIsSheetExpanded] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
