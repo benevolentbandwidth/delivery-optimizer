@@ -7,6 +7,10 @@ import AddressOverlay, {
 import { TIME_OPTIONS } from "@/app/edit/constants/timeOptions";
 import type { AddressCard as AddressCardType } from "@/app/edit/types/delivery";
 import {
+  hasRecipientContact,
+  recipientSummary,
+} from "@/app/edit/utils/recipientSummary";
+import {
   ADDRESS_ROW_EDIT_ROOT,
   ADDRESS_ROW_DESKTOP_WRAPPER,
   ADDRESS_ROW_EDIT_LEFT,
@@ -257,15 +261,13 @@ export default function AddressCard({
                 <>
                   {/* Recipient column — locked */}
                   <div className={ADDRESS_ROW_LOCKED_RECIPIENT_COL}>
-                    {(a.recipientName || a.phoneNumber) && (
+                    {hasRecipientContact(a) && (
                       <button
                         type="button"
                         onClick={() => unlockAddress(a.id)}
                         className={`${ADDRESS_ROW_LOCKED_PLAIN_TEXT} ${ADDRESS_ROW_LOCKED_FIELD_BTN}`}
                       >
-                        {[a.recipientName, a.phoneNumber]
-                          .filter(Boolean)
-                          .join(", ")}
+                        {recipientSummary(a)}
                       </button>
                     )}
                     <button
@@ -553,11 +555,9 @@ export default function AddressCard({
             <div className={MOBILE_ADDR_SUMMARY_SECTION}>
               <span className={MOBILE_ADDR_EDIT_SECTION_LABEL}>Recipient</span>
               <div className={MOBILE_ADDR_LOCKED_RECIPIENT_LINES}>
-                {(a.recipientName || a.phoneNumber) && (
+                {hasRecipientContact(a) && (
                   <span className={MOBILE_ADDR_LOCKED_VALUE}>
-                    {[a.recipientName, a.phoneNumber]
-                      .filter(Boolean)
-                      .join(", ")}
+                    {recipientSummary(a)}
                   </span>
                 )}
                 <span
@@ -616,11 +616,9 @@ export default function AddressCard({
                     className={MOBILE_ADDR_LOCKED_FIELD_BTN}
                   >
                     <div className={MOBILE_ADDR_LOCKED_RECIPIENT_LINES}>
-                      {(a.recipientName || a.phoneNumber) && (
+                      {hasRecipientContact(a) && (
                         <span className={MOBILE_ADDR_LOCKED_VALUE}>
-                          {[a.recipientName, a.phoneNumber]
-                            .filter(Boolean)
-                            .join(", ")}
+                          {recipientSummary(a)}
                         </span>
                       )}
                       <span
