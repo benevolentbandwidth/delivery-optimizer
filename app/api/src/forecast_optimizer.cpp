@@ -7,6 +7,7 @@
 #include <chrono>
 #include <cmath>
 #include <cstddef>
+#include <cstdint>
 #include <cstdlib>
 #include <drogon/drogon.h>
 #include <future>
@@ -173,6 +174,18 @@ WeatherForecastOptions ResolveWeatherForecastOptionsFromEnv() {
 
 bool IsOpenWeatherConfigured(const WeatherForecastOptions& options) {
   return options.enabled && !options.openweather_api_key.empty();
+}
+
+int EstimateServiceSeconds(const OptimizeRequestInput& input) {
+  std::int64_t total = 0;
+  for (const auto& job : input.jobs) {
+    total += job.service;
+    if (total >= std::numeric_limits<int>::max()) {
+      return std::numeric_limits<int>::max();
+    }
+  }
+
+  return static_cast<int>(total);
 }
 
 OpenWeatherDelayEstimate FetchOpenWeatherDelayEstimate(const WeatherForecastOptions& options,

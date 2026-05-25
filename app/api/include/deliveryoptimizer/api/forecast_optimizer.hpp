@@ -37,6 +37,8 @@ struct WeatherImpactEstimate {
 
 [[nodiscard]] bool IsOpenWeatherConfigured(const WeatherForecastOptions& options);
 
+[[nodiscard]] int EstimateServiceSeconds(const OptimizeRequestInput& input);
+
 [[nodiscard]] OpenWeatherDelayEstimate
 FetchOpenWeatherDelayEstimate(const WeatherForecastOptions& options, const Coordinate& coordinate);
 

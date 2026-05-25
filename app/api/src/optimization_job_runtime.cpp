@@ -7,26 +7,12 @@
 
 #include <chrono>
 #include <drogon/utils/Utilities.h>
-#include <limits>
 #include <thread>
 
 namespace {
 
 [[nodiscard]] std::string BuildWorkerIdPrefix() {
   return "opt-worker-" + drogon::utils::getUuid();
-}
-
-[[nodiscard]] int
-EstimateServiceSeconds(const deliveryoptimizer::api::OptimizeRequestInput& input) {
-  std::int64_t total = 0;
-  for (const auto& job : input.jobs) {
-    total += job.service;
-    if (total >= std::numeric_limits<int>::max()) {
-      return std::numeric_limits<int>::max();
-    }
-  }
-
-  return static_cast<int>(total);
 }
 
 } // namespace

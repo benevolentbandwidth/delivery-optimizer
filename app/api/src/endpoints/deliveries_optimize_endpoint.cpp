@@ -7,10 +7,8 @@
 #include "deliveryoptimizer/api/solve_execution.hpp"
 #include "deliveryoptimizer/api/vroom_runner.hpp"
 
-#include <cstdint>
 #include <drogon/drogon.h>
 #include <json/json.h>
-#include <limits>
 #include <memory>
 #include <optional>
 #include <string_view>
@@ -18,20 +16,6 @@
 #include <utility>
 
 namespace {
-
-using deliveryoptimizer::api::OptimizeRequestInput;
-
-[[nodiscard]] int EstimateServiceSeconds(const OptimizeRequestInput& input) {
-  std::int64_t total = 0;
-  for (const auto& job : input.jobs) {
-    total += job.service;
-    if (total >= std::numeric_limits<int>::max()) {
-      return std::numeric_limits<int>::max();
-    }
-  }
-
-  return static_cast<int>(total);
-}
 
 struct CompletedResponse {
   drogon::HttpResponsePtr response;
