@@ -44,7 +44,6 @@ export default function ResultsPage() {
     }
   }, [initialRoutes.length]);
 
-  const isSidebarOpen = true;
   const [isEditMode, setIsEditMode] = useState(false);
   const [pendingPinMove, setPendingPinMove] = useState<PendingPinMove | null>(
     null,
@@ -127,6 +126,7 @@ export default function ResultsPage() {
   const handleDoneEditingForExport = useCallback(() => {
     handleEditModeChange(false);
     setExportWarningOpen(false);
+    setExportOpen(true);
   }, [handleEditModeChange]);
 
   const handleExportSingleRoute = useCallback(
@@ -210,21 +210,23 @@ export default function ResultsPage() {
 
         <div className="ml-auto flex items-center gap-2">
           {pendingPinMove != null && (
-            <button
-              type="button"
-              onClick={cancelPendingPinMove}
-              className="h-9 px-6 rounded-[80px] border border-[var(--edit-foreground)] font-medium text-[14px] leading-5 text-[var(--edit-foreground)] whitespace-nowrap hover:bg-black/5 transition-colors"
-            >
-              Cancel
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={cancelPendingPinMove}
+                className="h-9 px-6 rounded-[80px] border border-[var(--edit-foreground)] font-medium text-[14px] leading-5 text-[var(--edit-foreground)] whitespace-nowrap hover:bg-black/5 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={savePendingPinMove}
+                className="h-9 px-6 rounded-[80px] border border-[var(--edit-foreground)] font-medium text-[14px] leading-5 text-[var(--edit-foreground)] whitespace-nowrap hover:bg-black/5 transition-colors"
+              >
+                Save
+              </button>
+            </>
           )}
-          <button
-            type="button"
-            onClick={savePendingPinMove}
-            className="h-9 px-6 rounded-[80px] border border-[var(--edit-foreground)] font-medium text-[14px] leading-5 text-[var(--edit-foreground)] whitespace-nowrap hover:bg-black/5 transition-colors"
-          >
-            Save
-          </button>
           <button
             type="button"
             onClick={handleExportClick}
@@ -241,9 +243,8 @@ export default function ResultsPage() {
           <SidebarResultsButton />
         </EditSidebar>
 
-        <div
-          className={`shrink-0 h-full overflow-hidden transition-[width] duration-300 ease-in-out ${isSidebarOpen ? "w-[28rem]" : "w-0"}`}
-        >
+        {/* Hi-fi routes panel width (28rem); always visible on desktop */}
+        <div className="shrink-0 h-full w-[28rem] overflow-hidden">
           <Sidebar
             routes={routes}
             isEditMode={isEditMode}
@@ -257,7 +258,7 @@ export default function ResultsPage() {
         <div className="flex-1 min-w-0 min-h-0 flex flex-col">
           <div className="relative flex-1 min-h-0 w-full overflow-hidden">
             {isEditMode && (
-              <div className="pointer-events-none absolute left-1/2 top-4 z-10 -translate-x-1/2 rounded-[80px] bg-[#7BCFC2] px-4 py-2 text-sm font-medium text-[#1C1B1F] shadow-sm">
+              <div className="pointer-events-none absolute left-1/2 top-4 z-10 -translate-x-1/2 rounded-[80px] bg-[var(--edit-teal-300)] px-4 py-2 text-sm font-medium text-[var(--edit-text-primary)] shadow-sm">
                 You are now in editing mode
               </div>
             )}

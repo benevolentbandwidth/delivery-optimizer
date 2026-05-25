@@ -1,6 +1,7 @@
 "use client";
 
 import type { Stop } from "../types";
+import { formatStopDeliveryWindow } from "../utils/formatStopTimeWindow";
 
 type StopHoverCardProps = {
   routeLabel: string;
@@ -16,21 +17,12 @@ function formatContact(stop: Stop): string | null {
   return null;
 }
 
-function formatTimeWindow(stop: Stop): string {
-  const time = stop.timeWindow?.time?.trim();
-  if (!time) return "—";
-  const kind = stop.timeWindow?.kind;
-  if (kind === "by") return `By ${time}`;
-  if (kind === "from") return `From ${time}`;
-  return time;
-}
-
 export default function StopHoverCard({
   routeLabel,
   stop,
 }: StopHoverCardProps) {
   const contact = formatContact(stop);
-  const timeLabel = formatTimeWindow(stop);
+  const timeLabel = formatStopDeliveryWindow(stop);
   const note = stop.note?.trim();
 
   return (

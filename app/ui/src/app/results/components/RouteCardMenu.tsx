@@ -25,6 +25,48 @@ function DownloadIcon({ className }: { className?: string }) {
   );
 }
 
+function DuplicateIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 20 20" fill="none" aria-hidden>
+      <rect
+        x="6.5"
+        y="6.5"
+        width="9"
+        height="9"
+        rx="1.25"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      />
+      <path
+        d="M4.5 13.5V5.75A1.25 1.25 0 0 1 5.75 4.5H13.5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function TrashIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 20 20" fill="none" aria-hidden>
+      <path
+        d="M5.5 6.5h9M8 6.5V5.25A.75.75 0 0 1 8.75 4.5h2.5a.75.75 0 0 1 .75.75V6.5M7.25 6.5v8.25A1.25 1.25 0 0 0 8.5 16h3a1.25 1.25 0 0 0 1.25-1.25V6.5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M8.25 9v4.25M11.75 9v4.25"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 export default function RouteCardMenu({
   routeLabel,
   isOpen,
@@ -35,6 +77,14 @@ export default function RouteCardMenu({
 }: RouteCardMenuProps) {
   const menuId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const first = itemRefs.current[0];
+    first?.focus();
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -43,7 +93,40 @@ export default function RouteCardMenu({
       onOpenChange(false);
     };
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onOpenChange(false);
+      if (e.key === "Escape") {
+        onOpenChange(false);
+        return;
+      }
+      if (!menuRef.current?.contains(e.target as Node)) return;
+
+      const items = itemRefs.current.filter(Boolean) as HTMLButtonElement[];
+      if (items.length === 0) return;
+
+      const currentIndex = items.findIndex(
+        (el) => el === document.activeElement,
+      );
+      let nextIndex = currentIndex;
+
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        nextIndex =
+          currentIndex < 0 || currentIndex >= items.length - 1
+            ? 0
+            : currentIndex + 1;
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        nextIndex = currentIndex <= 0 ? items.length - 1 : currentIndex - 1;
+      } else if (e.key === "Home") {
+        e.preventDefault();
+        nextIndex = 0;
+      } else if (e.key === "End") {
+        e.preventDefault();
+        nextIndex = items.length - 1;
+      } else {
+        return;
+      }
+
+      items[nextIndex]?.focus();
     };
     document.addEventListener("mousedown", handlePointerDown);
     document.addEventListener("keydown", handleKeyDown);
@@ -52,6 +135,10 @@ export default function RouteCardMenu({
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [isOpen, onOpenChange]);
+
+  const setItemRef = (index: number) => (el: HTMLButtonElement | null) => {
+    itemRefs.current[index] = el;
+  };
 
   return (
     <div ref={rootRef} className="relative">
@@ -81,6 +168,7 @@ export default function RouteCardMenu({
 
       {isOpen && (
         <div
+          ref={menuRef}
           id={menuId}
           role="menu"
           aria-label={`${routeLabel} actions`}
@@ -88,9 +176,11 @@ export default function RouteCardMenu({
           onClick={(e) => e.stopPropagation()}
         >
           <button
+            ref={setItemRef(0)}
             type="button"
             role="menuitem"
-            className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm font-medium text-zinc-900 hover:bg-zinc-50"
+            tabIndex={-1}
+            className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm font-medium text-zinc-900 hover:bg-zinc-50 focus:outline-none focus-visible:bg-zinc-50"
             onClick={() => {
               onExport();
               onOpenChange(false);
@@ -100,28 +190,32 @@ export default function RouteCardMenu({
             Export Route
           </button>
           <button
+            ref={setItemRef(1)}
             type="button"
             role="menuitem"
-            className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm font-medium text-zinc-900 hover:bg-zinc-50"
+            tabIndex={-1}
+            className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm font-medium text-zinc-900 hover:bg-zinc-50 focus:outline-none focus-visible:bg-zinc-50"
             onClick={() => {
               onDuplicate();
               onOpenChange(false);
             }}
           >
-            <DownloadIcon className="h-4 w-4 shrink-0" />
+            <DuplicateIcon className="h-4 w-4 shrink-0" />
             Duplicate Route
           </button>
           <div className="my-1 border-t border-zinc-100" role="separator" />
           <button
+            ref={setItemRef(2)}
             type="button"
             role="menuitem"
-            className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm font-medium text-red-700 hover:bg-red-50"
+            tabIndex={-1}
+            className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm font-medium text-red-700 hover:bg-red-50 focus:outline-none focus-visible:bg-red-50"
             onClick={() => {
               onDelete();
               onOpenChange(false);
             }}
           >
-            <DownloadIcon className="h-4 w-4 shrink-0 text-red-700" />
+            <TrashIcon className="h-4 w-4 shrink-0 text-red-700" />
             Delete Route
           </button>
         </div>

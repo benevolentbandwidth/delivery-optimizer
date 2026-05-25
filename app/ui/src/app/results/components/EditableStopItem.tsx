@@ -3,7 +3,8 @@
 "use client";
 
 import { useState } from "react";
-import type { Stop, TimeWindow } from "../types";
+import type { Stop } from "../types";
+import { formatStopDeliveryWindow } from "../utils/formatStopTimeWindow";
 
 type EditableStopItemProps = {
   stop: Stop;
@@ -11,34 +12,6 @@ type EditableStopItemProps = {
   isEditMode: boolean;
   onSaveNote: (note: string) => void;
 };
-
-function formatTime12h(raw: string): string {
-  const t = raw.trim();
-  if (/am|pm/i.test(t)) return t;
-  const m = t.match(/^(\d{1,2}):(\d{2})$/);
-  if (!m) return t;
-  let h = parseInt(m[1]!, 10);
-  const min = m[2];
-  const ap = h >= 12 ? "PM" : "AM";
-  h = h % 12;
-  if (h === 0) h = 12;
-  return `${h}:${min} ${ap}`;
-}
-
-function formatTimeWindowLine(tw: TimeWindow | undefined): string {
-  if (!tw?.time) return "—";
-  const label = formatTime12h(tw.time);
-  if (tw.kind === "by") return `By ${label}`;
-  if (tw.kind === "at") return label;
-  return `From ${label}`;
-}
-
-function formatDeliveryWindow(stop: Stop): string {
-  const a = stop.deliveryWindowStart?.trim();
-  const b = stop.deliveryWindowEnd?.trim();
-  if (a && b) return `${formatTime12h(a)} – ${formatTime12h(b)}`;
-  return formatTimeWindowLine(stop.timeWindow);
-}
 
 function formatContactLine(stop: Stop): string {
   const name = stop.addresseeName?.trim();
@@ -130,7 +103,7 @@ export default function EditableStopItem({
 }: EditableStopItemProps) {
   const [draft, setDraft] = useState(stop.note ?? "");
   const contactText = formatContactLine(stop);
-  const timeText = formatDeliveryWindow(stop);
+  const timeText = formatStopDeliveryWindow(stop);
 
   return (
     <div className="min-w-0 flex-1 rounded-2xl border border-zinc-200 bg-white p-3.5 shadow-sm">

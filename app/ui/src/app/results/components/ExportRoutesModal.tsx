@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { MODAL_OVERLAY } from "@/app/edit/formStyles";
 import editStyles from "@/app/edit/edit.module.css";
 import { useFocusTrap } from "@/app/edit/hooks/useFocusTrap";
+import { useIsClient } from "@/app/edit/hooks/useIsClient";
 import type { Route } from "../types";
 import { downloadRoutesAsJsonFiles } from "../utils/downloadRouteJson";
 import { routeColorHex } from "../utils/routeColors";
@@ -14,14 +15,6 @@ type ExportRoutesModalProps = {
   onClose: () => void;
   routes: Route[];
 };
-
-function useIsClient(): boolean {
-  return useSyncExternalStore(
-    () => () => {},
-    () => true,
-    () => false,
-  );
-}
 
 export default function ExportRoutesModal({
   isOpen,

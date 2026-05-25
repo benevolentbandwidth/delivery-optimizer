@@ -24,15 +24,9 @@ const DAVIS_CENTER = { lat: 38.5449, lng: -121.7405 };
 const MARKER_ICON_WIDTH = 28;
 const MARKER_ICON_HEIGHT = 40;
 
-let markerScaledSize: google.maps.Size | undefined;
-
 function getMarkerScaledSize(): google.maps.Size | undefined {
   if (typeof google === "undefined") return undefined;
-  markerScaledSize ??= new google.maps.Size(
-    MARKER_ICON_WIDTH,
-    MARKER_ICON_HEIGHT,
-  );
-  return markerScaledSize;
+  return new google.maps.Size(MARKER_ICON_WIDTH, MARKER_ICON_HEIGHT);
 }
 
 // fillColor is always a route palette hex from routeColorHex, never user input.
@@ -45,8 +39,8 @@ function createRoutePinElement(fillColor: string): HTMLElement {
   const wrapper = document.createElement("div");
   wrapper.style.width = `${MARKER_ICON_WIDTH}px`;
   wrapper.style.height = `${MARKER_ICON_HEIGHT}px`;
-  // Advanced marker anchor is the content center; shift so the SVG tip sits on the stop.
-  wrapper.style.transform = "translate(-50%, -50%)";
+  // Anchor bottom-center of the pin on the stop (tip is at y=40 in the SVG).
+  wrapper.style.transform = "translate(-50%, -100%)";
 
   const img = document.createElement("img");
   img.src = markerSvgDataUrl(fillColor);

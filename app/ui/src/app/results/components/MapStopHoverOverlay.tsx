@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useGoogleMap } from "@react-google-maps/api";
 import type { HoveredStopInfo } from "../types";
@@ -16,6 +16,9 @@ function useContainerPixelPosition(
   lng: number,
 ): { x: number; y: number } | null {
   const [pixel, setPixel] = useState<{ x: number; y: number } | null>(null);
+  const coordsRef = useRef({ lat, lng });
+  coordsRef.current = { lat, lng };
+  const overlayRef = useRef<google.maps.OverlayView | null>(null);
 
   useEffect(() => {
     if (!map) return;
@@ -24,12 +27,14 @@ function useContainerPixelPosition(
     overlay.onAdd = () => {};
     overlay.draw = () => {};
     overlay.setMap(map);
+    overlayRef.current = overlay;
 
     const update = () => {
       const projection = overlay.getProjection();
       if (!projection) return;
+      const { lat: la, lng: ln } = coordsRef.current;
       const point = projection.fromLatLngToContainerPixel(
-        new google.maps.LatLng(lat, lng),
+        new google.maps.LatLng(la, ln),
       );
       if (point) setPixel({ x: point.x, y: point.y });
     };
@@ -42,7 +47,18 @@ function useContainerPixelPosition(
       google.maps.event.removeListener(idleListener);
       google.maps.event.removeListener(boundsListener);
       overlay.setMap(null);
+      overlayRef.current = null;
     };
+  }, [map]);
+
+  useEffect(() => {
+    if (!map || !overlayRef.current) return;
+    const projection = overlayRef.current.getProjection();
+    if (!projection) return;
+    const point = projection.fromLatLngToContainerPixel(
+      new google.maps.LatLng(lat, lng),
+    );
+    if (point) setPixel({ x: point.x, y: point.y });
   }, [map, lat, lng]);
 
   return pixel;

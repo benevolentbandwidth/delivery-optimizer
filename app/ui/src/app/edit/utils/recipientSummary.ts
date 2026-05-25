@@ -1,6 +1,9 @@
 import type { AddressCard } from "../types/delivery";
 
-/** Display string for locked recipient name + phone (middle dot when both set). */
+/**
+ * Display string for recipient name + phone (middle dot when both set).
+ * Callers guarded by hasRecipientContact() skip the "—" fallback; it remains for direct use and tests.
+ */
 export function recipientSummary(
   a: Pick<AddressCard, "recipientName" | "phoneNumber">,
 ): string {

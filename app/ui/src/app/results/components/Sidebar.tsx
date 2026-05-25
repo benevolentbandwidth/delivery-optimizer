@@ -71,7 +71,7 @@ export default function Sidebar({
           onClick={() => onEditModeChange(!isEditMode)}
           className={`h-9 shrink-0 rounded-[80px] px-5 text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 ${
             isEditMode
-              ? "border border-[#7BCFC2] bg-[#7BCFC2] text-[#1C1B1F] hover:bg-[#6dc5b7]"
+              ? "border border-[var(--edit-teal-300)] bg-[var(--edit-teal-300)] text-[var(--edit-text-primary)] hover:opacity-90"
               : "border border-zinc-900 bg-white text-zinc-900 hover:bg-zinc-50"
           }`}
         >
@@ -96,7 +96,7 @@ export default function Sidebar({
                     key={route.vehicleId}
                     className={`rounded-[24px] border overflow-hidden ${
                       isEditMode
-                        ? "border-[#6CCBBE] bg-white"
+                        ? "border-[var(--edit-teal-300)] bg-white"
                         : "border-zinc-300 bg-white"
                     }`}
                   >
@@ -277,14 +277,21 @@ export default function Sidebar({
                             const isLastStop =
                               stopIdx === sortedStops.length - 1;
                             return (
-                              <li key={stop.id} className="flex gap-3">
+                              <li
+                                key={stop.id}
+                                className="flex gap-3 items-stretch"
+                              >
                                 <div className="flex w-9 shrink-0 flex-col items-center pt-1">
-                                  <span className="relative z-[1] flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-cyan-500 text-[13px] font-semibold text-white shadow-sm">
+                                  <span
+                                    className="relative z-[1] flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[13px] font-semibold text-white shadow-sm"
+                                    style={{ backgroundColor: accent }}
+                                  >
                                     {stop.sequence}
                                   </span>
                                   {!isLastStop && (
                                     <div
-                                      className="mt-2 w-0 flex-1 min-h-[20px] border-l-2 border-dotted border-cyan-500"
+                                      className="mt-2 w-0 flex-1 min-h-[20px] border-l-2 border-dotted"
+                                      style={{ borderColor: accent }}
                                       aria-hidden
                                     />
                                   )}
