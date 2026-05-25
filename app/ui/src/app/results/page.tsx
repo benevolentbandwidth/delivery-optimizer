@@ -136,21 +136,23 @@ export default function ResultsPage() {
 
         <div className="ml-auto flex items-center gap-2">
           {pendingPinMove != null && (
-            <button
-              type="button"
-              onClick={cancelPendingPinMove}
-              className="h-9 px-6 rounded-[80px] border border-[var(--edit-foreground)] font-medium text-[14px] leading-5 text-[var(--edit-foreground)] whitespace-nowrap hover:bg-black/5 transition-colors"
-            >
-              Cancel
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={cancelPendingPinMove}
+                className="h-9 px-6 rounded-[80px] border border-[var(--edit-foreground)] font-medium text-[14px] leading-5 text-[var(--edit-foreground)] whitespace-nowrap hover:bg-black/5 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={savePendingPinMove}
+                className="h-9 px-6 rounded-[80px] border border-[var(--edit-foreground)] font-medium text-[14px] leading-5 text-[var(--edit-foreground)] whitespace-nowrap hover:bg-black/5 transition-colors"
+              >
+                Save
+              </button>
+            </>
           )}
-          <button
-            type="button"
-            onClick={savePendingPinMove}
-            className="h-9 px-6 rounded-[80px] border border-[var(--edit-foreground)] font-medium text-[14px] leading-5 text-[var(--edit-foreground)] whitespace-nowrap hover:bg-black/5 transition-colors"
-          >
-            Save
-          </button>
           <button
             type="button"
             className="h-9 px-6 rounded-[80px] bg-[var(--edit-teal-500)] font-medium text-[14px] leading-5 text-[var(--edit-foreground)] whitespace-nowrap hover:opacity-90 transition-opacity"
