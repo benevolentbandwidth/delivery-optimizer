@@ -42,12 +42,17 @@ function makeAddress(
   };
 }
 
-function jobStep(jobId: string, arrivalSecs: number): VroomStep {
+function jobStep(
+  jobId: string,
+  arrivalSecs: number,
+  overrides: Partial<VroomStep> = {},
+): VroomStep {
   return {
     type: "job",
     job_external_id: jobId,
     location: [-74.006, 40.7128],
     arrival: arrivalSecs,
+    ...overrides,
   };
 }
 
@@ -195,5 +200,51 @@ describe("vroomToRoutes", () => {
     };
     const [route] = vroomToRoutes(response, [makeVehicle(1)], [makeAddress(1)]);
     expect(route.stops[0].timeWindow.time).toBe("9:00 AM");
+  });
+
+  it("maps recipient name and phone from the address form", () => {
+    const [route] = vroomToRoutes(
+      SINGLE_STOP,
+      [makeVehicle(1)],
+      [
+        makeAddress(1, {
+          recipientName: "Kayla Wong",
+          phoneNumber: "(530) 555-0199",
+        }),
+      ],
+    );
+    expect(route.stops[0]).toMatchObject({
+      addresseeName: "Kayla Wong",
+      phoneNumber: "(530) 555-0199",
+    });
+  });
+
+  it("capacityUsed prefers form deliveryQuantity when greater than zero", () => {
+    const [route] = vroomToRoutes(
+      SINGLE_STOP,
+      [makeVehicle(1)],
+      [makeAddress(1, { deliveryQuantity: 4 })],
+    );
+    expect(route.stops[0].capacityUsed).toBe(4);
+  });
+
+  it("capacityUsed falls back to VROOM step load when form quantity is zero", () => {
+    const response: VroomResponse = {
+      routes: [
+        {
+          vehicle: 1,
+          vehicle_external_id: "1",
+          steps: [jobStep("1", 32400, { load: [7] })],
+          distance: 0,
+          duration: 0,
+        },
+      ],
+    };
+    const [route] = vroomToRoutes(
+      response,
+      [makeVehicle(1)],
+      [makeAddress(1, { deliveryQuantity: 0 })],
+    );
+    expect(route.stops[0].capacityUsed).toBe(7);
   });
 });
