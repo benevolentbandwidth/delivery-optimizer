@@ -196,8 +196,8 @@ void RegisterDeliveriesOptimizeEndpoint(drogon::HttpAppFramework& app,
             request_size,
             [optimize_request_ptr, weather_options, weather_impact] {
               const int baseline_seconds = EstimateServiceSeconds(*optimize_request_ptr);
-              const WeatherImpactEstimate impact = EstimateRouteWeatherImpact(
-                  weather_options, *optimize_request_ptr, baseline_seconds);
+              const WeatherImpactEstimate impact = EstimateWeatherImpact(
+                  weather_options, optimize_request_ptr->jobs.size(), baseline_seconds);
               *weather_impact = impact;
               return BuildWeatherAdjustedVroomInput(*optimize_request_ptr, impact);
             },
