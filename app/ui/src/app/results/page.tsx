@@ -5,46 +5,45 @@
 import { useCallback, useEffect, useState } from "react";
 import { NAVBAR_V2_LOGO, NAVBAR_V2_ROOT } from "../edit/formStyles.v2";
 import styles from "../edit/edit.module.css";
-import EditSidebar from "../edit/components/layout/sidebar/Sidebar";
-import SidebarEditButton from "../edit/components/layout/sidebar/SidebarEditButton";
-import SidebarResultsButton from "../edit/components/layout/sidebar/SidebarResultsButton";
+import MobileSidebar from "../edit/components/layout/sidebar/MobileSidebar";
 import ExportEditWarningModal from "./components/ExportEditWarningModal";
 import ExportRoutesModal from "./components/ExportRoutesModal";
 import MapComponent from "./components/Map";
+import MobileResultsNavbar from "./components/MobileResultsNavbar";
+import ResultsBottomSheet from "./components/ResultsBottomSheet";
+import ResultsNavRail from "./components/ResultsNavRail";
 import Sidebar from "./components/Sidebar";
+import {
+  RESULTS_MOBILE_EDIT_BANNER_MESSAGE,
+  RESULTS_MOBILE_EDIT_PILL,
+} from "./formStyles.mobile";
 import type { PendingPinMove, Route } from "./types";
 import { downloadRoutesAsJsonFiles } from "./utils/downloadRouteJson";
 
-function readInitialRoutes(): { routes: Route[]; error: string | null } {
-  if (typeof window === "undefined") return { routes: [], error: null };
-
-  const stored = sessionStorage.getItem("optimizeResults");
-  if (!stored) return { routes: [], error: null };
-
-  try {
-    const parsed = JSON.parse(stored) as Route[];
-    return { routes: parsed, error: null };
-  } catch {
-    return {
-      routes: [],
-      error: "Route data could not be loaded. Please go back and try again.",
-    };
-  }
-}
-
 export default function ResultsPage() {
-  const [{ routes: initialRoutes, error: initialError }] =
-    useState(readInitialRoutes);
-  const [routes, setRoutes] = useState<Route[]>(initialRoutes);
-  const [error] = useState<string | null>(initialError);
+  const [routes, setRoutes] = useState<Route[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (initialRoutes.length > 0) {
-      sessionStorage.removeItem("optimizeResults"); // consume once after successful parse + state update
-    }
-  }, [initialRoutes.length]);
+    const stored = sessionStorage.getItem("optimizeResults");
+    if (!stored) return;
+
+    queueMicrotask(() => {
+      try {
+        const parsed = JSON.parse(stored) as Route[];
+        setRoutes(parsed);
+        sessionStorage.removeItem("optimizeResults");
+      } catch {
+        setError(
+          "Route data could not be loaded. Please go back and try again.",
+        );
+      }
+    });
+  }, []);
 
   const isSidebarOpen = true;
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSheetExpanded, setIsSheetExpanded] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [pendingPinMove, setPendingPinMove] = useState<PendingPinMove | null>(
     null,
@@ -86,6 +85,7 @@ export default function ResultsPage() {
   const handleEditModeChange = useCallback((value: boolean) => {
     setIsEditMode(value);
     if (!value) setPendingPinMove(null);
+    if (value) setIsSheetExpanded(true);
   }, []);
 
   const savePendingPinMove = useCallback(() => {
@@ -115,6 +115,18 @@ export default function ResultsPage() {
   );
 
   const cancelPendingPinMove = useCallback(() => setPendingPinMove(null), []);
+
+  const exitEditMode = useCallback(() => {
+    handleEditModeChange(false);
+  }, [handleEditModeChange]);
+
+  const handleMobileCancel = useCallback(() => {
+    if (pendingPinMove != null) {
+      cancelPendingPinMove();
+    } else {
+      exitEditMode();
+    }
+  }, [pendingPinMove, cancelPendingPinMove, exitEditMode]);
 
   const handleExportClick = useCallback(() => {
     if (isEditMode || pendingPinMove != null) {
@@ -203,17 +215,20 @@ export default function ResultsPage() {
         </div>
       )}{" "}
       {/* Map container switched to h-screen and added overflow hidden so the page is forced to be exactly one screen tall, whereas before the page was allowed to get taller than browser window leading to a long scroll */}
-      <header className={`${NAVBAR_V2_ROOT} shrink-0 border-b border-zinc-200`}>
-        <div className="flex items-center gap-3 min-w-0">
-          <p className={NAVBAR_V2_LOGO}>DELIVERY OPTIMIZER</p>
-        </div>
-
+      <MobileSidebar
+        isOpen={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
+      />
+      <header
+        className={`${NAVBAR_V2_ROOT} hidden lg:flex shrink-0 border-b border-[var(--edit-stone-200)]`}
+      >
+        <p className={NAVBAR_V2_LOGO}>DELIVERY OPTIMIZER</p>
         <div className="ml-auto flex items-center gap-2">
           {pendingPinMove != null && (
             <button
               type="button"
               onClick={cancelPendingPinMove}
-              className="h-9 px-6 rounded-[80px] border border-[var(--edit-foreground)] font-medium text-[14px] leading-5 text-[var(--edit-foreground)] whitespace-nowrap hover:bg-black/5 transition-colors"
+              className="h-9 px-4 rounded-[6px] border border-[var(--edit-stone-700)] font-semibold text-sm text-[var(--edit-text-primary)] hover:bg-[var(--edit-secondary-btn-hover)]"
             >
               Cancel
             </button>
@@ -221,7 +236,8 @@ export default function ResultsPage() {
           <button
             type="button"
             onClick={savePendingPinMove}
-            className="h-9 px-6 rounded-[80px] border border-[var(--edit-foreground)] font-medium text-[14px] leading-5 text-[var(--edit-foreground)] whitespace-nowrap hover:bg-black/5 transition-colors"
+            className="h-9 px-4 rounded-[6px] border border-[var(--edit-stone-700)] font-semibold text-sm text-[var(--edit-text-primary)] hover:bg-[var(--edit-secondary-btn-hover)] disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={!isEditMode && pendingPinMove == null}
           >
             Save
           </button>
@@ -229,18 +245,14 @@ export default function ResultsPage() {
             type="button"
             onClick={handleExportClick}
             disabled={routes.length === 0}
-            className="h-9 px-6 rounded-[80px] bg-[var(--edit-teal-500)] font-medium text-[14px] leading-5 text-[var(--edit-foreground)] whitespace-nowrap hover:opacity-90 transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
+            className="h-9 px-4 rounded-[6px] bg-[var(--edit-btn-primary)] font-semibold text-sm text-[var(--edit-text-primary)] hover:brightness-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
           >
             Export
           </button>
         </div>
       </header>
-      <div className="flex flex-1 min-h-0">
-        <EditSidebar>
-          <SidebarEditButton />
-          <SidebarResultsButton />
-        </EditSidebar>
-
+      <div className="hidden lg:flex flex-1 min-h-0">
+        <ResultsNavRail />
         <div
           className={`shrink-0 h-full overflow-hidden transition-[width] duration-300 ease-in-out ${isSidebarOpen ? "w-[28rem]" : "w-0"}`}
         >
@@ -257,9 +269,9 @@ export default function ResultsPage() {
         <div className="flex-1 min-w-0 min-h-0 flex flex-col">
           <div className="relative flex-1 min-h-0 w-full overflow-hidden">
             {isEditMode && (
-              <div className="pointer-events-none absolute left-1/2 top-4 z-10 -translate-x-1/2 rounded-[80px] bg-[#7BCFC2] px-4 py-2 text-sm font-medium text-[#1C1B1F] shadow-sm">
-                You are now in editing mode
-              </div>
+              <p className={RESULTS_MOBILE_EDIT_PILL} role="status">
+                {RESULTS_MOBILE_EDIT_BANNER_MESSAGE}
+              </p>
             )}
             <MapComponent
               routes={routes}
@@ -270,6 +282,43 @@ export default function ResultsPage() {
             />
           </div>
         </div>
+      </div>
+      <div className="lg:hidden relative flex flex-1 min-h-0 flex-col">
+        <MobileResultsNavbar
+          onMenuClick={() => setIsMobileMenuOpen(true)}
+          showCancel={pendingPinMove != null}
+          onSave={savePendingPinMove}
+          onCancel={handleMobileCancel}
+          saveDisabled={isEditMode && pendingPinMove == null}
+        />
+        <div className="relative flex flex-1 min-h-0 flex-col">
+          {isEditMode && (
+            <p className={RESULTS_MOBILE_EDIT_PILL} role="status">
+              {RESULTS_MOBILE_EDIT_BANNER_MESSAGE}
+            </p>
+          )}
+          <div className="flex-1 min-h-0 w-full overflow-hidden">
+            <MapComponent
+              routes={routes}
+              isEditMode={isEditMode}
+              pendingPinMove={pendingPinMove}
+              onPendingPinMove={handlePendingPinMove}
+              onRouteDistanceUpdate={handleRouteDistanceUpdate}
+            />
+          </div>
+        </div>
+        <ResultsBottomSheet
+          routes={routes}
+          isExpanded={isSheetExpanded}
+          onExpandedChange={setIsSheetExpanded}
+          isEditMode={isEditMode}
+          onEditModeChange={handleEditModeChange}
+          onExportClick={handleExportClick}
+          onUpdateStopNote={updateStopNote}
+          onExportRoute={handleExportSingleRoute}
+          onDuplicateRoute={handleDuplicateRoute}
+          onDeleteRoute={handleDeleteRoute}
+        />
       </div>
     </main>
   );

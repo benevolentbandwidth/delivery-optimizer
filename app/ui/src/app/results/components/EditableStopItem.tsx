@@ -4,6 +4,7 @@
 
 import { useState } from "react";
 import type { Stop, TimeWindow } from "../types";
+import { routeColorTint } from "../utils/routeColors";
 
 type EditableStopItemProps = {
   stop: Stop;
@@ -34,9 +35,8 @@ function formatTimeWindowLine(tw: TimeWindow | undefined): string {
 }
 
 function formatDeliveryWindow(stop: Stop): string {
-  const a = stop.deliveryWindowStart?.trim();
-  const b = stop.deliveryWindowEnd?.trim();
-  if (a && b) return `${formatTime12h(a)} – ${formatTime12h(b)}`;
+  const raw = stop.timeWindow?.time?.trim();
+  if (raw && /-|–/.test(raw)) return raw;
   return formatTimeWindowLine(stop.timeWindow);
 }
 
@@ -84,25 +84,6 @@ function ClockIcon({ className }: { className?: string }) {
   );
 }
 
-function NoteDocIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 20 20" fill="none" aria-hidden>
-      <path
-        d="M6.5 3.5h5.5L15.5 7v8.25A1.25 1.25 0 0 1 14.25 16.5h-7.5A1.25 1.25 0 0 1 5.5 15.25v-10.5A1.25 1.25 0 0 1 6.75 3.5h-.25Z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M11.5 3.5V7h4"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
 function PackageIcon({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 20 20" fill="none" aria-hidden>
@@ -116,6 +97,25 @@ function PackageIcon({ className }: { className?: string }) {
         d="M3.5 7.5 10 11l6.5-3.5M10 11v5.5"
         stroke="currentColor"
         strokeWidth="1.4"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function NoteDocIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 20 20" fill="none" aria-hidden>
+      <path
+        d="M6.5 3.5h5.5L15.5 7v8.25A1.25 1.25 0 0 1 14.25 16.5h-7.5A1.25 1.25 0 0 1 5.5 15.25v-10.5A1.25 1.25 0 0 1 6.75 3.5h-.25Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M11.5 3.5V7h4"
+        stroke="currentColor"
+        strokeWidth="1.5"
         strokeLinejoin="round"
       />
     </svg>
@@ -139,15 +139,15 @@ export default function EditableStopItem({
           {stop.address}
         </p>
         <span
-          className="flex shrink-0 items-center gap-1 rounded-full border px-2 py-1 text-[12px] font-semibold tabular-nums"
+          className="flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 text-[12px] font-semibold tabular-nums"
           style={{
-            borderColor: `${accentColor}55`,
-            backgroundColor: `${accentColor}18`,
             color: accentColor,
+            borderColor: accentColor,
+            backgroundColor: routeColorTint(accentColor, "1A"),
           }}
         >
           <span className="sr-only">Boxes:</span>
-          <PackageIcon className="h-3.5 w-3.5 opacity-90" />
+          <PackageIcon className="h-4 w-4 shrink-0" />
           {typeof stop.capacityUsed === "number" ? stop.capacityUsed : "—"}
         </span>
       </div>
