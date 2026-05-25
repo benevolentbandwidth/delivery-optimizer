@@ -238,7 +238,10 @@ export default function Sidebar({
                             const isLastStop =
                               stopIdx === sortedStops.length - 1;
                             return (
-                              <li key={stop.id} className="flex gap-3">
+                              <li
+                                key={stop.id}
+                                className="flex gap-3 items-stretch"
+                              >
                                 <div className="flex w-9 shrink-0 flex-col items-center pt-1">
                                   <span className="relative z-[1] flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-cyan-500 text-[13px] font-semibold text-white shadow-sm">
                                     {stop.sequence}

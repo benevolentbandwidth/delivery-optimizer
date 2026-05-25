@@ -41,7 +41,6 @@ export default function ResultsPage() {
     }
   }, [initialRoutes.length]);
 
-  const isSidebarOpen = true;
   const [isEditMode, setIsEditMode] = useState(false);
   const [pendingPinMove, setPendingPinMove] = useState<PendingPinMove | null>(
     null,
@@ -136,24 +135,29 @@ export default function ResultsPage() {
 
         <div className="ml-auto flex items-center gap-2">
           {pendingPinMove != null && (
-            <button
-              type="button"
-              onClick={cancelPendingPinMove}
-              className="h-9 px-6 rounded-[80px] border border-[var(--edit-foreground)] font-medium text-[14px] leading-5 text-[var(--edit-foreground)] whitespace-nowrap hover:bg-black/5 transition-colors"
-            >
-              Cancel
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={cancelPendingPinMove}
+                className="h-9 px-6 rounded-[80px] border border-[var(--edit-foreground)] font-medium text-[14px] leading-5 text-[var(--edit-foreground)] whitespace-nowrap hover:bg-black/5 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={savePendingPinMove}
+                className="h-9 px-6 rounded-[80px] border border-[var(--edit-foreground)] font-medium text-[14px] leading-5 text-[var(--edit-foreground)] whitespace-nowrap hover:bg-black/5 transition-colors"
+              >
+                Save
+              </button>
+            </>
           )}
           <button
             type="button"
-            onClick={savePendingPinMove}
-            className="h-9 px-6 rounded-[80px] border border-[var(--edit-foreground)] font-medium text-[14px] leading-5 text-[var(--edit-foreground)] whitespace-nowrap hover:bg-black/5 transition-colors"
-          >
-            Save
-          </button>
-          <button
-            type="button"
-            className="h-9 px-6 rounded-[80px] bg-[var(--edit-teal-500)] font-medium text-[14px] leading-5 text-[var(--edit-foreground)] whitespace-nowrap hover:opacity-90 transition-opacity"
+            disabled
+            aria-disabled="true"
+            title="Export coming soon"
+            className="h-9 px-6 rounded-[80px] bg-[var(--edit-teal-500)] font-medium text-[14px] leading-5 text-[var(--edit-foreground)] whitespace-nowrap opacity-50 cursor-not-allowed"
           >
             Export
           </button>
@@ -165,9 +169,8 @@ export default function ResultsPage() {
           <SidebarResultsButton />
         </EditSidebar>
 
-        <div
-          className={`shrink-0 h-full overflow-hidden transition-[width] duration-300 ease-in-out ${isSidebarOpen ? "w-[28rem]" : "w-0"}`}
-        >
+        {/* Hi-fi routes panel width (28rem); always visible on desktop */}
+        <div className="shrink-0 h-full w-[28rem] overflow-hidden">
           <Sidebar
             routes={routes}
             isEditMode={isEditMode}

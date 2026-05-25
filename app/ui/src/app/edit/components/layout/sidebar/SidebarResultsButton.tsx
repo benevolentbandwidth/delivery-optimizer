@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { readHasOptimizeResults } from "../../../utils/hasOptimizeResults";
+import { useHasOptimizeResults } from "../../../utils/hasOptimizeResults";
 import {
   SIDEBAR_NAV_ITEM_ACTIVE,
   SIDEBAR_NAV_ITEM_DISABLED,
@@ -32,7 +32,8 @@ const SIDEBAR_RESULTS_ICON = (
 export default function SidebarResultsButton() {
   const pathname = usePathname();
   const isResultsPage = pathname === "/results";
-  const hasStoredRoutes = !isResultsPage && readHasOptimizeResults();
+  const hasOptimizeResults = useHasOptimizeResults();
+  const hasStoredRoutes = !isResultsPage && hasOptimizeResults;
 
   if (isResultsPage) {
     return (
