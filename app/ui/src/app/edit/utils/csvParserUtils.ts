@@ -61,6 +61,7 @@ const COLUMN_ALIASES: Record<string, string[]> = {
   ],
   phone_number: [
     "phone_number",
+    "recipient_phone",
     "phone",
     "tel",
     "telephone",
