@@ -90,8 +90,8 @@ export default function Sidebar({
               return (
                 <li
                   key={route.vehicleId}
-                  className="rounded-xl border border-zinc-200 border-l-4 bg-zinc-50 shadow-sm overflow-hidden"
-                  style={{ borderLeftColor: accent }}
+                  className="rounded-xl border border-zinc-200 bg-zinc-50 shadow-sm overflow-hidden"
+                  style={{ boxShadow: `inset 4px 0 0 0 ${accent}` }}
                 >
                   <button
                     type="button"

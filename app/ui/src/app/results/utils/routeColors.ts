@@ -9,6 +9,5 @@ const PALETTE = [
 ] as const;
 
 export function routeColorHex(routeIndex: number): string {
-  // routeIndex (0 = first route, 1 = second route, etc.)
-  return PALETTE[routeIndex % PALETTE.length]!; // uses the list in order, and wraps back to the start if there are more routes than colors
+  return PALETTE[routeIndex % PALETTE.length]!;
 }

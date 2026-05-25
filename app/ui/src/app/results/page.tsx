@@ -41,7 +41,6 @@ export default function ResultsPage() {
     }
   }, [initialRoutes.length]);
 
-  const isSidebarOpen = true;
   const [isEditMode, setIsEditMode] = useState(false);
   const [pendingPinMove, setPendingPinMove] = useState<PendingPinMove | null>(
     null,
@@ -170,9 +169,7 @@ export default function ResultsPage() {
           <SidebarResultsButton />
         </EditSidebar>
 
-        <div
-          className={`shrink-0 h-full overflow-hidden transition-[width] duration-300 ease-in-out ${isSidebarOpen ? "w-72" : "w-0"}`}
-        >
+        <div className="shrink-0 h-full w-72 overflow-hidden">
           <Sidebar
             routes={routes}
             isEditMode={isEditMode}
