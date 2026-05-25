@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import MobileEditPageFooter from "../../edit/components/layout/footer/MobileEditPageFooter";
 import type { Route } from "../types";
 import {
@@ -51,14 +51,14 @@ export default function ResultsBottomSheet({
     [routes],
   );
 
-  function handleEditToggle() {
+  const handleEditToggle = useCallback(() => {
     if (isEditMode) {
       onEditModeChange(false);
     } else {
       onEditModeChange(true);
       onExpandedChange(true);
     }
-  }
+  }, [isEditMode, onEditModeChange, onExpandedChange]);
 
   return (
     <section

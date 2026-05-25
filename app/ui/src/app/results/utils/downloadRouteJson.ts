@@ -17,18 +17,25 @@ export function routeJsonFilename(
 }
 
 function triggerDownload(filename: string, json: string) {
-  const blob = new Blob([json], { type: "application/json" });
-  const objectUrl = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = objectUrl;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+  try {
+    const blob = new Blob([json], { type: "application/json" });
+    const objectUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = objectUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+  } catch (err) {
+    console.error(`Failed to download ${filename}:`, err);
+  }
 }
 
-/** One JSON file per route; stagger slightly so browsers allow multiple saves from one gesture. */
+/**
+ * One JSON file per route; stagger slightly so browsers allow multiple saves from one gesture.
+ * Timeouts are intentionally not tracked — exports are fire-and-forget from a user gesture.
+ */
 export function downloadRoutesAsJsonFiles(
   orderedRoutes: Route[],
   predicate: (route: Route, zeroBasedIndex: number) => boolean,

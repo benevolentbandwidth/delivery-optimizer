@@ -28,20 +28,14 @@ export default function ResultsPage() {
     const stored = sessionStorage.getItem("optimizeResults");
     if (!stored) return;
 
-    queueMicrotask(() => {
-      try {
-        const parsed = JSON.parse(stored) as Route[];
-        setRoutes(parsed);
-        sessionStorage.removeItem("optimizeResults");
-      } catch {
-        setError(
-          "Route data could not be loaded. Please go back and try again.",
-        );
-      }
-    });
+    try {
+      const parsed = JSON.parse(stored) as Route[];
+      setRoutes(parsed);
+      sessionStorage.removeItem("optimizeResults");
+    } catch {
+      setError("Route data could not be loaded. Please go back and try again.");
+    }
   }, []);
-
-  const isSidebarOpen = true;
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSheetExpanded, setIsSheetExpanded] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -139,6 +133,7 @@ export default function ResultsPage() {
   const handleDoneEditingForExport = useCallback(() => {
     handleEditModeChange(false);
     setExportWarningOpen(false);
+    setExportOpen(true);
   }, [handleEditModeChange]);
 
   const handleExportSingleRoute = useCallback(
@@ -225,22 +220,23 @@ export default function ResultsPage() {
         <p className={NAVBAR_V2_LOGO}>DELIVERY OPTIMIZER</p>
         <div className="ml-auto flex items-center gap-2">
           {pendingPinMove != null && (
-            <button
-              type="button"
-              onClick={cancelPendingPinMove}
-              className="h-9 px-4 rounded-[6px] border border-[var(--edit-stone-700)] font-semibold text-sm text-[var(--edit-text-primary)] hover:bg-[var(--edit-secondary-btn-hover)]"
-            >
-              Cancel
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={cancelPendingPinMove}
+                className="h-9 px-4 rounded-[6px] border border-[var(--edit-stone-700)] font-semibold text-sm text-[var(--edit-text-primary)] hover:bg-[var(--edit-secondary-btn-hover)]"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={savePendingPinMove}
+                className="h-9 px-4 rounded-[6px] border border-[var(--edit-stone-700)] font-semibold text-sm text-[var(--edit-text-primary)] hover:bg-[var(--edit-secondary-btn-hover)]"
+              >
+                Save
+              </button>
+            </>
           )}
-          <button
-            type="button"
-            onClick={savePendingPinMove}
-            className="h-9 px-4 rounded-[6px] border border-[var(--edit-stone-700)] font-semibold text-sm text-[var(--edit-text-primary)] hover:bg-[var(--edit-secondary-btn-hover)] disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={!isEditMode && pendingPinMove == null}
-          >
-            Save
-          </button>
           <button
             type="button"
             onClick={handleExportClick}
@@ -253,9 +249,8 @@ export default function ResultsPage() {
       </header>
       <div className="hidden lg:flex flex-1 min-h-0">
         <ResultsNavRail />
-        <div
-          className={`shrink-0 h-full overflow-hidden transition-[width] duration-300 ease-in-out ${isSidebarOpen ? "w-[28rem]" : "w-0"}`}
-        >
+        {/* Hi-fi routes panel width (28rem); always visible on desktop */}
+        <div className="shrink-0 h-full w-[28rem] overflow-hidden">
           <Sidebar
             routes={routes}
             isEditMode={isEditMode}

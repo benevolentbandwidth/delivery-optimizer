@@ -49,7 +49,7 @@ export default function RouteCard({
     <li
       className={`rounded-[24px] border overflow-hidden ${
         isEditMode
-          ? "border-[#6CCBBE] bg-white"
+          ? "border-[var(--edit-teal-300)] bg-white"
           : "border-[var(--edit-stone-200)] bg-white"
       }`}
     >
@@ -87,6 +87,11 @@ export default function RouteCard({
                 onClick={onToggleExpanded}
                 className="min-w-0 flex-1 text-left"
                 aria-expanded={isExpanded}
+                aria-label={
+                  isExpanded
+                    ? `Collapse route ${routeIndex + 1}, ${route.driverName}`
+                    : `Expand route ${routeIndex + 1}, ${route.driverName}`
+                }
               >
                 <div
                   className="text-[15px] font-semibold leading-none"

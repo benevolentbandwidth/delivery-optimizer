@@ -1,24 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useSyncExternalStore } from "react";
+import { useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { MODAL_OVERLAY } from "@/app/edit/formStyles";
 import editStyles from "@/app/edit/edit.module.css";
 import { useFocusTrap } from "@/app/edit/hooks/useFocusTrap";
+import { useIsClient } from "../hooks/useIsClient";
 
 type ExportEditWarningModalProps = {
   isOpen: boolean;
   onClose: () => void;
   onDoneEditing: () => void;
 };
-
-function useIsClient(): boolean {
-  return useSyncExternalStore(
-    () => () => {},
-    () => true,
-    () => false,
-  );
-}
 
 export default function ExportEditWarningModal({
   isOpen,
@@ -112,7 +105,7 @@ function ExportEditWarningModalPanel({
 
         <div
           className="mt-4 flex items-start gap-2 rounded-md bg-amber-50 px-3 py-2.5"
-          role="status"
+          role="alert"
         >
           <svg
             className="mt-0.5 h-5 w-5 shrink-0 text-amber-600"

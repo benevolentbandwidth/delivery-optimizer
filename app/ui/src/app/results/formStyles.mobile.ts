@@ -53,39 +53,4 @@ export const RESULTS_MOBILE_NAV_SAVE_BTN =
 export const RESULTS_MOBILE_NAV_CANCEL_BTN =
   "h-9 shrink-0 px-3 rounded-[80px] border border-[var(--edit-stone-700)] font-semibold text-[14px] leading-5 text-[var(--edit-text-primary)]";
 
-export const RESULTS_ROUTE_CARD_ROOT =
-  "rounded-[8px] border border-[var(--edit-stone-200)] bg-[var(--edit-bg-primary)] overflow-hidden";
-
-export const RESULTS_ROUTE_CARD_HEADER_BTN =
-  "flex w-full items-start gap-3 p-3 text-left hover:bg-[var(--edit-stone-50)] transition-colors";
-
-export const RESULTS_ROUTE_CARD_ICON_WRAP =
-  "flex h-10 w-10 shrink-0 items-center justify-center rounded-[6px]";
-
-export const RESULTS_ROUTE_CARD_TITLE =
-  "text-[14px] font-semibold leading-5 text-[var(--edit-text-primary)]";
-
-export const RESULTS_ROUTE_CARD_DRIVER =
-  "text-[12px] leading-4 text-[var(--edit-text-secondary,#6b6b6b)]";
-
-export const RESULTS_ROUTE_CARD_STAT_GRID = "mt-2 grid grid-cols-3 gap-2";
-
-export const RESULTS_ROUTE_CARD_STAT_CELL =
-  "rounded-[6px] border border-[var(--edit-stone-200)] bg-[var(--edit-stone-50)] px-2 py-1.5 text-center min-w-0";
-
-export const RESULTS_ROUTE_CARD_STAT_LABEL =
-  "text-[9px] font-semibold uppercase tracking-wide text-[var(--edit-text-secondary,#6b6b6b)]";
-
-export const RESULTS_ROUTE_CARD_STAT_VALUE =
-  "text-[14px] font-semibold leading-5 text-[var(--edit-text-primary)] tabular-nums";
-
-export const RESULTS_ROUTE_CARD_VEHICLE_ROW =
-  "mt-2 flex items-center gap-1.5 text-[12px] leading-4 text-[var(--edit-text-primary)]";
-
-export const RESULTS_ROUTE_CARD_ACTIONS =
-  "flex shrink-0 items-center gap-0.5 pt-0.5";
-
-export const RESULTS_ROUTE_CARD_EXPANDED =
-  "border-t border-[var(--edit-stone-200)] bg-[var(--edit-stone-50)] p-3";
-
 export const RESULTS_SHEET_FOOTER_WRAP = "pt-4 pb-2";
