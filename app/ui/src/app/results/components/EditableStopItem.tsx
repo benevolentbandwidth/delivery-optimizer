@@ -31,17 +31,9 @@ export default function EditableStopItem({
       }}
     >
       <div className="flex items-start justify-between gap-2">
-        <div className="flex min-w-0 items-center gap-2">
-          <span
-            className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-xs font-semibold text-white"
-            style={{ backgroundColor: accentColor }}
-          >
-            {stop.sequence}
-          </span>
-          <span className="text-xs font-semibold text-zinc-800 truncate">
-            {stop.address}
-          </span>
-        </div>
+        <span className="min-w-0 text-xs font-semibold text-zinc-800 truncate">
+          {stop.address}
+        </span>
         <span
           className="flex shrink-0 items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium text-white"
           style={{ backgroundColor: accentColor }}
