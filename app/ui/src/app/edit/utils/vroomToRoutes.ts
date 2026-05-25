@@ -64,7 +64,10 @@ export function vroomToRoutes(
         lat,
         lng,
         sequence: idx + 1,
-        capacityUsed: step.load?.[0] ?? 0,
+        capacityUsed:
+          address?.deliveryQuantity && address.deliveryQuantity > 0
+            ? address.deliveryQuantity
+            : (step.load?.[0] ?? 0),
         timeWindow: {
           kind: inferTimeWindowKind(
             address?.deliveryTimeStart,
