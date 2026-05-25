@@ -166,7 +166,7 @@ export default function ResultsPage() {
               <button
                 type="button"
                 onClick={savePendingPinMove}
-                className="rounded-full border border-zinc-300 bg-white px-3 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-50"
+                className="rounded-full bg-amber-500 px-3 py-1 text-xs font-medium text-white hover:bg-amber-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-amber-500"
               >
                 Save
               </button>
