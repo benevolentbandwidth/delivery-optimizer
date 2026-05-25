@@ -3,7 +3,7 @@
 "use client";
 
 import { useState } from "react";
-import type { Stop } from "../types";
+import type { Stop, TimeWindow } from "../types";
 
 type EditableStopItemProps = {
   stop: Stop;
@@ -12,6 +12,43 @@ type EditableStopItemProps = {
   onSaveNote: (note: string) => void;
 };
 
+function formatTime12h(raw: string): string {
+  const t = raw.trim();
+  if (/am|pm/i.test(t)) return t;
+  const m = t.match(/^(\d{1,2}):(\d{2})$/);
+  if (!m) return t;
+  let h = parseInt(m[1]!, 10);
+  const min = m[2];
+  const ap = h >= 12 ? "PM" : "AM";
+  h = h % 12;
+  if (h === 0) h = 12;
+  return `${h}:${min} ${ap}`;
+}
+
+function formatTimeWindowLine(tw: TimeWindow | undefined): string {
+  if (!tw?.time) return "—";
+  const label = formatTime12h(tw.time);
+  if (tw.kind === "by") return `By ${label}`;
+  if (tw.kind === "at") return label;
+  return `From ${label}`;
+}
+
+function formatDeliveryWindow(stop: Stop): string {
+  const a = stop.deliveryWindowStart?.trim();
+  const b = stop.deliveryWindowEnd?.trim();
+  if (a && b) return `${formatTime12h(a)} – ${formatTime12h(b)}`;
+  return formatTimeWindowLine(stop.timeWindow);
+}
+
+function formatContactLine(stop: Stop): string {
+  const name = stop.addresseeName?.trim();
+  const phone = stop.phoneNumber?.trim();
+  if (name && phone) return `${name} · ${phone}`;
+  if (name) return name;
+  if (phone) return phone;
+  return "—";
+}
+
 export default function EditableStopItem({
   stop,
   accentColor,
@@ -19,6 +56,8 @@ export default function EditableStopItem({
   onSaveNote,
 }: EditableStopItemProps) {
   const [draft, setDraft] = useState(stop.note ?? "");
+  const contactText = formatContactLine(stop);
+  const timeText = formatDeliveryWindow(stop);
 
   return (
     <div
@@ -44,16 +83,12 @@ export default function EditableStopItem({
       </div>
       <div className="mt-1.5 space-y-0.5 text-xs text-zinc-600">
         <div>
-          <span className="font-medium text-zinc-700">
-            Name of addressed to:
-          </span>{" "}
-          {stop.addresseeName ?? "—"}
+          <span className="font-medium text-zinc-700">Recipient:</span>{" "}
+          {contactText}
         </div>
         <div>
-          <span className="font-medium text-zinc-700">
-            Est time of arrival:
-          </span>{" "}
-          {stop.timeWindow?.time ?? "—"}
+          <span className="font-medium text-zinc-700">Delivery:</span>{" "}
+          {timeText}
         </div>
       </div>
 
