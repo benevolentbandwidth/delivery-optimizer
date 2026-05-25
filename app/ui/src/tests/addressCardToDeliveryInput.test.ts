@@ -104,6 +104,22 @@ describe("addressCardToDeliveryInput", () => {
         .notes,
     ).toBeUndefined();
   });
+
+  it("recipient name and phone forwarded when present", () => {
+    expect(
+      addressCardToDeliveryInput(
+        makeAddress({
+          recipientName: "Kayla Wong",
+          phoneNumber: "(530) 555-0199",
+        }),
+        LOC,
+        "units",
+      ),
+    ).toMatchObject({
+      recipientName: "Kayla Wong",
+      phoneNumber: "(530) 555-0199",
+    });
+  });
 });
 
 describe("vehicleRowToVehicleInput", () => {
