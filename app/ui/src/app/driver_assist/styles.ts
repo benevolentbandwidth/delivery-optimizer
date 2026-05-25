@@ -237,6 +237,9 @@ export const styles: Record<string, CSSProperties> = {
     gap: 8,
     gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
   },
+  singleButtonRow: {
+    gridTemplateColumns: "1fr",
+  },
   actionButton: {
     alignItems: "center",
     backgroundColor: "#ffffff",

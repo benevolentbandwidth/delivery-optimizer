@@ -18,6 +18,7 @@ type StopCardProps = {
   onChangeNote: (value: string) => void;
   onComplete: () => void;
   onReport?: () => void;
+  onCall?: () => void;
   onNavigate?: () => void;
 };
 
@@ -28,6 +29,7 @@ export default function StopCard({
   onChangeNote,
   onComplete,
   onReport,
+  onCall,
   onNavigate,
 }: StopCardProps) {
   // Completed and failed stops are read-only history items in this card.
@@ -106,15 +108,22 @@ export default function StopCard({
 
           {/* Call/report are intentionally hidden once a stop is done. */}
           {!isDone ? (
-            <div style={styles.buttonRow}>
-              <button
-                type="button"
-                style={styles.actionButton}
-                onClick={onNavigate}
-              >
-                <PhoneIcon />
-                Call
-              </button>
+            <div
+              style={{
+                ...styles.buttonRow,
+                ...(onCall ? {} : styles.singleButtonRow),
+              }}
+            >
+              {onCall ? (
+                <button
+                  type="button"
+                  style={styles.actionButton}
+                  onClick={onCall}
+                >
+                  <PhoneIcon />
+                  Call
+                </button>
+              ) : null}
               <button
                 type="button"
                 style={styles.actionButton}
