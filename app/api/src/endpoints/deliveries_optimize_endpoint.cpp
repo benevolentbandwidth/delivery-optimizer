@@ -12,6 +12,7 @@
 #include <memory>
 #include <optional>
 #include <string_view>
+#include <thread>
 #include <trantor/net/EventLoop.h>
 #include <utility>
 
@@ -196,22 +197,29 @@ void RegisterDeliveriesOptimizeEndpoint(drogon::HttpAppFramework& app,
 
               const auto finish_with_traffic =
                   [coordinator, optimize_request_ptr, request_size, traffic_options, forecast,
-                   impact, respond_with_completion](const CoordinatedSolveResult& weather_result) {
-                    std::optional<Json::Value> final_forecast = forecast;
+                   impact,
+                   respond_with_completion](CoordinatedSolveResult weather_result) {
                     if (!weather_result.output.has_value()) {
                       respond_with_completion(BuildSolveExecutionResponse(BuildSolveExecutionResult(
-                          *optimize_request_ptr, weather_result, final_forecast)));
+                          *optimize_request_ptr, weather_result, forecast)));
                       return;
                     }
 
-                    if (final_forecast.has_value()) {
+                    std::thread([coordinator, optimize_request_ptr, request_size, traffic_options,
+                                 forecast, impact, respond_with_completion,
+                                 weather_result = std::move(weather_result)]() mutable {
+                      std::optional<Json::Value> final_forecast = forecast;
+                      const Json::Value& route_output = *weather_result.output;
+
                       const TrafficDelayEstimate traffic_delay =
-                          ReadRouteTraffic(traffic_options, *weather_result.output,
+                          ReadRouteTraffic(traffic_options, route_output,
                                            ReadRouteStartTime(*optimize_request_ptr));
                       const TrafficImpact traffic = EstimateTrafficImpact(
-                          traffic_options, ReadVroomDuration(*weather_result.output).value_or(0),
+                          traffic_options, ReadVroomDuration(route_output).value_or(0),
                           traffic_delay.delay_seconds, traffic_delay.source);
-                      AddTrafficForecast(*final_forecast, traffic_options, traffic);
+                      if (final_forecast.has_value()) {
+                        AddTrafficForecast(*final_forecast, traffic_options, traffic);
+                      }
 
                       if (traffic.should_reoptimize) {
                         const SolveAdmissionStatus traffic_rerun_status = coordinator->Submit(
@@ -233,10 +241,10 @@ void RegisterDeliveriesOptimizeEndpoint(drogon::HttpAppFramework& app,
                         }
                         return;
                       }
-                    }
 
-                    respond_with_completion(BuildSolveExecutionResponse(BuildSolveExecutionResult(
-                        *optimize_request_ptr, weather_result, final_forecast)));
+                      respond_with_completion(BuildSolveExecutionResponse(BuildSolveExecutionResult(
+                          *optimize_request_ptr, weather_result, final_forecast)));
+                    }).detach();
                   };
 
               if (!impact.should_reoptimize) {
