@@ -199,8 +199,9 @@ void RegisterDeliveriesOptimizeEndpoint(drogon::HttpAppFramework& app,
                   [coordinator, optimize_request_ptr, request_size, traffic_options, forecast, impact,
                    respond_with_completion](CoordinatedSolveResult weather_result) {
                     if (!weather_result.output.has_value()) {
-                      respond_with_completion(BuildSolveExecutionResponse(
-                          BuildSolveExecutionResult(*optimize_request_ptr, weather_result, forecast)));
+                      const SolveExecutionResult response_result =
+                          BuildSolveExecutionResult(*optimize_request_ptr, weather_result, forecast);
+                      respond_with_completion(BuildSolveExecutionResponse(response_result));
                       return;
                     }
 
@@ -228,9 +229,9 @@ void RegisterDeliveriesOptimizeEndpoint(drogon::HttpAppFramework& app,
                             },
                             [optimize_request_ptr, final_forecast, respond_with_completion](
                                 const CoordinatedSolveResult& traffic_result) mutable {
-                              respond_with_completion(BuildSolveExecutionResponse(
-                                  BuildSolveExecutionResult(*optimize_request_ptr, traffic_result,
-                                                            final_forecast)));
+                              const SolveExecutionResult response_result = BuildSolveExecutionResult(
+                                  *optimize_request_ptr, traffic_result, final_forecast);
+                              respond_with_completion(BuildSolveExecutionResponse(response_result));
                             });
                         if (traffic_rerun_status != SolveAdmissionStatus::kAccepted) {
                           respond_with_completion(

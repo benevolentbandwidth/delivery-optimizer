@@ -416,3 +416,44 @@ TEST(TrafficForecastOptimizerTest, ReadsTrafficLegsFromVroomSteps) {
   EXPECT_DOUBLE_EQ(legs[0].origin.lon, -121.7405);
   EXPECT_DOUBLE_EQ(legs[0].destination.lon, -121.752);
 }
+TEST(TrafficForecastOptimizerTest, ReadsRelativeTrafficLegDepartures) {
+  constexpr int kRouteStart = 1767225600;
+
+  Json::Value output{Json::objectValue};
+  output["routes"] = Json::Value{Json::arrayValue};
+
+  Json::Value route{Json::objectValue};
+  route["steps"] = Json::Value{Json::arrayValue};
+
+  Json::Value start{Json::objectValue};
+  start["arrival"] = 0;
+  start["location"] = Json::Value{Json::arrayValue};
+  start["location"].append(-121.7405);
+  start["location"].append(38.5449);
+
+  Json::Value stop{Json::objectValue};
+  stop["arrival"] = 600;
+  stop["service"] = 120;
+  stop["location"] = Json::Value{Json::arrayValue};
+  stop["location"].append(-121.752);
+  stop["location"].append(38.548);
+
+  Json::Value end{Json::objectValue};
+  end["arrival"] = 1200;
+  end["location"] = Json::Value{Json::arrayValue};
+  end["location"].append(-121.7405);
+  end["location"].append(38.5449);
+
+  route["steps"].append(start);
+  route["steps"].append(stop);
+  route["steps"].append(end);
+  output["routes"].append(route);
+
+  const std::vector<deliveryoptimizer::api::TrafficLeg> legs =
+      deliveryoptimizer::api::ReadTrafficLegs(
+          output, std::chrono::sys_seconds{std::chrono::seconds{kRouteStart}});
+
+  ASSERT_EQ(legs.size(), 2U);
+  EXPECT_EQ(legs[0].departure_time.time_since_epoch(), std::chrono::seconds{kRouteStart});
+  EXPECT_EQ(legs[1].departure_time.time_since_epoch(), std::chrono::seconds{kRouteStart + 720});
+}
