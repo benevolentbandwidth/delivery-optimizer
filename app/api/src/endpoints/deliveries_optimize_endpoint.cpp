@@ -96,14 +96,15 @@ void DispatchResponse(
   response_loop->queueInLoop([callback, response] { (*callback)(response); });
 }
 
-void FinishWithTraffic(const std::shared_ptr<deliveryoptimizer::api::SolveCoordinator>& coordinator,
-                       std::shared_ptr<deliveryoptimizer::api::OptimizeRequestInput> optimize_request,
-                       const deliveryoptimizer::api::SolveRequestSize request_size,
-                       deliveryoptimizer::api::TrafficForecastOptions traffic_options,
-                       std::optional<Json::Value> forecast,
-                       const deliveryoptimizer::api::WeatherImpactEstimate weather_impact,
-                       std::function<void(const CompletedResponse&)> respond_with_completion,
-                       deliveryoptimizer::api::CoordinatedSolveResult weather_result) {
+void FinishWithTraffic(
+    const std::shared_ptr<deliveryoptimizer::api::SolveCoordinator>& coordinator,
+    std::shared_ptr<deliveryoptimizer::api::OptimizeRequestInput> optimize_request,
+    const deliveryoptimizer::api::SolveRequestSize request_size,
+    deliveryoptimizer::api::TrafficForecastOptions traffic_options,
+    std::optional<Json::Value> forecast,
+    const deliveryoptimizer::api::WeatherImpactEstimate weather_impact,
+    std::function<void(const CompletedResponse&)> respond_with_completion,
+    deliveryoptimizer::api::CoordinatedSolveResult weather_result) {
   if (!weather_result.output.has_value()) {
     const deliveryoptimizer::api::SolveExecutionResult response_result =
         deliveryoptimizer::api::BuildSolveExecutionResult(*optimize_request, weather_result,
@@ -141,8 +142,8 @@ void FinishWithTraffic(const std::shared_ptr<deliveryoptimizer::api::SolveCoordi
           [optimize_request, final_forecast, respond_with_completion](
               const deliveryoptimizer::api::CoordinatedSolveResult& traffic_result) mutable {
             const deliveryoptimizer::api::SolveExecutionResult response_result =
-                deliveryoptimizer::api::BuildSolveExecutionResult(*optimize_request,
-                                                                  traffic_result, final_forecast);
+                deliveryoptimizer::api::BuildSolveExecutionResult(*optimize_request, traffic_result,
+                                                                  final_forecast);
             respond_with_completion(BuildSolveExecutionResponse(response_result));
           });
       if (traffic_rerun_status != deliveryoptimizer::api::SolveAdmissionStatus::kAccepted) {
@@ -270,8 +271,8 @@ void RegisterDeliveriesOptimizeEndpoint(drogon::HttpAppFramework& app,
                     return BuildWeatherAdjustedVroomInput(*optimize_request_ptr, impact);
                   },
                   [coordinator, optimize_request_ptr, request_size, traffic_options, forecast,
-                   impact, respond_with_completion](
-                      const CoordinatedSolveResult& rerun_result) mutable {
+                   impact,
+                   respond_with_completion](const CoordinatedSolveResult& rerun_result) mutable {
                     FinishWithTraffic(coordinator, optimize_request_ptr, request_size,
                                       traffic_options, forecast, impact, respond_with_completion,
                                       rerun_result);
