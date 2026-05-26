@@ -292,6 +292,40 @@ TEST(TrafficForecastOptimizerTest, AboveThresholdTrafficReoptimizes) {
 }
 TEST(TrafficForecastOptimizerTest, AboveThresholdTrafficAddsServiceTime) {
   const auto input = BuildInput();
+  Json::Value output{Json::objectValue};
+  output["routes"] = Json::Value{Json::arrayValue};
+  Json::Value route{Json::objectValue};
+  route["steps"] = Json::Value{Json::arrayValue};
+
+  Json::Value start{Json::objectValue};
+  start["arrival"] = 0;
+  start["location"] = Json::Value{Json::arrayValue};
+  start["location"].append(-121.7405);
+  start["location"].append(38.5449);
+
+  Json::Value first_stop{Json::objectValue};
+  first_stop["type"] = "job";
+  first_stop["id"] = 1;
+  first_stop["arrival"] = 300;
+  first_stop["service"] = 180;
+  first_stop["location"] = Json::Value{Json::arrayValue};
+  first_stop["location"].append(-121.748);
+  first_stop["location"].append(38.545);
+
+  Json::Value second_stop{Json::objectValue};
+  second_stop["type"] = "job";
+  second_stop["id"] = 2;
+  second_stop["arrival"] = 1080;
+  second_stop["service"] = 120;
+  second_stop["location"] = Json::Value{Json::arrayValue};
+  second_stop["location"].append(-121.752);
+  second_stop["location"].append(38.548);
+
+  route["steps"].append(start);
+  route["steps"].append(first_stop);
+  route["steps"].append(second_stop);
+  output["routes"].append(route);
+
   const deliveryoptimizer::api::WeatherImpactEstimate weather{};
   const deliveryoptimizer::api::TrafficImpact traffic{
       .baseline_duration_seconds = 900,
@@ -303,12 +337,12 @@ TEST(TrafficForecastOptimizerTest, AboveThresholdTrafficAddsServiceTime) {
   };
 
   const Json::Value payload =
-      deliveryoptimizer::api::BuildTrafficAdjustedVroomInput(input, weather, traffic);
+      deliveryoptimizer::api::BuildTrafficAdjustedVroomInput(input, weather, traffic, output);
 
   ASSERT_TRUE(payload["jobs"].isArray());
   ASSERT_EQ(payload["jobs"].size(), 2U);
-  EXPECT_EQ(payload["jobs"][0]["service"].asInt(), 270);
-  EXPECT_EQ(payload["jobs"][1]["service"].asInt(), 210);
+  EXPECT_EQ(payload["jobs"][0]["service"].asInt(), 240);
+  EXPECT_EQ(payload["jobs"][1]["service"].asInt(), 240);
 }
 TEST(TrafficForecastOptimizerTest, BuildsGoogleTrafficPath) {
   const std::string path = deliveryoptimizer::api::BuildTrafficPath(

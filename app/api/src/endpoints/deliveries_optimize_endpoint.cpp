@@ -133,11 +133,12 @@ void FinishWithTraffic(
     }
 
     if (traffic.should_reoptimize) {
+      Json::Value route_output_copy = route_output;
       const deliveryoptimizer::api::SolveAdmissionStatus traffic_rerun_status = coordinator->Submit(
           request_size,
-          [optimize_request, weather_impact, traffic] {
-            return deliveryoptimizer::api::BuildTrafficAdjustedVroomInput(*optimize_request,
-                                                                          weather_impact, traffic);
+          [optimize_request, weather_impact, traffic, route_output_copy] {
+            return deliveryoptimizer::api::BuildTrafficAdjustedVroomInput(
+                *optimize_request, weather_impact, traffic, route_output_copy);
           },
           [optimize_request, final_forecast, respond_with_completion](
               const deliveryoptimizer::api::CoordinatedSolveResult& traffic_result) mutable {

@@ -132,7 +132,8 @@ ReadRouteStartTime(const OptimizeRequestInput& input);
 
 [[nodiscard]] Json::Value BuildTrafficAdjustedVroomInput(const OptimizeRequestInput& input,
                                                          const WeatherImpactEstimate& weather,
-                                                         const TrafficImpact& traffic);
+                                                         const TrafficImpact& traffic,
+                                                         const Json::Value& vroom_output);
 
 [[nodiscard]] Json::Value BuildWeatherForecastAnnotation(const WeatherForecastOptions& options,
                                                          const WeatherImpactEstimate& impact);
