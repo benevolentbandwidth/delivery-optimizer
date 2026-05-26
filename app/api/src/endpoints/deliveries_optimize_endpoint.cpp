@@ -196,12 +196,11 @@ void RegisterDeliveriesOptimizeEndpoint(drogon::HttpAppFramework& app,
               forecast = BuildWeatherForecastAnnotation(sync_weather_options, impact);
 
               const auto finish_with_traffic =
-                  [coordinator, optimize_request_ptr, request_size, traffic_options, forecast,
-                   impact,
+                  [coordinator, optimize_request_ptr, request_size, traffic_options, forecast, impact,
                    respond_with_completion](CoordinatedSolveResult weather_result) {
                     if (!weather_result.output.has_value()) {
-                      respond_with_completion(BuildSolveExecutionResponse(BuildSolveExecutionResult(
-                          *optimize_request_ptr, weather_result, forecast)));
+                      respond_with_completion(BuildSolveExecutionResponse(
+                          BuildSolveExecutionResult(*optimize_request_ptr, weather_result, forecast)));
                       return;
                     }
 
@@ -211,9 +210,8 @@ void RegisterDeliveriesOptimizeEndpoint(drogon::HttpAppFramework& app,
                       std::optional<Json::Value> final_forecast = forecast;
                       const Json::Value& route_output = *weather_result.output;
 
-                      const TrafficDelayEstimate traffic_delay =
-                          ReadRouteTraffic(traffic_options, route_output,
-                                           ReadRouteStartTime(*optimize_request_ptr));
+                      const TrafficDelayEstimate traffic_delay = ReadRouteTraffic(
+                          traffic_options, route_output, ReadRouteStartTime(*optimize_request_ptr));
                       const TrafficImpact traffic = EstimateTrafficImpact(
                           traffic_options, ReadVroomDuration(route_output).value_or(0),
                           traffic_delay.delay_seconds, traffic_delay.source);
@@ -228,8 +226,7 @@ void RegisterDeliveriesOptimizeEndpoint(drogon::HttpAppFramework& app,
                               return BuildTrafficAdjustedVroomInput(*optimize_request_ptr, impact,
                                                                     traffic);
                             },
-                            [optimize_request_ptr, final_forecast,
-                             respond_with_completion](
+                            [optimize_request_ptr, final_forecast, respond_with_completion](
                                 const CoordinatedSolveResult& traffic_result) mutable {
                               respond_with_completion(BuildSolveExecutionResponse(
                                   BuildSolveExecutionResult(*optimize_request_ptr, traffic_result,
