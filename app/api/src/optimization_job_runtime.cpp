@@ -176,8 +176,8 @@ void OptimizationJobRuntime::WorkerLoop(const std::stop_token stop_token,
               traffic_delay.delay_seconds, traffic_delay.source);
           AddTrafficForecast(*forecast, traffic_options_, traffic);
           if (traffic.should_reoptimize) {
-            final_result = ToCoordinatedSolveResult(runner_->Run(
-                BuildTrafficAdjustedVroomInput(parsed_request->input, impact, traffic)));
+            final_result = ToCoordinatedSolveResult(runner_->Run(BuildTrafficAdjustedVroomInput(
+                parsed_request->input, impact, traffic, *final_result.output)));
           }
         }
       }

@@ -14,11 +14,13 @@
 #include <iomanip>
 #include <limits>
 #include <memory>
+#include <numeric>
 #include <optional>
 #include <sstream>
 #include <string>
 #include <string_view>
 #include <utility>
+#include <vector>
 
 namespace {
 
@@ -195,6 +197,100 @@ ReadLegDeparture(const Json::Value& step,
 
   return std::chrono::time_point_cast<std::chrono::seconds>(std::chrono::system_clock::now()) +
          offset;
+}
+
+[[nodiscard]] std::vector<int> BuildEvenTrafficDelays(const std::size_t job_count,
+                                                      const int total_delay_seconds) {
+  std::vector<int> delays(job_count, 0);
+  if (job_count == 0U || total_delay_seconds <= 0) {
+    return delays;
+  }
+
+  const int delay_per_stop = static_cast<int>(
+      std::ceil(static_cast<double>(total_delay_seconds) / static_cast<double>(job_count)));
+  std::fill(delays.begin(), delays.end(), delay_per_stop);
+  return delays;
+}
+
+[[nodiscard]] std::vector<int> ReadJobTravelSeconds(const Json::Value& vroom_output,
+                                                    const std::size_t job_count) {
+  std::vector<int> travel_seconds(job_count, 0);
+  const Json::Value& routes = vroom_output["routes"];
+  if (!routes.isArray()) {
+    return travel_seconds;
+  }
+
+  for (const Json::Value& route : routes) {
+    const Json::Value& steps = route["steps"];
+    if (!steps.isArray() || steps.size() < 2U) {
+      continue;
+    }
+
+    for (Json::ArrayIndex index = 1U; index < steps.size(); ++index) {
+      const Json::Value& from = steps[index - 1U];
+      const Json::Value& to = steps[index];
+      if (to["type"].isString() && to["type"].asString() != "job") {
+        continue;
+      }
+      if (!to["id"].isUInt64()) {
+        continue;
+      }
+
+      const std::uint64_t raw_job_id = to["id"].asUInt64();
+      if (raw_job_id == 0U || raw_job_id > job_count) {
+        continue;
+      }
+
+      const int from_arrival = from["arrival"].isInt() ? from["arrival"].asInt() : 0;
+      const int from_service = from["service"].isInt() ? from["service"].asInt() : 0;
+      const int to_arrival = to["arrival"].isInt() ? to["arrival"].asInt() : from_arrival;
+      const int leg_seconds = std::max(to_arrival - from_arrival - from_service, 0);
+      travel_seconds[static_cast<std::size_t>(raw_job_id - 1U)] += leg_seconds;
+    }
+  }
+
+  return travel_seconds;
+}
+
+[[nodiscard]] std::vector<int> BuildWeightedTrafficDelays(const Json::Value& vroom_output,
+                                                          const std::size_t job_count,
+                                                          const int total_delay_seconds) {
+  if (job_count == 0U || total_delay_seconds <= 0) {
+    return std::vector<int>(job_count, 0);
+  }
+
+  const std::vector<int> travel_seconds = ReadJobTravelSeconds(vroom_output, job_count);
+  const int total_travel_seconds = std::accumulate(travel_seconds.begin(), travel_seconds.end(), 0);
+  if (total_travel_seconds <= 0) {
+    return BuildEvenTrafficDelays(job_count, total_delay_seconds);
+  }
+
+  std::vector<int> delays(job_count, 0);
+  int assigned_delay = 0;
+  std::vector<std::pair<double, std::size_t>> remainders;
+  remainders.reserve(job_count);
+  for (std::size_t index = 0U; index < job_count; ++index) {
+    const double raw_delay = static_cast<double>(total_delay_seconds) *
+                             static_cast<double>(travel_seconds[index]) /
+                             static_cast<double>(total_travel_seconds);
+    delays[index] = static_cast<int>(std::floor(raw_delay));
+    assigned_delay += delays[index];
+    remainders.emplace_back(raw_delay - static_cast<double>(delays[index]), index);
+  }
+
+  std::sort(remainders.begin(), remainders.end(),
+            [](const auto& left, const auto& right) { return left.first > right.first; });
+  int remaining_delay = total_delay_seconds - assigned_delay;
+  for (const auto& remainder : remainders) {
+    if (remaining_delay <= 0) {
+      break;
+    }
+    const std::size_t index = remainder.second;
+    ++delays[index];
+    --remaining_delay;
+  }
+
+  return delays;
 }
 
 } // namespace
@@ -637,18 +733,19 @@ std::string BuildWeatherAdjustedVroomInputText(const OptimizeRequestInput& input
 
 Json::Value BuildTrafficAdjustedVroomInput(const OptimizeRequestInput& input,
                                            const WeatherImpactEstimate& weather,
-                                           const TrafficImpact& traffic) {
+                                           const TrafficImpact& traffic,
+                                           const Json::Value& vroom_output) {
   Json::Value payload = BuildWeatherAdjustedVroomInput(input, weather);
   if (!traffic.should_reoptimize || input.jobs.empty()) {
     return payload;
   }
 
-  const int delay_per_stop = static_cast<int>(std::ceil(
-      static_cast<double>(traffic.traffic_delay_seconds) / static_cast<double>(input.jobs.size())));
+  const std::vector<int> traffic_delays =
+      BuildWeightedTrafficDelays(vroom_output, input.jobs.size(), traffic.traffic_delay_seconds);
   for (Json::ArrayIndex index = 0; index < payload["jobs"].size(); ++index) {
     Json::Value& job = payload["jobs"][index];
     const int current_service = job["service"].isInt() ? job["service"].asInt() : 0;
-    job["service"] = current_service + delay_per_stop;
+    job["service"] = current_service + traffic_delays[static_cast<std::size_t>(index)];
   }
 
   return payload;
