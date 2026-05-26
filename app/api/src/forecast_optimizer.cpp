@@ -185,7 +185,7 @@ ReadLegDeparture(const Json::Value& step,
   if (route_start_time.has_value()) {
     const std::chrono::seconds route_start_seconds =
         std::chrono::duration_cast<std::chrono::seconds>(route_start_time->time_since_epoch());
-    // Treat large arrivals near the route start as Unix timestamps and smaller ones are route offsets.
+    // Large arrivals are Unix timestamps; smaller arrivals are route offsets.
     if (offset >= route_start_seconds - std::chrono::hours{24}) {
       return std::chrono::sys_seconds{offset};
     }
