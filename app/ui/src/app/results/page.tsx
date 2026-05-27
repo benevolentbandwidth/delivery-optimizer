@@ -147,7 +147,7 @@ export default function ResultsPage() {
               <button
                 type="button"
                 onClick={savePendingPinMove}
-                className="h-9 px-6 rounded-[80px] border border-[var(--edit-foreground)] font-medium text-[14px] leading-5 text-[var(--edit-foreground)] whitespace-nowrap hover:bg-black/5 transition-colors"
+                className="h-9 px-6 rounded-[80px] bg-amber-500 font-medium text-[14px] leading-5 text-white whitespace-nowrap hover:bg-amber-600 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-amber-500"
               >
                 Save
               </button>
@@ -155,7 +155,10 @@ export default function ResultsPage() {
           )}
           <button
             type="button"
-            className="h-9 px-6 rounded-[80px] bg-[var(--edit-teal-500)] font-medium text-[14px] leading-5 text-[var(--edit-foreground)] whitespace-nowrap hover:opacity-90 transition-opacity"
+            disabled
+            aria-disabled="true"
+            title="Export coming soon"
+            className="h-9 px-6 rounded-[80px] bg-[var(--edit-teal-500)] font-medium text-[14px] leading-5 text-[var(--edit-foreground)] whitespace-nowrap opacity-50 cursor-not-allowed"
           >
             Export
           </button>
