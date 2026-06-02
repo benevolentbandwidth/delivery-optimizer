@@ -18,7 +18,7 @@ export const SIDEBAR_NAV_ITEM_DISABLED =
   "flex flex-col gap-1 items-center w-full opacity-[0.26] cursor-not-allowed";
 
 export const SIDEBAR_NAV_PILL_ACTIVE =
-  "w-full flex items-center justify-center rounded-[80px] bg-[var(--edit-container-active)] px-[9px] py-[4px]";
+  "w-full flex items-center justify-center rounded-[80px] bg-[var(--edit-container-active)] px-[9px] py-[4px] text-[var(--edit-text-primary)]";
 
 export const SIDEBAR_NAV_PILL_INACTIVE =
   "w-full flex items-center justify-center rounded-[80px] px-[9px] py-[4px]";
@@ -760,7 +760,7 @@ export const MOBILE_BOTTOM_BAR_ROOT =
 export const MOBILE_BOTTOM_BAR_INNER = "flex flex-col gap-[8px] w-full";
 
 export const MOBILE_BOTTOM_BAR_OPTIMIZE_BTN =
-  "flex items-center justify-center h-[44px] px-[16px] py-[10px] rounded-[80px] w-full overflow-clip bg-[var(--edit-btn-primary)] cursor-pointer";
+  "flex items-center justify-center h-[44px] px-[16px] py-[10px] rounded-[80px] flex-1 min-w-0 overflow-clip bg-[var(--edit-btn-primary)] cursor-pointer disabled:cursor-not-allowed";
 
 export const MOBILE_BOTTOM_BAR_OPTIMIZE_LABEL =
   "font-['Manrope',sans-serif] font-semibold text-[16px] leading-[22px] text-[var(--edit-text-primary)] whitespace-nowrap";

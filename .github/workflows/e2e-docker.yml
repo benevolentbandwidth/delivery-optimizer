@@ -1,0 +1,117 @@
+# Full backend Docker E2E suite.
+# Runs every test registered with `LABELS e2e` in tests/CMakeLists.txt
+# (see `deliveryoptimizer_add_docker_*e2e_test` helpers). Each E2E test brings
+# up the full Compose stack (postgres + osrm + http-server) under a unique
+# project name, exercises a real routing/job/proxy/health flow, and tears the
+# stack down on exit.
+#
+# Triggers:
+#   - schedule: weekly, Mondays 06:00 UTC (cron: '0 6 * * 1')
+#   - workflow_dispatch: manual run (Actions tab -> Run workflow, or
+#     `gh workflow run e2e-docker.yml`)
+#
+# Not wired to pull_request on purpose. PR CI (pr-light.yml) keeps excluding
+# e2e/docker via `ctest -LE 'e2e|docker'` because each E2E run can take a long
+# time on cold caches (Docker build of OSRM + http-server image, OSRM PBF
+# preprocess for Monaco, then 8 serial bring-up/tear-down cycles).
+#
+# Runner: native ARM64 to match deploy/compose/docker-compose.arm64.yml and
+# tests/integration/e2e/e2e_stack.env (DELIVERYOPTIMIZER_PLATFORM=linux/arm64).
+# If `ubuntu-24.04-arm` is unavailable on this org/repo, switch `runs-on` to
+# `ubuntu-latest` and add a Buildx + QEMU setup step before the ctest call;
+# emulated arm64 builds will be noticeably slower.
+#
+# Disabled by CMake (DISABLED TRUE): DeliveryOptimizerRoutingSmokeTest.OsrmAndVroom.
+# CTest skips disabled tests automatically, so `ctest -L e2e` is safe to use.
+
+name: E2E Docker (weekly + manual)
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  group: e2e-docker-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    name: ctest -L e2e (full suite)
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build + test prerequisites
+        uses: awalsh128/cache-apt-pkgs-action@v1
+        with:
+          packages: ninja-build libjsoncpp-dev libdrogon-dev uuid-dev libmariadb-dev libbrotli-dev libhiredis-dev libyaml-cpp-dev libgtest-dev python3
+          version: 1.0
+
+      - name: Verify toolchain
+        run: |
+          cmake --version
+          docker --version
+          docker compose version
+          python3 --version
+          bash --version | head -n 1
+
+      - name: Validate compose config with E2E env
+        run: |
+          docker compose \
+            -f deploy/compose/docker-compose.arm64.yml \
+            --env-file tests/integration/e2e/e2e_stack.env \
+            config > /dev/null
+
+      - name: Configure (CMake dev preset)
+        run: cmake --preset dev
+
+      - name: Build (CMake dev preset)
+        run: cmake --build --preset dev --parallel
+
+      - name: List discovered E2E tests
+        run: ctest --preset dev -N -L e2e
+
+      - name: Run full E2E suite
+        run: ctest --preset dev --output-on-failure -L e2e
+
+      - name: Capture Docker diagnostics on failure
+        if: failure()
+        run: |
+          mkdir -p e2e-diagnostics
+          {
+            echo "=== docker version ==="
+            docker version || true
+            echo
+            echo "=== docker ps -a ==="
+            docker ps -a || true
+            echo
+            echo "=== docker network ls ==="
+            docker network ls || true
+            echo
+            echo "=== docker volume ls ==="
+            docker volume ls || true
+            echo
+            echo "=== docker images (deliveryoptimizer*) ==="
+            docker images "deliveryoptimizer*" || true
+          } > e2e-diagnostics/docker-state.txt 2>&1
+
+          # Each E2E test uses its own unique compose project name and cleans
+          # up on EXIT, so logs are usually unavailable post-mortem. Attempt a
+          # best-effort dump for any leftover containers.
+          for cid in $(docker ps -aq); do
+            (
+              echo "=== docker logs ${cid} ==="
+              docker logs "${cid}" 2>&1 || true
+            ) >> e2e-diagnostics/leftover-container-logs.txt
+          done
+
+      - name: Upload diagnostics artifact
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-docker-diagnostics
+          path: e2e-diagnostics/
+          retention-days: 7
+          if-no-files-found: ignore

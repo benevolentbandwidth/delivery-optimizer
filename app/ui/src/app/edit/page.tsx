@@ -267,7 +267,11 @@ export default function Page() {
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
       />
-      <MobileBottomBar onSave={handleExportSession} />
+      <MobileBottomBar
+        onSave={handleExportSession}
+        onOptimize={() => void optimize()}
+        isOptimizing={isOptimizing}
+      />
       <MobileNavbar onMenuClick={() => setIsMobileMenuOpen(true)} />
       <Navbar onSave={handleExportSession} />
       <div className={PAGE_V2_BODY}>

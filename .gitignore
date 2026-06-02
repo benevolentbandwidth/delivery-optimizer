@@ -92,6 +92,7 @@ services/vroom/data/
 # macOS / editor noise
 .DS_Store
 
-# Claude
+# Claude and Cursor
 Claude.md
 .claude/
+.cursor/

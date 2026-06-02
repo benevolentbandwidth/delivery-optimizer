@@ -30,14 +30,14 @@ export default function ErrorOverlay({ message, onClose }: ErrorOverlayProps) {
   if (!message) return null;
 
   return (
-    <div
-      className={OVERLAY_BACKDROP}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="error-overlay-title"
-      onKeyDown={handleKeyDown}
-    >
-      <div ref={panelRef} className={OVERLAY_PANEL}>
+    <div className={OVERLAY_BACKDROP} onKeyDown={handleKeyDown}>
+      <div
+        ref={panelRef}
+        className={OVERLAY_PANEL}
+        role="dialog"
+        aria-modal={true}
+        aria-labelledby="error-overlay-title"
+      >
         <div className={OVERLAY_HEADER}>
           <h2 id="error-overlay-title" className={OVERLAY_TITLE}>
             Something went wrong

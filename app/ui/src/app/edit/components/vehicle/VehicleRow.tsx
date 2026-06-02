@@ -12,15 +12,12 @@ import type {
   VehicleType,
 } from "@/app/edit/types/delivery";
 import { capitalize } from "@/app/edit/utils/deliveryHelpers";
+import StatusToggle from "@/app/edit/components/vehicle/StatusToggle";
 import {
   VEHICLE_ROW_CELL,
   VEHICLE_ROW_ACTIONS,
   VEHICLE_ROW_DESKTOP,
   VEHICLE_ROW_STATUS_CELL,
-  STATUS_TOGGLE_WRAPPER,
-  STATUS_TOGGLE_BTN_ACTIVE,
-  STATUS_TOGGLE_BTN_INACTIVE,
-  STATUS_TOGGLE_TEXT,
   VEHICLE_MOBILE_LOCKED_CARD_V2,
   VEHICLE_MOBILE_LOCKED_HEADER,
   VEHICLE_MOBILE_LOCKED_INFO,
@@ -80,36 +77,11 @@ export default function VehicleRow({
           </div>
         </div>
         <div className={VEHICLE_MOBILE_LOCKED_STATUS_ROW}>
-          <div
-            className={STATUS_TOGGLE_WRAPPER}
-            role="group"
-            aria-label="Vehicle availability"
-          >
-            <button
-              type="button"
-              onClick={() => updateVehicle(v.id, "available", true)}
-              aria-pressed={v.available}
-              className={
-                v.available
-                  ? STATUS_TOGGLE_BTN_ACTIVE
-                  : STATUS_TOGGLE_BTN_INACTIVE
-              }
-            >
-              <span className={STATUS_TOGGLE_TEXT}>Available</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => updateVehicle(v.id, "available", false)}
-              aria-pressed={!v.available}
-              className={
-                !v.available
-                  ? STATUS_TOGGLE_BTN_ACTIVE
-                  : STATUS_TOGGLE_BTN_INACTIVE
-              }
-            >
-              <span className={STATUS_TOGGLE_TEXT}>In use</span>
-            </button>
-          </div>
+          <StatusToggle
+            vehicleId={v.id}
+            available={v.available}
+            onUpdate={updateVehicle}
+          />
           <span className={VEHICLE_MOBILE_LOCKED_DEPARTURE}>
             {(v.departureTime || "--:--") + " departure time"}
           </span>
@@ -128,36 +100,11 @@ export default function VehicleRow({
       </span>
       <span className={VEHICLE_ROW_CELL}>{formatCapacity(v)}</span>
       <span className={VEHICLE_ROW_STATUS_CELL}>
-        <div
-          className={STATUS_TOGGLE_WRAPPER}
-          role="group"
-          aria-label="Vehicle availability"
-        >
-          <button
-            type="button"
-            onClick={() => updateVehicle(v.id, "available", true)}
-            aria-pressed={v.available}
-            className={
-              v.available
-                ? STATUS_TOGGLE_BTN_ACTIVE
-                : STATUS_TOGGLE_BTN_INACTIVE
-            }
-          >
-            <span className={STATUS_TOGGLE_TEXT}>Available</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => updateVehicle(v.id, "available", false)}
-            aria-pressed={!v.available}
-            className={
-              !v.available
-                ? STATUS_TOGGLE_BTN_ACTIVE
-                : STATUS_TOGGLE_BTN_INACTIVE
-            }
-          >
-            <span className={STATUS_TOGGLE_TEXT}>In use</span>
-          </button>
-        </div>
+        <StatusToggle
+          vehicleId={v.id}
+          available={v.available}
+          onUpdate={updateVehicle}
+        />
       </span>
       <span className={VEHICLE_ROW_CELL}>{v.departureTime}</span>
       <div className={VEHICLE_ROW_ACTIONS}>

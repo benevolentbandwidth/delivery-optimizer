@@ -43,7 +43,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "curl -fsS \"http://127.0.0.1:${OSRM_INTERNAL_PORT:-5001}/nearest/v1/driving/-122.4194,37.7749?number=1&generate_hints=false\" | grep -q '\"code\":\"Ok\"'",
+          "curl -fsS \"http://127.0.0.1:${OSRM_INTERNAL_PORT:-5001}/nearest/v1/driving/${OSRM_HEALTHCHECK_LON:--122.4194},${OSRM_HEALTHCHECK_LAT:-37.7749}?number=1&generate_hints=false\" | grep -q '\"code\":\"Ok\"'",
         ]
       interval: 30s
       timeout: 10s

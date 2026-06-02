@@ -1,0 +1,8 @@
+name: deliveryoptimizer
+
+services:
+  osrm:
+    volumes:
+      - ${OSRM_CACHE_DIR}:/osrm-cache
+    environment:
+      OSRM_DATA_DIR: /osrm-cache
