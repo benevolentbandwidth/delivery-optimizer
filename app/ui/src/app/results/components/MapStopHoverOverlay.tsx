@@ -18,7 +18,6 @@ function useContainerPixelPosition(
   const [pixel, setPixel] = useState<{ x: number; y: number } | null>(null);
   const overlayRef = useRef<google.maps.OverlayView | null>(null);
   const latLngRef = useRef({ lat, lng });
-  latLngRef.current = { lat, lng };
 
   useEffect(() => {
     if (!map) return;
@@ -52,6 +51,8 @@ function useContainerPixelPosition(
   }, [map]);
 
   useEffect(() => {
+    latLngRef.current = { lat, lng };
+
     const overlay = overlayRef.current;
     if (!overlay) return;
 
