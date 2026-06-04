@@ -66,11 +66,7 @@ function readInitialRoutes(): {
 
 export default function ResultsPage() {
   const [
-    {
-      routes: initialRoutes,
-      error: initialError,
-      loadedFromSessionStorage,
-    },
+    { routes: initialRoutes, error: initialError, loadedFromSessionStorage },
   ] = useState(readInitialRoutes);
 
   useEffect(() => {
