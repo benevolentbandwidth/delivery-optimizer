@@ -27,7 +27,7 @@ function formatTime12h(raw: string): string {
   return `${h}:${min} ${ap}`;
 }
 
-function formatTimeWindowLine(tw: TimeWindow | undefined): string {
+export function formatTimeWindowLine(tw: TimeWindow | undefined): string {
   if (!tw?.time) return "—";
   const label = formatTime12h(tw.time);
   if (tw.kind === "by") return `By ${label}`;
@@ -36,7 +36,7 @@ function formatTimeWindowLine(tw: TimeWindow | undefined): string {
   return label;
 }
 
-function formatDeliveryWindow(stop: Stop): string {
+export function formatDeliveryWindow(stop: Stop): string {
   const raw = stop.timeWindow?.time?.trim();
   if (raw && /-|–/.test(raw)) return raw;
   return formatTimeWindowLine(stop.timeWindow);

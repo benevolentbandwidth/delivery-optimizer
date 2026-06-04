@@ -2,7 +2,7 @@
 
 "use client";
 
-import { default as React, useCallback, useState } from "react";
+import { default as React, useCallback, useEffect, useState } from "react";
 import { NAVBAR_V2_LOGO, NAVBAR_V2_ROOT } from "../edit/formStyles.v2";
 import styles from "../edit/edit.module.css";
 import MobileSidebar from "../components/sidebar/MobileSidebar";
@@ -22,30 +22,62 @@ import {
 import type { PendingPinMove, Route } from "./types";
 import { downloadRoutesAsJsonFiles } from "./utils/downloadRouteJson";
 
-function readInitialRoutes(): { routes: Route[]; error: string | null } {
-  if (typeof window === "undefined") return { routes: [], error: null };
+function readInitialRoutes(): {
+  routes: Route[];
+  error: string | null;
+  loadedFromSessionStorage: boolean;
+} {
+  if (typeof window === "undefined") {
+    return { routes: [], error: null, loadedFromSessionStorage: false };
+  }
   const forceMock = new URLSearchParams(window.location.search).get("mock");
+  // Intentional demo: ?mock=1 loads fixture routes for visual QA without running optimize.
   if (forceMock === "1") {
-    return { routes: [mockRouteToRoute(mockRouteData)], error: null };
+    return {
+      routes: [mockRouteToRoute(mockRouteData)],
+      error: null,
+      loadedFromSessionStorage: false,
+    };
   }
 
   const stored = sessionStorage.getItem("optimizeResults");
   if (!stored) {
-    return { routes: [mockRouteToRoute(mockRouteData)], error: null };
+    // Intentional demo fallback: direct /results visits (no prior optimize) render mock
+    // routes so the hi-fi UI can be reviewed without a full optimize flow.
+    return {
+      routes: [mockRouteToRoute(mockRouteData)],
+      error: null,
+      loadedFromSessionStorage: false,
+    };
   }
 
   try {
     const parsed = JSON.parse(stored) as Route[];
-    sessionStorage.removeItem("optimizeResults");
-    return { routes: parsed, error: null };
+    return { routes: parsed, error: null, loadedFromSessionStorage: true };
   } catch {
-    return { routes: [mockRouteToRoute(mockRouteData)], error: null };
+    return {
+      routes: [],
+      error:
+        "Could not read saved route data. Please run optimize again from the edit page.",
+      loadedFromSessionStorage: false,
+    };
   }
 }
 
 export default function ResultsPage() {
-  const [{ routes: initialRoutes, error: initialError }] =
-    useState(readInitialRoutes);
+  const [
+    {
+      routes: initialRoutes,
+      error: initialError,
+      loadedFromSessionStorage,
+    },
+  ] = useState(readInitialRoutes);
+
+  useEffect(() => {
+    if (loadedFromSessionStorage) {
+      sessionStorage.removeItem("optimizeResults");
+    }
+  }, [loadedFromSessionStorage]);
   const [routes, setRoutes] = useState<Route[]>(initialRoutes);
   const [error] = useState<string | null>(initialError);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -243,20 +275,12 @@ export default function ResultsPage() {
               <button
                 type="button"
                 onClick={savePendingPinMove}
-                className="h-9 px-4 rounded-[6px] border border-[var(--edit-stone-700)] font-semibold text-sm text-[var(--edit-text-primary)] hover:bg-[var(--edit-secondary-btn-hover)]"
+                className="h-9 px-4 rounded-[6px] bg-[var(--edit-btn-primary)] font-semibold text-sm text-[var(--edit-text-primary)] hover:brightness-[0.97]"
               >
                 Save
               </button>
             </>
           )}
-          <button
-            type="button"
-            onClick={savePendingPinMove}
-            disabled={pendingPinMove == null}
-            className="h-9 px-4 rounded-[6px] bg-[var(--edit-btn-primary)] font-semibold text-sm text-[var(--edit-text-primary)] hover:brightness-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            Save
-          </button>
         </div>
       </header>
       <div className="hidden lg:flex flex-1 min-h-0">
