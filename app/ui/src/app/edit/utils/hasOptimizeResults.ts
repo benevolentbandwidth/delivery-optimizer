@@ -18,4 +18,5 @@ export function readHasOptimizeResults(): boolean {
 export function setOptimizeResults(results: Route[]): void {
   if (typeof window === "undefined") return;
   sessionStorage.setItem("optimizeResults", JSON.stringify(results));
+  window.dispatchEvent(new Event("optimize-results-updated"));
 }
