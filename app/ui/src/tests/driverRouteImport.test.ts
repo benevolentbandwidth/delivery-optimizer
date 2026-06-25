@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
 
+import { parseRouteUploadText } from "@/app/upload-route/routeUploadValidation";
 import { loadSessionFromText } from "@/lib/driver-route/importSession";
 import { transformSessionToDriverRoute } from "@/lib/driver-route/transformSession";
 import { buildSessionSave } from "@/lib/session/exportSession";
 
 describe("driver route import", () => {
   it("loads a saved route-manager session into the driver_assist route shape", () => {
-    const session = loadSessionFromText(
+    const route = parseRouteUploadText(
       JSON.stringify(
         buildSessionSave(
           {
@@ -35,7 +36,7 @@ describe("driver route import", () => {
       ),
     );
 
-    expect(transformSessionToDriverRoute(session)).toEqual({
+    expect(route).toEqual({
       driverName: "driver1",
       routeLabel: "Route 7 - 1 stops",
       stops: [
@@ -105,7 +106,13 @@ describe("driver route import", () => {
     );
   });
 
-  it("also accepts the same session data shape without the save envelope", () => {
+  it("rejects invalid upload-route files before handing them to driver_assist", () => {
+    expect(() => parseRouteUploadText(JSON.stringify({ version: 1 }))).toThrow(
+      'Invalid save file format at "savedAt".',
+    );
+  });
+
+  it("also accepts a direct optimize request JSON file", () => {
     const session = loadSessionFromText(
       JSON.stringify({
         deliveries: [
