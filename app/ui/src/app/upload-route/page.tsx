@@ -7,6 +7,11 @@ import { useRouter } from "next/navigation";
 import HiFiUploadPage from "@/app/components/HiFiUploadPage";
 import { createUploadOperation } from "@/app/utils/uploadOperation";
 
+import {
+  parseRouteUploadText,
+  ROUTE_UPLOAD_ERROR_KEY,
+} from "./routeUploadValidation";
+
 const MAX_FILE_MB = 10;
 const MAX_FILE_BYTES = MAX_FILE_MB * 1024 * 1024;
 
@@ -24,6 +29,14 @@ export default function UploadRoutePage() {
       activeOperation.invalidate();
     };
   }, [activeOperation]);
+
+  useEffect(() => {
+    const uploadError = sessionStorage.getItem(ROUTE_UPLOAD_ERROR_KEY);
+    if (!uploadError) return;
+
+    sessionStorage.removeItem(ROUTE_UPLOAD_ERROR_KEY);
+    queueMicrotask(() => setError(uploadError));
+  }, []);
 
   const handleFile = (f: File) => {
     setError(null);
@@ -70,6 +83,7 @@ export default function UploadRoutePage() {
     try {
       const text = await file.text();
       if (!isCurrentOperation()) return;
+      parseRouteUploadText(text);
       sessionStorage.setItem(
         "routeFile",
         JSON.stringify({ name: file.name, content: text }),
