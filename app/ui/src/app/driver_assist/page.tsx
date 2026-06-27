@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { loadDriverRouteFromText } from "@/lib/driver-route/importSession";
 import type { DeliveryStop, DriverRoute } from "@/lib/driver-route/types";
 
 import DriverFooter from "./components/DriverFooter";
@@ -20,7 +19,10 @@ import {
   readUploadedRouteFile,
 } from "./storage";
 import { styles } from "./styles";
-import { ROUTE_UPLOAD_ERROR_KEY } from "@/app/upload-route/routeUploadValidation";
+import {
+  parseRouteUploadFile,
+  ROUTE_UPLOAD_ERROR_KEY,
+} from "@/app/upload-route/routeUploadValidation";
 
 function openNavigation(stop: DeliveryStop) {
   // Prefer exact coordinates from the route file; fall back to the address if
@@ -68,7 +70,10 @@ export default function DriverAssistPwaPage() {
 
     if (uploadedRoute) {
       try {
-        const nextRoute = loadDriverRouteFromText(uploadedRoute.content);
+        const nextRoute = parseRouteUploadFile(
+          uploadedRoute.name,
+          uploadedRoute.content,
+        );
         persistRoute(nextRoute);
         clearUploadedRouteFile();
         queueMicrotask(() => {
