@@ -1,6 +1,7 @@
 import { ZodError, z } from "zod";
 
-import type { DriverRoute, OptimizeRequestLike } from "./types";
+import type { DeliveryStop, DriverRoute, OptimizeRequestLike } from "./types";
+import { transformSessionToDriverRoute } from "./transformSession";
 import {
   migrateSessionSaveFile,
   sessionSaveDataSchema,
@@ -37,6 +38,24 @@ const persistedRouteStateSchema = z.object({
 
 type PersistedRouteState = z.infer<typeof persistedRouteStateSchema>;
 
+const resultsRouteStopSchema = z.object({
+  id: z.union([z.string(), z.number()]),
+  address: z.string().optional(),
+  lat: z.number(),
+  lng: z.number(),
+  sequence: z.number().int().nonnegative(),
+  capacityUsed: z.number().positive().optional(),
+  note: z.string().optional(),
+  addresseeName: z.string().optional(),
+  phoneNumber: z.string().optional(),
+});
+
+const resultsRouteSchema = z.object({
+  vehicleId: z.union([z.string(), z.number()]),
+  driverName: z.string().optional(),
+  stops: z.array(resultsRouteStopSchema).min(1),
+});
+
 // Guard the browser import path before we spend time parsing a file.
 export async function loadSessionFromFile(
   file: Pick<File, "name" | "size" | "type" | "text">,
@@ -70,17 +89,38 @@ export function loadSessionFromText(text: string): OptimizeRequestLike {
   }
 
   try {
-    // Preferred route-manager save file shape.
-    return migrateSessionSaveFile(parsed).data;
+    return loadSessionFromParsedJson(parsed);
   } catch (error) {
-    try {
-      // Also accept the same data shape without the version/savedAt envelope.
-      return sessionSaveDataSchema.parse(parsed);
-    } catch {
-      throw new Error(
-        formatValidationError(error) ?? "Invalid save file format.",
-      );
-    }
+    throw new Error(
+      formatValidationError(error) ?? "Invalid save file format.",
+    );
+  }
+}
+
+export function loadDriverRouteFromText(text: string): DriverRoute {
+  if (text.length === 0) {
+    throw new Error("Invalid file contents.");
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    throw new Error("This file is not valid JSON.");
+  }
+
+  const exportedRoute = resultsRouteSchema.safeParse(parsed);
+  if (exportedRoute.success) {
+    return transformResultsRouteToDriverRoute(exportedRoute.data);
+  }
+
+  try {
+    return transformSessionToDriverRoute(loadSessionFromParsedJson(parsed));
+  } catch (error) {
+    throw new Error(
+      formatValidationError(error) ??
+        "This file is not a recognized route or session JSON file.",
+    );
   }
 }
 
@@ -114,4 +154,44 @@ function formatValidationError(error: unknown): string | null {
       : "file";
 
   return `Invalid save file format at "${path}".`;
+}
+
+function loadSessionFromParsedJson(parsed: unknown): OptimizeRequestLike {
+  try {
+    // Preferred route-manager save file shape.
+    return migrateSessionSaveFile(parsed).data;
+  } catch (error) {
+    try {
+      // Also accept the same data shape without the version/savedAt envelope.
+      return sessionSaveDataSchema.parse(parsed);
+    } catch {
+      throw error;
+    }
+  }
+}
+
+function transformResultsRouteToDriverRoute(
+  route: z.infer<typeof resultsRouteSchema>,
+): DriverRoute {
+  const orderedStops = [...route.stops].sort((a, b) => a.sequence - b.sequence);
+  const stops: DeliveryStop[] = orderedStops.map((stop, index) => ({
+    id: String(stop.id),
+    stopNumber: index + 1,
+    address: stop.address || "No address provided",
+    customerName: stop.addresseeName || `Stop ${index + 1}`,
+    phoneNumber: stop.phoneNumber,
+    packageCount: stop.capacityUsed ?? 1,
+    notes: stop.note || "",
+    status: "pending",
+    lat: stop.lat,
+    lng: stop.lng,
+    completedAt: undefined,
+    failureReason: undefined,
+  }));
+
+  return {
+    driverName: route.driverName || "driver_assist",
+    routeLabel: `Route ${route.vehicleId} - ${stops.length} stops`,
+    stops,
+  };
 }
