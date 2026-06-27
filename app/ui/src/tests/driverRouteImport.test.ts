@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { parseRouteUploadText } from "@/app/upload-route/routeUploadValidation";
+import {
+  parseRouteUploadFile,
+  parseRouteUploadText,
+} from "@/app/upload-route/routeUploadValidation";
 import { loadSessionFromText } from "@/lib/driver-route/importSession";
 import { transformSessionToDriverRoute } from "@/lib/driver-route/transformSession";
 import { buildSessionSave } from "@/lib/session/exportSession";
@@ -177,6 +180,43 @@ describe("driver route import", () => {
           lng: -121.75,
           completedAt: undefined,
           failureReason: undefined,
+        },
+      ],
+    });
+  });
+
+  it("loads a route CSV upload into the driver_assist route shape", () => {
+    const route = parseRouteUploadFile(
+      "driver-route.csv",
+      [
+        "sequence,address,addresseeName,phoneNumber,capacityUsed,note,lat,lng",
+        '2,"200 Second St","Second Customer","555-555-0202",4,"Ring bell",38.55,-121.75',
+        '1,"100 First St","First Customer","555-555-0101",2,"Leave at front desk",38.54,-121.74',
+      ].join("\n"),
+    );
+
+    expect(route).toMatchObject({
+      routeLabel: "CSV route - 2 stops",
+      stops: [
+        {
+          stopNumber: 1,
+          address: "100 First St",
+          customerName: "First Customer",
+          phoneNumber: "555-555-0101",
+          packageCount: 2,
+          notes: "Leave at front desk",
+          lat: 38.54,
+          lng: -121.74,
+        },
+        {
+          stopNumber: 2,
+          address: "200 Second St",
+          customerName: "Second Customer",
+          phoneNumber: "555-555-0202",
+          packageCount: 4,
+          notes: "Ring bell",
+          lat: 38.55,
+          lng: -121.75,
         },
       ],
     });
