@@ -112,6 +112,76 @@ describe("driver route import", () => {
     );
   });
 
+  it("loads a Results page route export into the driver_assist route shape", () => {
+    const route = parseRouteUploadText(
+      JSON.stringify({
+        vehicleId: "vehicle-7",
+        driverName: "Driver Export",
+        stops: [
+          {
+            id: "stop-later",
+            address: "200 Second St",
+            lat: 38.55,
+            lng: -121.75,
+            sequence: 2,
+            capacityUsed: 4,
+            timeWindow: { kind: "by", time: "13:00" },
+            note: "Ring bell",
+            addresseeName: "Second Customer",
+            phoneNumber: "555-555-0202",
+          },
+          {
+            id: "stop-first",
+            address: "100 First St",
+            lat: 38.54,
+            lng: -121.74,
+            sequence: 1,
+            capacityUsed: 2,
+            timeWindow: { kind: "from", time: "09:00" },
+            note: "Leave at front desk",
+            addresseeName: "First Customer",
+            phoneNumber: "555-555-0101",
+          },
+        ],
+      }),
+    );
+
+    expect(route).toEqual({
+      driverName: "Driver Export",
+      routeLabel: "Route vehicle-7 - 2 stops",
+      stops: [
+        {
+          id: "stop-first",
+          stopNumber: 1,
+          address: "100 First St",
+          customerName: "First Customer",
+          phoneNumber: "555-555-0101",
+          packageCount: 2,
+          notes: "Leave at front desk",
+          status: "pending",
+          lat: 38.54,
+          lng: -121.74,
+          completedAt: undefined,
+          failureReason: undefined,
+        },
+        {
+          id: "stop-later",
+          stopNumber: 2,
+          address: "200 Second St",
+          customerName: "Second Customer",
+          phoneNumber: "555-555-0202",
+          packageCount: 4,
+          notes: "Ring bell",
+          status: "pending",
+          lat: 38.55,
+          lng: -121.75,
+          completedAt: undefined,
+          failureReason: undefined,
+        },
+      ],
+    });
+  });
+
   it("also accepts a direct optimize request JSON file", () => {
     const session = loadSessionFromText(
       JSON.stringify({
