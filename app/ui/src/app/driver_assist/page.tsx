@@ -3,8 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { loadSessionFromText } from "@/lib/driver-route/importSession";
-import { transformSessionToDriverRoute } from "@/lib/driver-route/transformSession";
+import { loadDriverRouteFromText } from "@/lib/driver-route/importSession";
 import type { DeliveryStop, DriverRoute } from "@/lib/driver-route/types";
 
 import DriverFooter from "./components/DriverFooter";
@@ -69,8 +68,7 @@ export default function DriverAssistPwaPage() {
 
     if (uploadedRoute) {
       try {
-        const session = loadSessionFromText(uploadedRoute.content);
-        const nextRoute = transformSessionToDriverRoute(session);
+        const nextRoute = loadDriverRouteFromText(uploadedRoute.content);
         persistRoute(nextRoute);
         clearUploadedRouteFile();
         queueMicrotask(() => {
