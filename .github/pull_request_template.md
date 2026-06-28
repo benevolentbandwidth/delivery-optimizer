@@ -1,14 +1,14 @@
 ## Summary
 
-- 
+-
 
 ## Motivation
 
-- 
+-
 
 ## Changes
 
-- 
+-
 
 ## Validation
 
@@ -32,11 +32,11 @@
 
 ## Risk
 
-- 
+-
 
 ## Rollout and Recovery
 
-- 
+-
 
 ## High-Signal PR Checklist
 

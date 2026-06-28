@@ -12,7 +12,7 @@ Checks: >
   -cppcoreguidelines-pro-bounds-pointer-arithmetic,
   -readability-magic-numbers
 
-WarningsAsErrors: ''
+WarningsAsErrors: ""
 
 FormatStyle: file
 

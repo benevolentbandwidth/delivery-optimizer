@@ -5,8 +5,7 @@ import {
 } from "@/lib/validation/session.schema";
 
 export type SessionExportResult =
-  | { ok: true; filename: string }
-  | { ok: false; error: Error };
+  { ok: true; filename: string } | { ok: false; error: Error };
 
 export function filenameTimestamp(date: Date) {
   const yyyy = String(date.getUTCFullYear());

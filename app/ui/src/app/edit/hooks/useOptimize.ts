@@ -29,12 +29,7 @@ const POLL_INTERVAL_MS = 500;
 const POLL_TIMEOUT_MS = 120000;
 
 type OptimizationJobState =
-  | "queued"
-  | "running"
-  | "succeeded"
-  | "failed"
-  | "timed_out"
-  | "expired";
+  "queued" | "running" | "succeeded" | "failed" | "timed_out" | "expired";
 
 type OptimizationJobStatusResponse = {
   job_id: string;

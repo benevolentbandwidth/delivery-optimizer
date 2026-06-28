@@ -1,4 +1,4 @@
-export type DeliveryStatus = 'pending' | 'completed' | 'failed';
+export type DeliveryStatus = "pending" | "completed" | "failed";
 
 export type DeliveryStop = {
   id: string;

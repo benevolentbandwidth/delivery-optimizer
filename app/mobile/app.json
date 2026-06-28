@@ -11,9 +11,7 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "LSApplicationQueriesSchemes": [
-          "comgooglemaps"
-        ]
+        "LSApplicationQueriesSchemes": ["comgooglemaps"]
       }
     },
     "android": {

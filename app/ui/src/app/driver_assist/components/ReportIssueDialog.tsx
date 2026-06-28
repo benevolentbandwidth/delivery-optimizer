@@ -1,9 +1,7 @@
 import { styles } from "../styles";
 
 export type ReportReason =
-  | "Customer unavailable"
-  | "Can't access location"
-  | "Other";
+  "Customer unavailable" | "Can't access location" | "Other";
 
 type ReportIssueDialogProps = {
   reason: ReportReason;

@@ -38,7 +38,10 @@ export const AutocompleteDropdown: React.FC<AutocompleteDropdownProps> = ({
             }`}
           >
             <div className="flex items-center">
-              <span aria-hidden="true" className="text-gray-400 mr-2 text-xs shrink-0">
+              <span
+                aria-hidden="true"
+                className="text-gray-400 mr-2 text-xs shrink-0"
+              >
                 📍
               </span>
               <p className="flex-1 text-gray-900 truncate">

@@ -5,6 +5,7 @@ Native mobile application for delivery drivers built with React Native and Expo.
 ## Overview
 
 This is the mobile client for the Delivery Optimizer platform, part of a larger monorepo that includes:
+
 - **UI**: Next.js web dashboard (`app/ui`)
 - **API**: C++ backend server (`app/api`)
 - **Mobile**: React Native driver app (this directory)

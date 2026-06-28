@@ -135,7 +135,7 @@ curl -f http://127.0.0.1:8080/health
 Expected output contains:
 
 ```json
-{"status":"ok"}
+{ "status": "ok" }
 ```
 
 ## 7) LSP, lint, and format checks

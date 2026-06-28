@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import type { DeliveryStop } from './types';
+import React, { useEffect, useState } from "react";
+import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import type { DeliveryStop } from "./types";
 
 type Props = {
   stop: DeliveryStop;
@@ -27,9 +27,9 @@ export default function DeliveryCard({
   onCancelReport,
   onSubmitFailure,
 }: Props) {
-  const [failureReason, setFailureReason] = useState('');
-  const isCompleted = stop.status === 'completed';
-  const isFailed = stop.status === 'failed';
+  const [failureReason, setFailureReason] = useState("");
+  const isCompleted = stop.status === "completed";
+  const isFailed = stop.status === "failed";
   const isDone = isCompleted || isFailed;
   const canSubmitFailure = failureReason.trim().length > 0;
   const completedAtText = stop.completedAt
@@ -38,7 +38,7 @@ export default function DeliveryCard({
 
   useEffect(() => {
     if (isReporting) {
-      setFailureReason('');
+      setFailureReason("");
     }
   }, [isReporting]);
 
@@ -85,11 +85,15 @@ export default function DeliveryCard({
           />
 
           {isCompleted && completedAtText ? (
-            <Text style={styles.statusText}>Completed at: {completedAtText}</Text>
+            <Text style={styles.statusText}>
+              Completed at: {completedAtText}
+            </Text>
           ) : null}
 
           {isFailed && stop.failureReason ? (
-            <Text style={styles.statusText}>Failure reason: {stop.failureReason}</Text>
+            <Text style={styles.statusText}>
+              Failure reason: {stop.failureReason}
+            </Text>
           ) : null}
 
           {!isDone && !isReporting && (
@@ -149,110 +153,110 @@ export default function DeliveryCard({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#f3f4f6',
+    backgroundColor: "#f3f4f6",
     borderRadius: 24,
     padding: 18,
     marginBottom: 14,
   },
   completedCard: {
-    backgroundColor: '#e5e7eb',
+    backgroundColor: "#e5e7eb",
   },
   failedCard: {
-    backgroundColor: '#fee2e2',
+    backgroundColor: "#fee2e2",
   },
   headerRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    alignItems: "flex-start",
   },
   statusCircle: {
     width: 22,
     height: 22,
     borderRadius: 11,
     borderWidth: 2,
-    borderColor: '#d1d5db',
-    backgroundColor: '#fff',
+    borderColor: "#d1d5db",
+    backgroundColor: "#fff",
     marginTop: 4,
     marginRight: 12,
   },
   completedCircle: {
-    backgroundColor: '#22c55e',
-    borderColor: '#22c55e',
+    backgroundColor: "#22c55e",
+    borderColor: "#22c55e",
   },
   failedCircle: {
-    backgroundColor: '#ef4444',
-    borderColor: '#ef4444',
+    backgroundColor: "#ef4444",
+    borderColor: "#ef4444",
   },
   textBlock: {
     flex: 1,
   },
   stopText: {
     fontSize: 24,
-    fontWeight: '700',
+    fontWeight: "700",
     marginBottom: 2,
-    color: '#111827',
+    color: "#111827",
   },
   nameText: {
     fontSize: 16,
-    color: '#6b7280',
+    color: "#6b7280",
     marginBottom: 2,
   },
   phoneText: {
     fontSize: 15,
-    color: '#6b7280',
+    color: "#6b7280",
     marginBottom: 4,
   },
   addressText: {
     fontSize: 16,
-    color: '#374151',
+    color: "#374151",
   },
   expandedSection: {
     marginTop: 16,
     paddingTop: 14,
     borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
+    borderTopColor: "#e5e7eb",
   },
   metaText: {
     fontSize: 16,
-    color: '#111827',
+    color: "#111827",
     marginBottom: 12,
   },
   noteInput: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 16,
     padding: 12,
     borderWidth: 1,
-    borderColor: '#d1d5db',
+    borderColor: "#d1d5db",
     marginBottom: 12,
     minHeight: 72,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
   },
   statusText: {
     fontSize: 14,
-    color: '#374151',
+    color: "#374151",
     marginBottom: 12,
   },
   buttonRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 8,
   },
   actionButton: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 14,
     paddingVertical: 12,
-    alignItems: 'center',
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: "#e5e7eb",
   },
   actionText: {
-    fontWeight: '600',
-    color: '#111827',
+    fontWeight: "600",
+    color: "#111827",
   },
   disabledButton: {
-    backgroundColor: '#f9fafb',
-    borderColor: '#d1d5db',
+    backgroundColor: "#f9fafb",
+    borderColor: "#d1d5db",
   },
   disabledText: {
-    color: '#9ca3af',
+    color: "#9ca3af",
   },
 });

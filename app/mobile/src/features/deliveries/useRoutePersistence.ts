@@ -1,14 +1,14 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useEffect, useState } from 'react';
-import type { Dispatch, SetStateAction } from 'react';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useEffect, useState } from "react";
+import type { Dispatch, SetStateAction } from "react";
 
 import {
   createPersistedRouteState,
   parsePersistedRouteState,
-} from './importSession';
-import type { DriverRoute } from './types';
+} from "./importSession";
+import type { DriverRoute } from "./types";
 
-const ROUTE_STORAGE_KEY = 'driver-assist.active-route.v1';
+const ROUTE_STORAGE_KEY = "driver-assist.active-route.v1";
 const MAX_ROUTE_AGE_MS = 24 * 60 * 60 * 1000;
 
 type RouteSetter = SetStateAction<DriverRoute | null>;
@@ -62,7 +62,7 @@ export function useRoutePersistence() {
 }
 
 async function loadPersistedRoute(
-  setStorageAvailable: Dispatch<SetStateAction<boolean>>
+  setStorageAvailable: Dispatch<SetStateAction<boolean>>,
 ): Promise<DriverRoute | null> {
   let savedValue: string | null;
 
@@ -97,7 +97,7 @@ async function loadPersistedRoute(
 
 async function persistRoute(
   nextRoute: DriverRoute | null,
-  setStorageAvailable: Dispatch<SetStateAction<boolean>>
+  setStorageAvailable: Dispatch<SetStateAction<boolean>>,
 ) {
   try {
     if (!nextRoute) {
@@ -114,7 +114,7 @@ async function persistRoute(
 }
 
 async function clearPersistedRoute(
-  setStorageAvailable: Dispatch<SetStateAction<boolean>>
+  setStorageAvailable: Dispatch<SetStateAction<boolean>>,
 ) {
   try {
     await AsyncStorage.removeItem(ROUTE_STORAGE_KEY);

@@ -1,6 +1,6 @@
-import { Platform, Share } from 'react-native';
+import { Platform, Share } from "react-native";
 
-import type { DriverRoute } from './types';
+import type { DriverRoute } from "./types";
 
 export type EndOfShiftSummary = {
   version: 1;
@@ -17,26 +17,35 @@ export type EndOfShiftSummary = {
 
 export async function exportEndOfShiftSummary(
   route: DriverRoute,
-  endReason: string
+  endReason: string,
 ): Promise<void> {
   const summary = createEndOfShiftSummary(route, endReason);
   const json = JSON.stringify(summary, null, 2);
 
-  if (Platform.OS === 'web' && typeof document !== 'undefined') {
+  if (Platform.OS === "web" && typeof document !== "undefined") {
     downloadJsonFile(json, buildFileName(summary.endedAt));
     return;
   }
 
   await Share.share({
-    title: 'End of Shift Summary',
+    title: "End of Shift Summary",
     message: json,
   });
 }
 
-function createEndOfShiftSummary(route: DriverRoute, endReason: string): EndOfShiftSummary {
-  const completedStops = route.stops.filter((stop) => stop.status === 'completed').length;
-  const failedStops = route.stops.filter((stop) => stop.status === 'failed').length;
-  const pendingStops = route.stops.filter((stop) => stop.status === 'pending').length;
+function createEndOfShiftSummary(
+  route: DriverRoute,
+  endReason: string,
+): EndOfShiftSummary {
+  const completedStops = route.stops.filter(
+    (stop) => stop.status === "completed",
+  ).length;
+  const failedStops = route.stops.filter(
+    (stop) => stop.status === "failed",
+  ).length;
+  const pendingStops = route.stops.filter(
+    (stop) => stop.status === "pending",
+  ).length;
   const trimmedReason = endReason.trim();
 
   return {
@@ -54,9 +63,9 @@ function createEndOfShiftSummary(route: DriverRoute, endReason: string): EndOfSh
 }
 
 function downloadJsonFile(json: string, fileName: string) {
-  const blob = new Blob([json], { type: 'application/json' });
+  const blob = new Blob([json], { type: "application/json" });
   const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
+  const link = document.createElement("a");
 
   link.href = url;
   link.download = fileName;
@@ -67,6 +76,6 @@ function downloadJsonFile(json: string, fileName: string) {
 }
 
 function buildFileName(timestamp: string) {
-  const safeTimestamp = timestamp.replace(/[:.]/g, '-');
+  const safeTimestamp = timestamp.replace(/[:.]/g, "-");
   return `end_of_shift_${safeTimestamp}.json`;
 }

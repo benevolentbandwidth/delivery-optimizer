@@ -1,5 +1,5 @@
-import * as DocumentPicker from 'expo-document-picker';
-import React, { useEffect, useState } from 'react';
+import * as DocumentPicker from "expo-document-picker";
+import React, { useEffect, useState } from "react";
 import {
   Alert,
   LayoutAnimation,
@@ -15,25 +15,26 @@ import {
   TouchableOpacity,
   UIManager,
   View,
-} from 'react-native';
+} from "react-native";
 
-import DeliveryCard from '@/src/features/deliveries/DeliveryCard';
-import { exportEndOfShiftSummary } from '@/src/features/deliveries/endShift';
-import { loadSessionFromDocument } from '@/src/features/deliveries/importSession';
-import { transformSessionToDriverRoute } from '@/src/features/deliveries/transformSession';
-import { useRoutePersistence } from '@/src/features/deliveries/useRoutePersistence';
-import type { DeliveryStop } from '@/src/features/deliveries/types';
+import DeliveryCard from "@/src/features/deliveries/DeliveryCard";
+import { exportEndOfShiftSummary } from "@/src/features/deliveries/endShift";
+import { loadSessionFromDocument } from "@/src/features/deliveries/importSession";
+import { transformSessionToDriverRoute } from "@/src/features/deliveries/transformSession";
+import { useRoutePersistence } from "@/src/features/deliveries/useRoutePersistence";
+import type { DeliveryStop } from "@/src/features/deliveries/types";
 
-if (Platform.OS === 'android') {
+if (Platform.OS === "android") {
   UIManager.setLayoutAnimationEnabledExperimental?.(true);
 }
 
 export default function HomeScreen() {
-  const { route, setRoute, clearRoute, isRestored, storageAvailable } = useRoutePersistence();
+  const { route, setRoute, clearRoute, isRestored, storageAvailable } =
+    useRoutePersistence();
   const [openId, setOpenId] = useState<string | null>(null);
   const [reportingStopId, setReportingStopId] = useState<string | null>(null);
   const [isEndShiftModalVisible, setIsEndShiftModalVisible] = useState(false);
-  const [endReason, setEndReason] = useState('');
+  const [endReason, setEndReason] = useState("");
   const [isEndingRoute, setIsEndingRoute] = useState(false);
 
   useEffect(() => {
@@ -46,21 +47,23 @@ export default function HomeScreen() {
       return;
     }
 
-    const firstPendingStop = route.stops.find((stop) => stop.status === 'pending');
+    const firstPendingStop = route.stops.find(
+      (stop) => stop.status === "pending",
+    );
     setOpenId(firstPendingStop?.id || route.stops[0]?.id || null);
   }, [route, openId]);
 
   const resetTransientState = () => {
     setOpenId(null);
     setReportingStopId(null);
-    setEndReason('');
+    setEndReason("");
     setIsEndShiftModalVisible(false);
   };
 
   const handleImportJson = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: 'application/json',
+        type: "application/json",
         copyToCacheDirectory: true,
       });
 
@@ -68,7 +71,7 @@ export default function HomeScreen() {
 
       const file = result.assets?.[0];
       if (!file) {
-        Alert.alert('Import failed', 'No file selected.');
+        Alert.alert("Import failed", "No file selected.");
         return;
       }
 
@@ -77,10 +80,10 @@ export default function HomeScreen() {
       setRoute(newRoute);
       setOpenId(newRoute.stops[0]?.id || null);
       setReportingStopId(null);
-      setEndReason('');
+      setEndReason("");
     } catch (error) {
-      console.error('Failed to import route JSON', error);
-      Alert.alert('Import failed', 'Please upload a valid JSON file.');
+      console.error("Failed to import route JSON", error);
+      Alert.alert("Import failed", "Please upload a valid JSON file.");
     }
   };
 
@@ -118,7 +121,7 @@ export default function HomeScreen() {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
 
     updateStop(stopId, {
-      status: 'completed',
+      status: "completed",
       completedAt: new Date().toISOString(),
     });
 
@@ -138,14 +141,17 @@ export default function HomeScreen() {
     const trimmedReason = reason.trim();
 
     if (!trimmedReason) {
-      Alert.alert('Failure reason required', 'Please enter a reason before submitting.');
+      Alert.alert(
+        "Failure reason required",
+        "Please enter a reason before submitting.",
+      );
       return;
     }
 
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
 
     updateStop(stopId, {
-      status: 'failed',
+      status: "failed",
       failureReason: trimmedReason,
     });
 
@@ -157,7 +163,7 @@ export default function HomeScreen() {
     const stop = route?.stops.find((routeStop) => routeStop.id === stopId);
 
     if (!stop) {
-      Alert.alert('Navigation failed', 'We could not find that stop.');
+      Alert.alert("Navigation failed", "We could not find that stop.");
       return;
     }
 
@@ -174,7 +180,7 @@ export default function HomeScreen() {
         return;
       }
 
-      if (Platform.OS === 'ios') {
+      if (Platform.OS === "ios") {
         await Linking.openURL(appleMapsUrl);
         return;
       }
@@ -186,8 +192,11 @@ export default function HomeScreen() {
 
       await Linking.openURL(googleMapsWebUrl);
     } catch (error) {
-      console.error('Failed to open navigation app', error);
-      Alert.alert('Navigation failed', 'We could not open a navigation app for this stop.');
+      console.error("Failed to open navigation app", error);
+      Alert.alert(
+        "Navigation failed",
+        "We could not open a navigation app for this stop.",
+      );
     }
   };
   const handleFinishRoute = () => {
@@ -195,7 +204,7 @@ export default function HomeScreen() {
       return;
     }
 
-    setEndReason('');
+    setEndReason("");
     setIsEndShiftModalVisible(true);
   };
 
@@ -205,7 +214,7 @@ export default function HomeScreen() {
     }
 
     setIsEndShiftModalVisible(false);
-    setEndReason('');
+    setEndReason("");
   };
 
   const handleConfirmEndShift = async () => {
@@ -219,20 +228,28 @@ export default function HomeScreen() {
       await exportEndOfShiftSummary(route, endReason);
       clearRoute();
       resetTransientState();
-      Alert.alert('Shift ended', 'Your route was cleared after exporting the shift summary.');
+      Alert.alert(
+        "Shift ended",
+        "Your route was cleared after exporting the shift summary.",
+      );
     } catch (error) {
-      console.error('Failed to end route', error);
-      Alert.alert('End shift failed', 'We could not export the end-of-shift summary.');
+      console.error("Failed to end route", error);
+      Alert.alert(
+        "End shift failed",
+        "We could not export the end-of-shift summary.",
+      );
     } finally {
       setIsEndingRoute(false);
     }
   };
 
   const stops = route?.stops || [];
-  const pendingStops = stops.filter((stop) => stop.status === 'pending');
-  const historicalStops = stops.filter((stop) => stop.status !== 'pending');
-  const completedCount = stops.filter((stop) => stop.status === 'completed').length;
-  const failedCount = stops.filter((stop) => stop.status === 'failed').length;
+  const pendingStops = stops.filter((stop) => stop.status === "pending");
+  const historicalStops = stops.filter((stop) => stop.status !== "pending");
+  const completedCount = stops.filter(
+    (stop) => stop.status === "completed",
+  ).length;
+  const failedCount = stops.filter((stop) => stop.status === "failed").length;
   const progress = stops.length > 0 ? completedCount / stops.length : 0;
 
   if (!isRestored) {
@@ -251,7 +268,10 @@ export default function HomeScreen() {
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.uploadScreen}>
           <Text style={styles.appHeader}>Driver Assist</Text>
-          <TouchableOpacity style={styles.uploadButton} onPress={handleImportJson}>
+          <TouchableOpacity
+            style={styles.uploadButton}
+            onPress={handleImportJson}
+          >
             <Text style={styles.uploadButtonText}>Upload JSON</Text>
           </TouchableOpacity>
           {storageAvailable ? (
@@ -266,7 +286,10 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={false}
+      >
         <Text style={styles.appHeader}>Driver Assist</Text>
 
         <View style={styles.summaryCard}>
@@ -282,7 +305,9 @@ export default function HomeScreen() {
           </View>
 
           <View style={styles.progressTrack}>
-            <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
+            <View
+              style={[styles.progressFill, { width: `${progress * 100}%` }]}
+            />
           </View>
 
           <View style={styles.statsRow}>
@@ -302,7 +327,10 @@ export default function HomeScreen() {
             </View>
           </View>
 
-          <Pressable style={styles.finishRouteButton} onPress={handleFinishRoute}>
+          <Pressable
+            style={styles.finishRouteButton}
+            onPress={handleFinishRoute}
+          >
             <Text style={styles.finishRouteButtonText}>Finish Route</Text>
           </Pressable>
         </View>
@@ -355,15 +383,17 @@ export default function HomeScreen() {
         <View style={styles.modalBackdrop}>
           <View style={styles.modalCard}>
             <Text style={styles.modalTitle}>
-              {pendingStops.length > 0 ? 'End Route With Incomplete Stops?' : 'Finish Route?'}
+              {pendingStops.length > 0
+                ? "End Route With Incomplete Stops?"
+                : "Finish Route?"}
             </Text>
 
             <Text style={styles.modalBody}>
               {pendingStops.length > 0
                 ? `You have ${pendingStops.length} incomplete stop${
-                    pendingStops.length === 1 ? '' : 's'
+                    pendingStops.length === 1 ? "" : "s"
                   }. End anyway?`
-                : 'This will export an end-of-shift summary and reset the active route.'}
+                : "This will export an end-of-shift summary and reset the active route."}
             </Text>
 
             <TextInput
@@ -375,17 +405,23 @@ export default function HomeScreen() {
             />
 
             <View style={styles.modalButtonRow}>
-              <Pressable style={styles.modalSecondaryButton} onPress={handleCancelEndShift}>
+              <Pressable
+                style={styles.modalSecondaryButton}
+                onPress={handleCancelEndShift}
+              >
                 <Text style={styles.modalSecondaryButtonText}>Cancel</Text>
               </Pressable>
 
               <Pressable
-                style={[styles.modalPrimaryButton, isEndingRoute && styles.disabledPrimaryButton]}
+                style={[
+                  styles.modalPrimaryButton,
+                  isEndingRoute && styles.disabledPrimaryButton,
+                ]}
                 onPress={handleConfirmEndShift}
                 disabled={isEndingRoute}
               >
                 <Text style={styles.modalPrimaryButtonText}>
-                  {isEndingRoute ? 'Ending...' : 'End Shift'}
+                  {isEndingRoute ? "Ending..." : "End Shift"}
                 </Text>
               </Pressable>
             </View>
@@ -399,103 +435,103 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: "#ffffff",
   },
   uploadScreen: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 24,
   },
   appHeader: {
     fontSize: 32,
-    fontWeight: '700',
-    color: '#111827',
+    fontWeight: "700",
+    color: "#111827",
     marginBottom: 16,
   },
   uploadButton: {
-    backgroundColor: '#111827',
+    backgroundColor: "#111827",
     borderRadius: 16,
     paddingHorizontal: 20,
     paddingVertical: 14,
   },
   uploadButtonText: {
-    color: '#ffffff',
-    fontWeight: '600',
+    color: "#ffffff",
+    fontWeight: "600",
     fontSize: 16,
   },
   uploadHint: {
     marginTop: 12,
     fontSize: 14,
-    color: '#6b7280',
-    textAlign: 'center',
+    color: "#6b7280",
+    textAlign: "center",
   },
   container: {
     padding: 16,
   },
   summaryCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: "#ffffff",
     borderRadius: 24,
     padding: 20,
     marginBottom: 16,
     borderWidth: 2,
-    borderColor: '#4b5563',
+    borderColor: "#4b5563",
   },
   headerLabel: {
     fontSize: 18,
-    color: '#6b7280',
+    color: "#6b7280",
     marginBottom: 8,
   },
   driverName: {
     fontSize: 36,
-    fontWeight: '700',
-    color: '#111827',
+    fontWeight: "700",
+    color: "#111827",
   },
   routeLabel: {
     fontSize: 18,
-    color: '#374151',
+    color: "#374151",
     marginBottom: 18,
   },
   progressHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 8,
   },
   progressText: {
     fontSize: 15,
-    color: '#111827',
+    color: "#111827",
   },
   progressTrack: {
     height: 12,
-    backgroundColor: '#e5e7eb',
+    backgroundColor: "#e5e7eb",
     borderRadius: 999,
-    overflow: 'hidden',
+    overflow: "hidden",
     marginBottom: 18,
   },
   progressFill: {
     height: 12,
-    backgroundColor: '#22c55e',
+    backgroundColor: "#22c55e",
   },
   statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    backgroundColor: '#f3f4f6',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    backgroundColor: "#f3f4f6",
     borderRadius: 18,
     paddingVertical: 18,
     marginBottom: 16,
   },
   statBlock: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: "center",
   },
   statNumber: {
     fontSize: 28,
-    fontWeight: '700',
-    color: '#111827',
+    fontWeight: "700",
+    color: "#111827",
   },
   statLabel: {
     fontSize: 14,
-    color: '#4b5563',
+    color: "#4b5563",
     marginTop: 4,
   },
   historySection: {
@@ -503,81 +539,81 @@ const styles = StyleSheet.create({
   },
   historyTitle: {
     fontSize: 20,
-    fontWeight: '700',
-    color: '#111827',
+    fontWeight: "700",
+    color: "#111827",
     marginBottom: 10,
   },
   finishRouteButton: {
-    backgroundColor: '#111827',
+    backgroundColor: "#111827",
     borderRadius: 16,
     paddingVertical: 14,
-    alignItems: 'center',
+    alignItems: "center",
   },
   finishRouteButtonText: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   modalBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(17, 24, 39, 0.45)',
-    justifyContent: 'center',
+    backgroundColor: "rgba(17, 24, 39, 0.45)",
+    justifyContent: "center",
     padding: 20,
   },
   modalCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: "#ffffff",
     borderRadius: 24,
     padding: 20,
   },
   modalTitle: {
     fontSize: 22,
-    fontWeight: '700',
-    color: '#111827',
+    fontWeight: "700",
+    color: "#111827",
     marginBottom: 8,
   },
   modalBody: {
     fontSize: 16,
-    color: '#4b5563',
+    color: "#4b5563",
     marginBottom: 14,
   },
   modalInput: {
-    backgroundColor: '#f9fafb',
+    backgroundColor: "#f9fafb",
     borderRadius: 16,
     padding: 12,
     borderWidth: 1,
-    borderColor: '#d1d5db',
+    borderColor: "#d1d5db",
     minHeight: 88,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
     marginBottom: 16,
   },
   modalButtonRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 10,
   },
   modalSecondaryButton: {
     flex: 1,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#d1d5db',
+    borderColor: "#d1d5db",
     paddingVertical: 12,
-    alignItems: 'center',
+    alignItems: "center",
   },
   modalSecondaryButtonText: {
-    color: '#374151',
-    fontWeight: '600',
+    color: "#374151",
+    fontWeight: "600",
   },
   modalPrimaryButton: {
     flex: 1,
     borderRadius: 14,
-    backgroundColor: '#111827',
+    backgroundColor: "#111827",
     paddingVertical: 12,
-    alignItems: 'center',
+    alignItems: "center",
   },
   disabledPrimaryButton: {
-    backgroundColor: '#9ca3af',
+    backgroundColor: "#9ca3af",
   },
   modalPrimaryButtonText: {
-    color: '#ffffff',
-    fontWeight: '700',
+    color: "#ffffff",
+    fontWeight: "700",
   },
 });
