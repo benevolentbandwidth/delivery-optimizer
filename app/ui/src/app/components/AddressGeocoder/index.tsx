@@ -545,7 +545,7 @@ export default function AddressGeocoder() {
                 ))}
               </div>
               <p className="mt-3 text-xs text-gray-500">
-                💡 Type at least 3 characters to see address suggestions
+                💡 Type at least 4 characters to see address suggestions
               </p>
             </div>
 
@@ -604,7 +604,7 @@ export default function AddressGeocoder() {
                 ))}
               </div>
               <p className="mt-3 text-xs text-gray-500">
-                💡 Type at least 3 characters to see address suggestions
+                💡 Type at least 4 characters to see address suggestions
               </p>
             </div>
           </div>

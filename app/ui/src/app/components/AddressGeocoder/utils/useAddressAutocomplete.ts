@@ -23,7 +23,7 @@ export const useAddressAutocomplete = (
   }, []);
 
   const fetchSuggestions = useCallback(async (query: string) => {
-    if (query.length < 3) {
+    if (query.length < 4) {
       setSuggestions([]);
       setShowSuggestions(false);
       return;
@@ -44,7 +44,7 @@ export const useAddressAutocomplete = (
   const debouncedFetch = useCallback(
     (query: string) => {
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
-      debounceTimerRef.current = setTimeout(() => fetchSuggestions(query), 300);
+      debounceTimerRef.current = setTimeout(() => fetchSuggestions(query), 200);
     },
     [fetchSuggestions],
   );

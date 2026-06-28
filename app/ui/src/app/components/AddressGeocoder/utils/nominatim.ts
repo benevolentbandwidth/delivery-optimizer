@@ -62,9 +62,9 @@ export async function geocodeAddress(
 /** Autocomplete — returns up to `limit` suggestions. */
 export async function autocompleteAddress(
   query: string,
-  limit = 5,
+  limit = 15,
 ): Promise<NominatimResult[]> {
-  if (query.length < 3) return [];
+  if (query.length < 4) return [];
 
   await throttle();
 
@@ -86,5 +86,6 @@ export async function autocompleteAddress(
     );
   }
 
-  return response.json();
+  const data: NominatimResult[] = await response.json();
+  return data.filter((r) => r.address?.state === "California");
 }
