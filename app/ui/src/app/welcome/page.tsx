@@ -195,29 +195,6 @@ export default function WelcomePage() {
           <div className="welcome-cards">
             <div className="welcome-card">
               <Image
-                src="/icons/icon-resume-session.png"
-                alt=""
-                width={64}
-                height={64}
-                className="welcome-card-icon"
-                aria-hidden="true"
-              />
-              <p className="welcome-card-title">Resume session</p>
-              <p className="welcome-card-desc">
-                Import a saved CSV file from a previous session to continue
-                managing and optimizing routes.
-              </p>
-              <button
-                className="welcome-card-cta"
-                aria-label="Resume session — continue"
-                onClick={() => router.push("/upload-save-point")}
-              >
-                Continue
-              </button>
-            </div>
-
-            <div className="welcome-card">
-              <Image
                 src="/icons/icon-new-session.png"
                 alt=""
                 width={64}
@@ -234,6 +211,29 @@ export default function WelcomePage() {
                 className="welcome-card-cta"
                 aria-label="Start new session — continue"
                 onClick={handleNewSession}
+              >
+                Continue
+              </button>
+            </div>
+
+            <div className="welcome-card">
+              <Image
+                src="/icons/icon-resume-session.png"
+                alt=""
+                width={64}
+                height={64}
+                className="welcome-card-icon"
+                aria-hidden="true"
+              />
+              <p className="welcome-card-title">Resume session</p>
+              <p className="welcome-card-desc">
+                Import a saved CSV file from a previous session to continue
+                managing and optimizing routes.
+              </p>
+              <button
+                className="welcome-card-cta"
+                aria-label="Resume session — continue"
+                onClick={() => router.push("/upload-save-point")}
               >
                 Continue
               </button>

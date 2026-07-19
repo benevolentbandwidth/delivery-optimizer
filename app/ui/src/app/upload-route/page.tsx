@@ -119,48 +119,64 @@ export default function UploadRoutePage() {
         .upload-dropzone {
           width: 100%;
           max-width: 580px;
-          border: 1.5px dashed #ccc;
-          border-radius: 12px;
-          padding: 52px 24px;
+          height: 200px;
+          border: 1px dashed #dcdbd8;
+          border-radius: 6px;
+          padding: 24px 24px 16px;
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          gap: 10px;
-          cursor: pointer;
-          background: #f9f9f8;
+          gap: 8px;
+          background: #f8f7f5;
           transition: border-color 0.15s, background 0.15s;
-          margin-bottom: 16px;
-          min-height: 160px;
+          margin-bottom: 8px;
         }
 
         .upload-dropzone.dragging {
-          border-color: #4a8c7a;
-          background: #f0f7f5;
+          border-color: #57ac91;
+          background: #f0faf6;
         }
 
-        .upload-dropzone-icon { color: #555; margin-bottom: 4px; }
+        .upload-dropzone-icon { color: #3d3d3c; margin-bottom: 4px; display: flex; }
 
         .upload-dropzone-text {
-          font-size: 14px;
-          color: #333;
+          font-size: 16px;
+          color: #272725;
           text-align: center;
         }
 
         .upload-dropzone-browse {
           font-size: 14px;
-          color: #4a8c7a;
-          font-weight: 500;
+          font-weight: 600;
+          color: #272725;
           text-align: center;
+          background: none;
+          border: none;
+          cursor: pointer;
+          font-family: inherit;
+          padding: 8px 16px;
+          border-radius: 4px;
+          transition: background 0.15s;
+        }
+
+        .upload-dropzone-browse:hover { background: #f6f5f2; }
+
+        .upload-dropzone-description {
+          width: 100%;
+          max-width: 580px;
+          font-size: 14px;
+          color: #464544;
+          margin-bottom: 24px;
         }
 
         .upload-file-row {
           width: 100%;
           max-width: 580px;
-          background: #eef5f3;
-          border: 1px solid #d0e5df;
-          border-radius: 8px;
-          padding: 10px 16px;
+          background: #d5f2e8;
+          border: none;
+          border-radius: 6px;
+          padding: 16px;
           display: flex;
           align-items: center;
           gap: 10px;
@@ -306,7 +322,6 @@ export default function UploadRoutePage() {
           {/* Drop zone — shows spinner while file is being read */}
           <div
             className={`upload-dropzone${isDragging ? " dragging" : ""}`}
-            onClick={() => !isProcessing && inputRef.current?.click()}
             onDragEnter={handleDragEnter}
             onDragOver={(e) => e.preventDefault()}
             onDragLeave={handleDragLeave}
@@ -317,36 +332,23 @@ export default function UploadRoutePage() {
             ) : (
               <>
                 <div className="upload-dropzone-icon">
-                  <svg width="32" height="40" viewBox="0 0 32 40" fill="none">
-                    <rect
-                      x="1"
-                      y="1"
-                      width="22"
-                      height="34"
-                      rx="3"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      fill="none"
-                    />
+                  <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
                     <path
-                      d="M7 10h10M7 15h10M7 20h6"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                    />
-                    <path
-                      d="M15 26v-7M15 19l-3 3M15 19l3 3"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
+                      d="M18.667 31.6112H21.4449V23.7083L24.6116 26.875L26.5557 24.9166L20.0003 18.4721L13.5003 24.9721L15.4587 26.9166L18.667 23.7083V31.6112ZM9.44491 36.6666C8.69491 36.6666 8.04435 36.3912 7.49324 35.8404C6.94241 35.2893 6.66699 34.6387 6.66699 33.8887V6.11123C6.66699 5.36123 6.94241 4.71068 7.49324 4.15956C8.04435 3.60873 8.69491 3.33331 9.44491 3.33331H23.917L33.3337 12.75V33.8887C33.3337 34.6387 33.0582 35.2893 32.5074 35.8404C31.9563 36.3912 31.3057 36.6666 30.5557 36.6666H9.44491ZM22.5282 14.0554V6.11123H9.44491V33.8887H30.5557V14.0554H22.5282Z"
+                      fill="currentColor"
                     />
                   </svg>
                 </div>
                 <p className="upload-dropzone-text">
                   Drag and drop .json files here, or
                 </p>
-                <p className="upload-dropzone-browse">Browse files</p>
+                <button
+                  type="button"
+                  className="upload-dropzone-browse"
+                  onClick={() => inputRef.current?.click()}
+                >
+                  Browse files
+                </button>
               </>
             )}
             <input
@@ -362,6 +364,11 @@ export default function UploadRoutePage() {
             />
           </div>
 
+          <p className="upload-dropzone-description">
+            Import your route file to begin. Maximum file size of {MAX_FILE_MB}{" "}
+            MB.
+          </p>
+
           {file && !isProcessing && (
             <div className="upload-file-row">
               <svg
@@ -369,7 +376,7 @@ export default function UploadRoutePage() {
                 height="16"
                 viewBox="0 0 24 24"
                 fill="none"
-                style={{ color: "#4a8c7a", flexShrink: 0 }}
+                style={{ color: "#3d3d3c", flexShrink: 0 }}
               >
                 <path
                   d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"
