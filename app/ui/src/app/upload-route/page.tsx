@@ -369,6 +369,7 @@ export default function UploadRoutePage() {
                 height="16"
                 viewBox="0 0 24 24"
                 fill="none"
+                aria-hidden="true"
                 style={{ color: "#4a8c7a", flexShrink: 0 }}
               >
                 <path

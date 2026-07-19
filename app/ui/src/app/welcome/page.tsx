@@ -78,6 +78,7 @@ export default function WelcomePage() {
 
         .welcome-cards {
           display: flex;
+          flex-wrap: wrap;
           width: 100%;
           max-width: 640px;
           background: #ffffff;
@@ -89,16 +90,14 @@ export default function WelcomePage() {
 
         .welcome-card {
           flex: 1;
+          min-width: 220px;
           padding: 32px 28px 28px;
           display: flex;
           flex-direction: column;
           align-items: flex-start;
           gap: 10px;
-          transition: background 0.15s;
           position: relative;
         }
-
-        .welcome-card:hover { background: #f9f9f8; }
 
         .welcome-card + .welcome-card::before {
           content: '';
@@ -147,7 +146,7 @@ export default function WelcomePage() {
           transition: background 0.15s;
         }
 
-        .welcome-card:hover .welcome-card-cta { background: #3d7a6a; }
+        .welcome-card-cta:hover { background: #3d7a6a; }
 
         .welcome-card-cta:focus-visible {
           outline: 2px solid #4a8c7a;
@@ -180,6 +179,39 @@ export default function WelcomePage() {
           position: relative;
           z-index: 1;
         }
+
+        @media (max-width: 520px) {
+          .welcome-cards {
+            flex-wrap: wrap;
+          }
+
+          .welcome-card {
+            min-width: 100%;
+          }
+
+          .welcome-card + .welcome-card::before {
+            left: 24px;
+            right: 24px;
+            top: 0;
+            bottom: auto;
+            width: auto;
+            height: 1px;
+          }
+        }
+
+        @media (max-height: 640px) {
+          .welcome-content {
+            justify-content: flex-start;
+            padding-top: 32px;
+            padding-bottom: 72px;
+          }
+
+          .welcome-back {
+            position: static;
+            transform: none;
+            margin-top: 24px;
+          }
+        }
       `}</style>
 
       <div className="welcome-root">
@@ -201,6 +233,7 @@ export default function WelcomePage() {
                 height={64}
                 className="welcome-card-icon"
                 aria-hidden="true"
+                priority
               />
               <p className="welcome-card-title">Resume session</p>
               <p className="welcome-card-desc">
@@ -224,6 +257,7 @@ export default function WelcomePage() {
                 height={64}
                 className="welcome-card-icon"
                 aria-hidden="true"
+                priority
               />
               <p className="welcome-card-title">Start new session</p>
               <p className="welcome-card-desc">

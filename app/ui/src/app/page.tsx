@@ -67,10 +67,15 @@ export default function LandingPage() {
           text-align: center;
           max-width: 500px;
           line-height: 1.65;
+          min-height: 46px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
 
         .landing-cards {
           display: flex;
+          flex-wrap: wrap;
           width: 100%;
           max-width: 640px;
           background: #ffffff;
@@ -82,16 +87,14 @@ export default function LandingPage() {
 
         .landing-card {
           flex: 1;
+          min-width: 220px;
           padding: 32px 28px 28px;
           display: flex;
           flex-direction: column;
           align-items: flex-start;
           gap: 10px;
-          transition: background 0.15s;
           position: relative;
         }
-
-        .landing-card:hover { background: #f9f9f8; }
 
         .landing-card + .landing-card::before {
           content: '';
@@ -140,7 +143,7 @@ export default function LandingPage() {
           transition: background 0.15s;
         }
 
-        .landing-card:hover .landing-card-cta { background: #3d7a6a; }
+        .landing-card-cta:hover { background: #3d7a6a; }
 
         .landing-card-cta:focus-visible {
           outline: 2px solid #4a8c7a;
@@ -153,6 +156,25 @@ export default function LandingPage() {
           background: #ffffff !important;
           position: relative;
           z-index: 1;
+        }
+
+        @media (max-width: 520px) {
+          .landing-cards {
+            flex-wrap: wrap;
+          }
+
+          .landing-card {
+            min-width: 100%;
+          }
+
+          .landing-card + .landing-card::before {
+            left: 24px;
+            right: 24px;
+            top: 0;
+            bottom: auto;
+            width: auto;
+            height: 1px;
+          }
         }
       `}</style>
 
@@ -179,6 +201,7 @@ export default function LandingPage() {
                 height={64}
                 className="landing-card-icon"
                 aria-hidden="true"
+                priority
               />
               <p className="landing-card-title">Route manager</p>
               <p className="landing-card-desc">
@@ -202,6 +225,7 @@ export default function LandingPage() {
                 height={64}
                 className="landing-card-icon"
                 aria-hidden="true"
+                priority
               />
               <p className="landing-card-title">Driver</p>
               <p className="landing-card-desc">
