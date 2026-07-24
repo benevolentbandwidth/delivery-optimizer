@@ -129,11 +129,12 @@ function extractRoadPath(
   }
 
   const path: google.maps.LatLng[] = [];
-  for (const leg of route.legs ?? []) {
-    for (const [i, step] of (leg.steps ?? []).entries()) {
-      if (step.path?.length) {
-        path.push(...(i === 0 ? step.path : step.path.slice(1)));
-      }
+  for (const [legIndex, leg] of (route.legs ?? []).entries()) {
+    for (const [stepIndex, step] of (leg.steps ?? []).entries()) {
+      if (!step.path?.length) continue;
+      // Skip the shared boundary point between consecutive steps and legs.
+      const skipFirst = legIndex > 0 || stepIndex > 0;
+      path.push(...(skipFirst ? step.path.slice(1) : step.path));
     }
   }
   return path;
@@ -343,29 +344,13 @@ function RoutePolylinesOverlay({
     }
 
     for (const route of routes) {
+      const poly = byVehicle[route.vehicleId];
+      // Effect 1 owns polyline creation; skip until it has written a polyline.
+      if (!poly) continue;
       const committed = buildRoutePath(route, null);
       if (committed.length < 2) continue;
       const key = routeCacheKey(committed);
       const cached = directionsCacheRef.current.get(key);
-      const routeIndex = routes.findIndex(
-        (r) => r.vehicleId === route.vehicleId,
-      );
-      const strokeColor = routeColorHex(routeIndex);
-
-      let poly = byVehicle[route.vehicleId];
-      if (!poly) {
-        // Effect 1 may have cleared refs before this runs; show a path immediately.
-        const path =
-          cached && cached.path.length >= 2 ? cached.path : committed;
-        poly = new google.maps.Polyline({
-          map,
-          path,
-          ...routePolylineOptions(strokeColor),
-        });
-        byVehicle[route.vehicleId] = poly;
-        continue;
-      }
-
       if (cached && cached.path.length >= 2) {
         poly.setPath(cached.path);
       } else {
