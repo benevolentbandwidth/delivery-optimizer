@@ -13,7 +13,7 @@ type NavbarProps = {
 export default function Navbar({ onSave }: NavbarProps) {
   return (
     <header className={NAVBAR_V2_ROOT}>
-      <span className={NAVBAR_V2_LOGO}>DELIVERY OPTIMIZER</span>
+      <span className={NAVBAR_V2_LOGO}>Delivery Optimizer</span>
       <button className={NAVBAR_V2_BTN_SAVE} onClick={onSave} type="button">
         Save
       </button>

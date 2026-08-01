@@ -153,13 +153,19 @@ function buildRoutePath(
     }
     return { lat: s.lat, lng: s.lng };
   });
-  if (route.startLocation) {
-    return [
-      { lat: route.startLocation.lat, lng: route.startLocation.lng },
-      ...deliveryPoints,
-    ];
+  const points = route.startLocation
+    ? [
+        { lat: route.startLocation.lat, lng: route.startLocation.lng },
+        ...deliveryPoints,
+      ]
+    : deliveryPoints;
+  // Close the loop so the map shows the drive back home: the last stop connects
+  // to the starting point (depot, or the first stop when no depot is provided),
+  // even though the optimizer output does not include the return leg.
+  if (points.length >= 2) {
+    points.push({ ...points[0]! });
   }
-  return deliveryPoints;
+  return points;
 }
 
 function RoutePolylinesOverlay({

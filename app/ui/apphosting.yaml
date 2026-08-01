@@ -15,6 +15,10 @@ env:
     availability:
       - BUILD
       - RUNTIME
+  - variable: WHATSAPP_SEND_ROUTE_SECRET
+    secret: WHATSAPP_SEND_ROUTE_SECRET
+    availability:
+      - RUNTIME
   - variable: FEEDBACK_ENABLED
     value: "1"
   - variable: FEEDBACK_GITHUB_REPO

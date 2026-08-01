@@ -3,7 +3,7 @@
  * job, poll status, then fetch the completed result.
  */
 
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { geocodeAddress } from "@/app/components/AddressGeocoder/utils/nominatim";
@@ -16,6 +16,12 @@ import { SUPPORTED_STATES } from "@/app/edit/constants/supportedRegions";
 import { hasCachedLocationWithState } from "@/app/edit/utils/deliveryHelpers";
 import { setOptimizeResults } from "@/app/edit/utils/hasOptimizeResults";
 import { vroomToRoutes } from "@/app/edit/utils/vroomToRoutes";
+import {
+  capacityWarningMessage,
+  nextPartialApproval,
+  shouldWarnForOverCapacity,
+  type PartialApprovalEvent,
+} from "@/app/edit/lib/partialOptimizationApproval";
 import { saveEditPageDraft } from "@/lib/session/editPageDraft";
 import type {
   AddressCard,
@@ -41,6 +47,17 @@ type OptimizationJobStatusResponse = {
   status: OptimizationJobState;
   error?: string;
 };
+
+type PreflightResult =
+  | { ok: false }
+  | {
+      ok: true;
+      availableVehicles: VehicleRow[];
+      lockedVehicles: LockedVehicleRow[];
+      demandType: CapacityUnit;
+      totalDemand: number;
+      totalCapacity: number;
+    };
 
 function isLocked(v: VehicleRow): v is LockedVehicleRow {
   return v.locked && v.type !== "" && v.capacityUnit !== "";
@@ -102,6 +119,7 @@ export function useOptimize(
   const router = useRouter();
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [optimizeError, setOptimizeError] = useState<string | null>(null);
+  const [capacityWarning, setCapacityWarning] = useState<string | null>(null);
   const [geocodeFailedAddressIds, setGeocodeFailedAddressIds] = useState<
     number[]
   >([]);
@@ -119,51 +137,58 @@ export function useOptimize(
   );
   const [result, setResult] = useState<unknown>(null);
   const [needsDepotAddress, setNeedsDepotAddress] = useState(false);
+  const allowPartialRef = useRef(false);
+  const optimizeInFlightRef = useRef(false);
 
-  const optimize = useCallback(
-    async (depotAddress?: string) => {
-      setOptimizeError(null);
-      setGeocodeFailedAddressIds([]);
-      setGeocodeFailedVehicleIds([]);
-      setOutOfRegionAddressIds([]);
-      setOutOfRegionVehicleIds([]);
-      setOptimizationJobId(null);
-      setResult(null);
-      setNeedsDepotAddress(false);
+  const setPartialApproval = useCallback((event: PartialApprovalEvent) => {
+    allowPartialRef.current = nextPartialApproval(
+      allowPartialRef.current,
+      event,
+    );
+  }, []);
 
+  const clearTransientOptimizeState = useCallback(() => {
+    setOptimizeError(null);
+    setCapacityWarning(null);
+    setGeocodeFailedAddressIds([]);
+    setGeocodeFailedVehicleIds([]);
+    setOutOfRegionAddressIds([]);
+    setOutOfRegionVehicleIds([]);
+    setOptimizationJobId(null);
+    setResult(null);
+  }, []);
+
+  const runPreflight = useCallback(
+    (setError: (message: string) => void): PreflightResult => {
       const unlockedVehicle = vehicles.find((v) => !v.locked);
       const unlockedAddress = addresses.find((a) => !a.locked);
       if (unlockedVehicle || unlockedAddress) {
-        setOptimizeError(
+        setError(
           "Please confirm all vehicles and addresses before optimizing.",
         );
-        return;
+        return { ok: false };
       }
 
       const availableVehicles = vehicles.filter((v) => v.available);
       if (availableVehicles.length === 0) {
-        setOptimizeError("At least one available vehicle is required.");
-        return;
+        setError("At least one available vehicle is required.");
+        return { ok: false };
       }
       if (addresses.length === 0) {
-        setOptimizeError("At least one delivery address is required.");
-        return;
+        setError("At least one delivery address is required.");
+        return { ok: false };
       }
 
       const lockedVehicles = availableVehicles.filter(isLocked);
       if (lockedVehicles.length !== availableVehicles.length) {
-        setOptimizeError(
-          "One or more vehicles are missing type or capacity unit.",
-        );
-        return;
+        setError("One or more vehicles are missing type or capacity unit.");
+        return { ok: false };
       }
 
       const units = [...new Set(availableVehicles.map((v) => v.capacityUnit))];
       if (units.length > 1) {
-        setOptimizeError(
-          "All vehicles must use the same capacity unit to optimize.",
-        );
-        return;
+        setError("All vehicles must use the same capacity unit to optimize.");
+        return { ok: false };
       }
       const demandType = units[0] as CapacityUnit;
 
@@ -175,19 +200,87 @@ export function useOptimize(
         (sum, v) => sum + v.capacity,
         0,
       );
-      if (totalDemand > totalCapacity) {
-        setOptimizeError(
-          `Total delivery quantity (${totalDemand}) exceeds total vehicle capacity (${totalCapacity}). Add more vehicles or reduce quantities.`,
+
+      return {
+        ok: true,
+        availableVehicles,
+        lockedVehicles,
+        demandType,
+        totalDemand,
+        totalCapacity,
+      };
+    },
+    [vehicles, addresses],
+  );
+
+  const startOptimize = useCallback(() => {
+    setPartialApproval("fresh_start");
+    clearTransientOptimizeState();
+    setNeedsDepotAddress(false);
+
+    const preflight = runPreflight(setOptimizeError);
+    if (!preflight.ok) return;
+
+    if (
+      shouldWarnForOverCapacity(
+        preflight.totalDemand,
+        preflight.totalCapacity,
+        allowPartialRef.current,
+      )
+    ) {
+      setCapacityWarning(
+        capacityWarningMessage(preflight.totalDemand, preflight.totalCapacity),
+      );
+      return;
+    }
+
+    setNeedsDepotAddress(true);
+  }, [clearTransientOptimizeState, runPreflight, setPartialApproval]);
+
+  const optimizeAnyway = useCallback(() => {
+    setPartialApproval("approve");
+    setCapacityWarning(null);
+    setNeedsDepotAddress(true);
+  }, [setPartialApproval]);
+
+  const optimize = useCallback(
+    async (depotAddress: string) => {
+      if (optimizeInFlightRef.current || isOptimizing) return;
+
+      clearTransientOptimizeState();
+      setNeedsDepotAddress(false);
+
+      const preflight = runPreflight(setOptimizeError);
+      if (!preflight.ok) {
+        setPartialApproval("run_finished");
+        return;
+      }
+
+      if (
+        shouldWarnForOverCapacity(
+          preflight.totalDemand,
+          preflight.totalCapacity,
+          allowPartialRef.current,
+        )
+      ) {
+        setCapacityWarning(
+          capacityWarningMessage(
+            preflight.totalDemand,
+            preflight.totalCapacity,
+          ),
         );
         return;
       }
 
-      const trimmedDepotAddress = depotAddress?.trim();
+      const trimmedDepotAddress = depotAddress.trim();
       if (!trimmedDepotAddress) {
         setNeedsDepotAddress(true);
         return;
       }
 
+      const { availableVehicles, lockedVehicles, demandType } = preflight;
+
+      optimizeInFlightRef.current = true;
       setIsOptimizing(true);
       try {
         // Geocode the shared depot address once and reuse it for all vehicles.
@@ -406,15 +499,21 @@ export function useOptimize(
           "Network error. Please check your connection and try again.",
         );
       } finally {
+        setPartialApproval("run_finished");
+        optimizeInFlightRef.current = false;
         setIsOptimizing(false);
       }
     },
     [
-      vehicles,
       addresses,
-      router,
-      setVehiclesStartLocation,
       cacheAddressLocation,
+      clearTransientOptimizeState,
+      isOptimizing,
+      router,
+      runPreflight,
+      setPartialApproval,
+      setVehiclesStartLocation,
+      vehicles,
     ],
   );
 
@@ -422,15 +521,25 @@ export function useOptimize(
     setOptimizeError(null);
   }, []);
 
+  const clearCapacityWarning = useCallback(() => {
+    setPartialApproval("dismiss");
+    setCapacityWarning(null);
+  }, [setPartialApproval]);
+
   const dismissDepotAddressPrompt = useCallback(() => {
+    setPartialApproval("dismiss");
     setNeedsDepotAddress(false);
-  }, []);
+  }, [setPartialApproval]);
 
   return {
+    startOptimize,
+    optimizeAnyway,
     optimize,
     isOptimizing,
     optimizeError,
     clearOptimizeError,
+    capacityWarning,
+    clearCapacityWarning,
     needsDepotAddress,
     dismissDepotAddressPrompt,
     geocodeFailedAddressIds,

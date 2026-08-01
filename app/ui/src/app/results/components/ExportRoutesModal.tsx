@@ -130,7 +130,7 @@ function ExportRoutesModalPanel({
             Export Routes
           </h2>
           <p className="mt-1 text-sm font-normal leading-snug text-black">
-            Select which routes to export as JSON files
+            Select which routes to download
           </p>
         </div>
 

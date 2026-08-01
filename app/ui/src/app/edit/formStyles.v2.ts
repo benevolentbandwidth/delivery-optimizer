@@ -43,7 +43,7 @@ export const MOBILE_NAVBAR_MENU_BTN =
   "size-6 shrink-0 cursor-pointer flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--edit-teal-300)] rounded-[4px]";
 
 export const MOBILE_NAVBAR_TITLE =
-  "font-bold text-[20px] leading-[28px] text-[var(--edit-text-primary)] whitespace-nowrap";
+  "font-sans-manrope font-bold text-[20px] leading-[28px] text-[var(--edit-text-primary)] whitespace-nowrap";
 
 // ── MOBILE Sidebar (Figma 7472:3661) ─────────────────────────────────────────
 
@@ -67,7 +67,7 @@ export const MOBILE_SIDEBAR_CLOSE_BTN =
   "size-6 shrink-0 cursor-pointer flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--edit-teal-300)] rounded-[4px]";
 
 export const MOBILE_SIDEBAR_HEADER_TITLE =
-  "font-bold text-[20px] leading-[28px] text-[var(--edit-text-primary)] whitespace-nowrap";
+  "font-sans-manrope font-bold text-[20px] leading-[28px] text-[var(--edit-text-primary)] whitespace-nowrap";
 
 export const MOBILE_SIDEBAR_NAV = "flex flex-col gap-4 px-4 mt-[23px]";
 
@@ -99,7 +99,7 @@ export const ADDRESS_CARD_MOBILE_ROOT =
 export const ADDRESS_LIST_MOBILE_WRAP = "lg:hidden flex flex-col gap-4";
 
 export const NAVBAR_V2_LOGO =
-  "font-bold text-[20px] leading-7 text-[var(--edit-text-primary)] whitespace-nowrap";
+  "font-sans-manrope font-bold text-[20px] leading-7 text-[var(--edit-text-primary)] whitespace-nowrap";
 
 export const NAVBAR_V2_ACTIONS = "flex items-center gap-2";
 
@@ -554,7 +554,10 @@ export const OVERLAY_CANCEL_BTN =
   "h-9 px-4 rounded-[80px] font-semibold text-[14px] leading-5 text-[var(--edit-text-primary)] whitespace-nowrap hover:bg-[var(--edit-tertiary-btn-hover)] active:bg-[var(--edit-tertiary-btn-pressed)] transition-colors cursor-pointer";
 
 export const OVERLAY_PRIMARY_BTN =
-  "h-9 px-4 rounded-[80px] bg-[var(--edit-btn-primary)] font-semibold text-[14px] leading-5 text-[var(--edit-text-primary)] whitespace-nowrap cursor-pointer";
+  "h-9 px-4 rounded-[80px] bg-[var(--edit-btn-primary)] font-semibold text-[14px] leading-5 text-[var(--edit-text-primary)] whitespace-nowrap cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed";
+
+export const OVERLAY_WARNING_BTN =
+  "h-9 px-4 rounded-[80px] bg-[var(--edit-btn-warning)] font-semibold text-[14px] leading-5 text-[var(--edit-text-primary)] whitespace-nowrap cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed";
 
 export const OVERLAY_DELETE_BTN =
   "h-9 px-4 rounded-[80px] bg-[var(--edit-btn-delete)] font-semibold text-[14px] leading-5 text-[var(--edit-text-invert)] whitespace-nowrap cursor-pointer";
@@ -780,12 +783,12 @@ export const MOBILE_BOTTOM_BAR_SECONDARY_BTN =
 export const MOBILE_BOTTOM_BAR_SECONDARY_LABEL =
   "font-['Manrope',sans-serif] font-semibold text-[16px] leading-[22px] text-[var(--edit-text-primary)] whitespace-nowrap";
 
-// ── ErrorOverlay ──────────────────────────────────────────────────────────────
+// ── AlertPopup ────────────────────────────────────────────────────────────────
 
-export const ERROR_OVERLAY_MESSAGE =
+export const ALERT_POPUP_MESSAGE =
   "text-[14px] leading-5 text-[var(--edit-text-secondary)] w-full";
 
-export const ERROR_OVERLAY_FOOTER = "flex items-center justify-end";
+export const ALERT_POPUP_FOOTER = "flex items-center justify-end gap-2";
 
 // ── CSV Upload Overlay (Figma 8102:1548 desktop / 7472:5765 mobile) ───────────
 

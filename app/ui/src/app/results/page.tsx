@@ -10,7 +10,7 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
-import { NAVBAR_V2_LOGO, NAVBAR_V2_ROOT } from "../edit/formStyles.v2";
+import { NAVBAR_V2_LOGO, NAVBAR_V2_ROOT } from "@/app/edit/formStyles.v2";
 import styles from "../edit/edit.module.css";
 import MobileSidebar from "../components/sidebar/MobileSidebar";
 import ExportEditWarningModal from "./components/ExportEditWarningModal";
@@ -167,6 +167,21 @@ export default function ResultsPage() {
   useEffect(() => {
     routesRef.current = routes;
   }, [routes]);
+
+  useEffect(() => {
+    const { style: documentElementStyle } = document.documentElement;
+    const { style: bodyStyle } = document.body;
+    const previousDocumentOverflow = documentElementStyle.overflow;
+    const previousBodyOverflow = bodyStyle.overflow;
+
+    documentElementStyle.overflow = "hidden";
+    bodyStyle.overflow = "hidden";
+
+    return () => {
+      documentElementStyle.overflow = previousDocumentOverflow;
+      bodyStyle.overflow = previousBodyOverflow;
+    };
+  }, []);
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSheetExpanded, setIsSheetExpanded] = useState(false);
@@ -416,7 +431,7 @@ export default function ResultsPage() {
       <header
         className={`${NAVBAR_V2_ROOT} hidden lg:flex shrink-0 border-b border-[var(--edit-stone-200)]`}
       >
-        <p className={NAVBAR_V2_LOGO}>DELIVERY OPTIMIZER</p>
+        <span className={NAVBAR_V2_LOGO}>Delivery Optimizer</span>
         <div className="ml-auto flex items-center gap-2">
           {pendingPinMove != null && (
             <>
@@ -438,13 +453,13 @@ export default function ResultsPage() {
           )}
         </div>
       </header>
-      <div className="hidden lg:flex flex-1 min-h-0">
+      <div className="hidden lg:flex flex-1 min-h-0 overflow-hidden">
         <NavSidebar>
           <SidebarEditButton />
           <SidebarResultsButton />
         </NavSidebar>
         {/* Hi-fi routes panel width (28rem); always visible on desktop */}
-        <div className="shrink-0 h-full w-[28rem] overflow-hidden">
+        <div className="shrink-0 h-full min-h-0 w-[28rem] overflow-hidden">
           <Sidebar
             routes={routes}
             isEditMode={isEditMode}

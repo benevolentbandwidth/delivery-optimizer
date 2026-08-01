@@ -27,7 +27,7 @@ import {
   CSV_UPLOAD_FILE_CHIP_SIZE,
   CSV_UPLOAD_FILE_CHIP_REMOVE,
 } from "@/app/edit/formStyles.v2";
-import ErrorOverlay from "@/app/edit/components/shared/ErrorOverlay";
+import AlertPopup from "@/app/edit/components/shared/AlertPopup";
 import type { AddressCard } from "@/app/edit/types/delivery";
 import { useCSVImport } from "@/app/edit/hooks/useCSVImport";
 
@@ -201,29 +201,31 @@ function StepColumnMapper({
                       onChange={(e) =>
                         onMappingChange(header, e.target.value as MappableField)
                       }
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      className="absolute inset-0 w-full h-full appearance-none bg-transparent px-3 pr-10 text-[14px] leading-[1.5] text-[var(--edit-text-primary)] cursor-pointer truncate"
                     >
-                      <option value="">Select</option>
+                      <option
+                        value=""
+                        className="bg-[var(--edit-bg-primary)] text-[var(--edit-text-primary)]"
+                      >
+                        Select
+                      </option>
                       {(
                         Object.keys(FIELD_LABELS) as Exclude<
                           MappableField,
                           ""
                         >[]
                       ).map((f) => (
-                        <option key={f} value={f}>
+                        <option
+                          key={f}
+                          value={f}
+                          className="bg-[var(--edit-bg-primary)] text-[var(--edit-text-primary)]"
+                        >
                           {FIELD_LABELS[f]}
                         </option>
                       ))}
                     </select>
-                    <span className="flex-1 px-3 text-[14px] leading-[1.5] pointer-events-none truncate text-[var(--edit-text-primary)]">
-                      {mapping[header]
-                        ? FIELD_LABELS[
-                            mapping[header] as Exclude<MappableField, "">
-                          ]
-                        : "Select"}
-                    </span>
                     <svg
-                      className="shrink-0 mr-3 pointer-events-none rotate-90"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none rotate-90"
                       width="16"
                       height="16"
                       viewBox="0 0 16 16"
@@ -666,7 +668,7 @@ export default function CSVUploadOverlay({
   // ── Render ──────────────────────────────────────────────────────────────────
 
   if (parseError) {
-    return <ErrorOverlay message={parseError} onClose={closeImportModal} />;
+    return <AlertPopup message={parseError} onClose={closeImportModal} />;
   }
 
   if (isImportModalOpen) {
