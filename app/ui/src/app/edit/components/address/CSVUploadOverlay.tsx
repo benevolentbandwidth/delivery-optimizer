@@ -146,6 +146,9 @@ const MAPPING_FIELD_OPTIONS = Object.keys(FIELD_LABELS) as Exclude<
   ""
 >[];
 
+// Leading "" entry lets users clear an incorrect mapping back to unmapped.
+const MAPPING_FIELD_VALUES: MappableField[] = ["", ...MAPPING_FIELD_OPTIONS];
+
 function MappingFieldSelect({
   header,
   value,
@@ -165,9 +168,7 @@ function MappingFieldSelect({
 
   useLayoutEffect(() => {
     if (open) {
-      const currentIndex = MAPPING_FIELD_OPTIONS.indexOf(
-        value as Exclude<MappableField, "">,
-      );
+      const currentIndex = MAPPING_FIELD_VALUES.indexOf(value);
       setActiveIndex(currentIndex >= 0 ? currentIndex : 0);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -218,16 +219,14 @@ function MappingFieldSelect({
         setOpen(false);
       } else if (e.key === "ArrowDown") {
         e.preventDefault();
-        setActiveIndex((i) =>
-          Math.min(i + 1, MAPPING_FIELD_OPTIONS.length - 1),
-        );
+        setActiveIndex((i) => Math.min(i + 1, MAPPING_FIELD_VALUES.length - 1));
       } else if (e.key === "ArrowUp") {
         e.preventDefault();
         setActiveIndex((i) => Math.max(i - 1, 0));
       } else if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
-        const chosen = MAPPING_FIELD_OPTIONS[activeIndex];
-        if (chosen) {
+        const chosen = MAPPING_FIELD_VALUES[activeIndex];
+        if (chosen !== undefined) {
           onChange(chosen);
           setOpen(false);
         }
@@ -277,9 +276,9 @@ function MappingFieldSelect({
           aria-label={`${header} field options`}
           style={menuStyle}
         >
-          {MAPPING_FIELD_OPTIONS.map((f, i) => (
+          {MAPPING_FIELD_VALUES.map((f, i) => (
             <div
-              key={f}
+              key={f || "__clear__"}
               ref={(el) => {
                 optionRefs.current[i] = el;
               }}
@@ -298,7 +297,7 @@ function MappingFieldSelect({
               }}
             >
               <span className={OVERLAY_AUTOCOMPLETE_ITEM_TEXT}>
-                {FIELD_LABELS[f]}
+                {f ? FIELD_LABELS[f] : "Select"}
               </span>
             </div>
           ))}
@@ -394,51 +393,11 @@ function StepColumnMapper({
                     {header.charAt(0).toUpperCase() + header.slice(1)}
                   </span>
 
-                  <div className="relative border border-[var(--edit-stone-200)] rounded-[6px] h-10 flex items-center overflow-hidden">
-                    <select
-                      value={mapping[header] ?? ""}
-                      onChange={(e) =>
-                        onMappingChange(header, e.target.value as MappableField)
-                      }
-                      className="absolute inset-0 w-full h-full appearance-none bg-transparent px-3 pr-10 text-[14px] leading-[1.5] text-[var(--edit-text-primary)] cursor-pointer truncate"
-                    >
-                      <option
-                        value=""
-                        className="bg-[var(--edit-bg-primary)] text-[var(--edit-text-primary)]"
-                      >
-                        Select
-                      </option>
-                      {(
-                        Object.keys(FIELD_LABELS) as Exclude<
-                          MappableField,
-                          ""
-                        >[]
-                      ).map((f) => (
-                        <option
-                          key={f}
-                          value={f}
-                          className="bg-[var(--edit-bg-primary)] text-[var(--edit-text-primary)]"
-                        >
-                          {FIELD_LABELS[f]}
-                        </option>
-                      ))}
-                    </select>
-                    <svg
-                      className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none rotate-90"
-                      width="16"
-                      height="16"
-                      viewBox="0 0 16 16"
-                      fill="none"
-                    >
-                      <path
-                        d="M6 4l4 4-4 4"
-                        stroke="var(--edit-text-primary)"
-                        strokeWidth="1.4"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </div>
+                  <MappingFieldSelect
+                    header={header}
+                    value={mapping[header] ?? ""}
+                    onChange={(field) => onMappingChange(header, field)}
+                  />
 
                   <div className="flex flex-col gap-[2px] overflow-hidden">
                     {previewRows.map((row, i) => {
