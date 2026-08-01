@@ -44,7 +44,7 @@ import {
   OVERLAY_AUTOCOMPLETE_ITEM_ACTIVE,
   OVERLAY_AUTOCOMPLETE_ITEM_TEXT,
 } from "@/app/edit/formStyles.v2";
-import ErrorOverlay from "@/app/edit/components/shared/ErrorOverlay";
+import AlertPopup from "@/app/edit/components/shared/AlertPopup";
 import type { AddressCard } from "@/app/edit/types/delivery";
 import { useCSVImport } from "@/app/edit/hooks/useCSVImport";
 
@@ -394,11 +394,51 @@ function StepColumnMapper({
                     {header.charAt(0).toUpperCase() + header.slice(1)}
                   </span>
 
-                  <MappingFieldSelect
-                    header={header}
-                    value={mapping[header] ?? ""}
-                    onChange={(field) => onMappingChange(header, field)}
-                  />
+                  <div className="relative border border-[var(--edit-stone-200)] rounded-[6px] h-10 flex items-center overflow-hidden">
+                    <select
+                      value={mapping[header] ?? ""}
+                      onChange={(e) =>
+                        onMappingChange(header, e.target.value as MappableField)
+                      }
+                      className="absolute inset-0 w-full h-full appearance-none bg-transparent px-3 pr-10 text-[14px] leading-[1.5] text-[var(--edit-text-primary)] cursor-pointer truncate"
+                    >
+                      <option
+                        value=""
+                        className="bg-[var(--edit-bg-primary)] text-[var(--edit-text-primary)]"
+                      >
+                        Select
+                      </option>
+                      {(
+                        Object.keys(FIELD_LABELS) as Exclude<
+                          MappableField,
+                          ""
+                        >[]
+                      ).map((f) => (
+                        <option
+                          key={f}
+                          value={f}
+                          className="bg-[var(--edit-bg-primary)] text-[var(--edit-text-primary)]"
+                        >
+                          {FIELD_LABELS[f]}
+                        </option>
+                      ))}
+                    </select>
+                    <svg
+                      className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none rotate-90"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                    >
+                      <path
+                        d="M6 4l4 4-4 4"
+                        stroke="var(--edit-text-primary)"
+                        strokeWidth="1.4"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </div>
 
                   <div className="flex flex-col gap-[2px] overflow-hidden">
                     {previewRows.map((row, i) => {
@@ -827,7 +867,7 @@ export default function CSVUploadOverlay({
   // ── Render ──────────────────────────────────────────────────────────────────
 
   if (parseError) {
-    return <ErrorOverlay message={parseError} onClose={closeImportModal} />;
+    return <AlertPopup message={parseError} onClose={closeImportModal} />;
   }
 
   if (isImportModalOpen) {

@@ -116,7 +116,7 @@ test("results export opens method choices before existing flows", async ({
     methodDialog.getByRole("button", { name: /Send via WhatsApp/ }),
   ).toBeVisible();
   await expect(
-    methodDialog.getByRole("button", { name: /Export JSON/ }),
+    methodDialog.getByRole("button", { name: /Export Routes/ }),
   ).toBeVisible();
 
   await methodDialog.getByRole("button", { name: /Send via WhatsApp/ }).click();
@@ -129,7 +129,7 @@ test("results export opens method choices before existing flows", async ({
   await page.getByRole("button", { name: "Export", exact: true }).click();
   await page
     .getByRole("dialog", { name: "Choose export method" })
-    .getByRole("button", { name: /Export JSON/ })
+    .getByRole("button", { name: /Export Routes/ })
     .click();
   await expect(
     page.getByRole("dialog", { name: "Export Routes" }),

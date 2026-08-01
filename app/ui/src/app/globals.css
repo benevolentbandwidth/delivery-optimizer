@@ -33,6 +33,7 @@
   --edit-manage-heading: #000000;
 
   --edit-btn-primary: #4cb599;
+  --edit-btn-warning: #f2b134;
   --edit-secondary-btn-hover: rgba(0, 0, 0, 0.02);
   --edit-secondary-btn-pressed: rgba(0, 0, 0, 0.04);
   --edit-tertiary-btn-hover: #f6f5f2;
@@ -95,7 +96,7 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-manrope), Arial, Helvetica, sans-serif;
 }
 
 /* Native <select> chevrons — shared by edit address/vehicle (avoids fragile Tailwind arbitrary URLs). */

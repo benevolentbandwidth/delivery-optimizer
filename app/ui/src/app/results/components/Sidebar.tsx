@@ -92,7 +92,13 @@ export default function Sidebar({
           </div>
         </div>
       )}
-      <div className={isSheet ? "w-full" : "flex-1 min-h-0 overflow-y-auto"}>
+      <div
+        className={
+          isSheet
+            ? "w-full"
+            : "flex-1 min-h-0 overflow-y-auto overscroll-y-contain"
+        }
+      >
         {routes.length === 0 ? (
           <p className="text-sm text-zinc-500">No routes yet</p>
         ) : (

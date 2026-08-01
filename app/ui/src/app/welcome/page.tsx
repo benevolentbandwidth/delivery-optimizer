@@ -46,10 +46,18 @@ export default function WelcomePage() {
           display: flex;
           flex-direction: column;
           align-items: center;
-          justify-content: center;
+          justify-content: flex-start;
           padding: 48px 24px;
           position: relative;
           z-index: 1;
+        }
+
+        .welcome-main {
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          margin-block: auto;
         }
 
         .welcome-title {
@@ -155,10 +163,9 @@ export default function WelcomePage() {
         }
 
         .welcome-back {
-          position: absolute;
-          bottom: 32px;
-          left: 50%;
-          transform: translateX(-50%);
+          align-self: center;
+          flex-shrink: 0;
+          margin-top: 24px;
           background: none;
           border: none;
           cursor: pointer;
@@ -187,56 +194,58 @@ export default function WelcomePage() {
         <ShellNavbar />
 
         <div className="welcome-content">
-          <h1 className="welcome-title">
-            Choose how you&apos;d like to continue
-          </h1>
-          <p className="welcome-subtitle">Select one</p>
+          <div className="welcome-main">
+            <h1 className="welcome-title">
+              Choose how you&apos;d like to continue
+            </h1>
+            <p className="welcome-subtitle">Select one</p>
 
-          <div className="welcome-cards">
-            <div className="welcome-card">
-              <Image
-                src="/icons/icon-new-session.png"
-                alt=""
-                width={64}
-                height={64}
-                className="welcome-card-icon"
-                aria-hidden="true"
-              />
-              <p className="welcome-card-title">Start new session</p>
-              <p className="welcome-card-desc">
-                Set up vehicles, drivers, and delivery stops to create your
-                optimized route.
-              </p>
-              <button
-                className="welcome-card-cta"
-                aria-label="Start new session — continue"
-                onClick={handleNewSession}
-              >
-                Continue
-              </button>
-            </div>
+            <div className="welcome-cards">
+              <div className="welcome-card">
+                <Image
+                  src="/icons/icon-new-session.png"
+                  alt=""
+                  width={64}
+                  height={64}
+                  className="welcome-card-icon"
+                  aria-hidden="true"
+                />
+                <p className="welcome-card-title">Start new session</p>
+                <p className="welcome-card-desc">
+                  Set up vehicles, drivers, and delivery stops to create your
+                  optimized route.
+                </p>
+                <button
+                  className="welcome-card-cta"
+                  aria-label="Start new session — continue"
+                  onClick={handleNewSession}
+                >
+                  Continue
+                </button>
+              </div>
 
-            <div className="welcome-card">
-              <Image
-                src="/icons/icon-resume-session.png"
-                alt=""
-                width={64}
-                height={64}
-                className="welcome-card-icon"
-                aria-hidden="true"
-              />
-              <p className="welcome-card-title">Resume session</p>
-              <p className="welcome-card-desc">
-                Import a saved CSV file from a previous session to continue
-                managing and optimizing routes.
-              </p>
-              <button
-                className="welcome-card-cta"
-                aria-label="Resume session — continue"
-                onClick={() => router.push("/upload-save-point")}
-              >
-                Continue
-              </button>
+              <div className="welcome-card">
+                <Image
+                  src="/icons/icon-resume-session.png"
+                  alt=""
+                  width={64}
+                  height={64}
+                  className="welcome-card-icon"
+                  aria-hidden="true"
+                />
+                <p className="welcome-card-title">Resume session</p>
+                <p className="welcome-card-desc">
+                  Import a saved CSV file from a previous session to continue
+                  managing and optimizing routes.
+                </p>
+                <button
+                  className="welcome-card-cta"
+                  aria-label="Resume session — continue"
+                  onClick={() => router.push("/upload-save-point")}
+                >
+                  Continue
+                </button>
+              </div>
             </div>
           </div>
 

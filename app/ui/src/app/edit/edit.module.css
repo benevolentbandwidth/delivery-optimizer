@@ -7,6 +7,7 @@
  *   <div className={styles.root}>...</div>
  */
 
+/* Page wrapper class; --edit-* button tokens live on :root in globals.css. */
 .root {
 }
 

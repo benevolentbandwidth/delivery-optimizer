@@ -35,7 +35,6 @@ export default function LandingPage() {
           position: relative;
           z-index: 10;
           background: #ffffff;
-          border-bottom: 1px solid rgba(0,0,0,0.08);
         }
 
         .landing-content {
