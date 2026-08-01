@@ -44,9 +44,6 @@ export const RESULTS_BOTTOM_SHEET_BTN_RECT_FILLED =
 export const RESULTS_BOTTOM_SHEET_BODY =
   "flex-1 min-h-0 overflow-y-auto px-4 pb-2";
 
-export const RESULTS_MOBILE_NAV_TITLE =
-  "min-w-0 truncate font-bold text-[14px] leading-5 uppercase tracking-[0.02em] text-[var(--edit-text-primary)] sm:text-[16px] sm:leading-[22px]";
-
 export const RESULTS_MOBILE_NAV_SAVE_BTN =
   "h-9 px-4 rounded-[6px] border border-[var(--edit-stone-700)] font-semibold text-[14px] leading-5 text-[var(--edit-text-primary)] whitespace-nowrap hover:bg-[var(--edit-secondary-btn-hover)] active:bg-[var(--edit-secondary-btn-pressed)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
 

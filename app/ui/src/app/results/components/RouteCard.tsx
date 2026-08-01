@@ -1,9 +1,11 @@
 "use client";
 
+import { capitalize } from "@/app/edit/utils/deliveryHelpers";
 import type { Route } from "../types";
 import { routeColorHex } from "../utils/routeColors";
 import EditableStopItem from "./EditableStopItem";
 import RouteCardMenu from "./RouteCardMenu";
+import VehicleTypeIcon from "./VehicleTypeIcon";
 
 type RouteCardProps = {
   route: Route;
@@ -183,34 +185,12 @@ export default function RouteCard({
                 </div>
               </div>
               <p className="mt-3 flex items-center gap-2 text-[12px] text-[var(--edit-text-primary)]">
-                <svg
-                  className="h-4 w-4 text-[var(--edit-text-secondary)]"
-                  viewBox="0 0 20 20"
-                  fill="none"
-                  aria-hidden
-                >
-                  <path
-                    d="M2.5 5.5A1.5 1.5 0 0 1 4 4h7.5A1.5 1.5 0 0 1 13 5.5V7h1.75c.4 0 .77.16 1.06.44l1.75 1.75c.28.28.44.66.44 1.06v2A1.75 1.75 0 0 1 16.25 14h-.6a2.15 2.15 0 0 1-4.2 0h-3.9a2.15 2.15 0 0 1-4.2 0H2.75A1.75 1.75 0 0 1 1 12.25V7.25A1.75 1.75 0 0 1 2.75 5.5h-.25Z"
-                    stroke="currentColor"
-                    strokeWidth="1.4"
-                    strokeLinejoin="round"
-                  />
-                  <circle
-                    cx="5.4"
-                    cy="14"
-                    r="1.15"
-                    stroke="currentColor"
-                    strokeWidth="1.4"
-                  />
-                  <circle
-                    cx="13.6"
-                    cy="14"
-                    r="1.15"
-                    stroke="currentColor"
-                    strokeWidth="1.4"
-                  />
-                </svg>
-                <span>{route.vehicleType ?? "Vehicle"}</span>
+                <VehicleTypeIcon vehicleType={route.vehicleType} />
+                <span>
+                  {route.vehicleType
+                    ? capitalize(route.vehicleType)
+                    : "Vehicle"}
+                </span>
               </p>
             </button>
           </div>

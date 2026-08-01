@@ -10,7 +10,7 @@ import Navbar from "@/app/components/navbar/Navbar";
 import MobileNavbar from "@/app/components/navbar/MobileNavbar";
 import MobileSidebar from "@/app/components/sidebar/MobileSidebar";
 import OptimizingModal from "@/app/edit/components/shared/OptimizingModal";
-import ErrorOverlay from "@/app/edit/components/shared/ErrorOverlay";
+import AlertPopup from "@/app/edit/components/shared/AlertPopup";
 import Sidebar from "@/app/components/sidebar/Sidebar";
 import SidebarEditButton from "@/app/components/sidebar/SidebarEditButton";
 import SidebarResultsButton from "@/app/components/sidebar/SidebarResultsButton";
@@ -76,10 +76,14 @@ export default function Page() {
   const { parseError, closeImportModal } = useCSVImport();
 
   const {
+    startOptimize,
+    optimizeAnyway,
     optimize,
     isOptimizing,
     optimizeError,
     clearOptimizeError,
+    capacityWarning,
+    clearCapacityWarning,
     needsDepotAddress,
     dismissDepotAddressPrompt,
     geocodeFailedAddressIds,
@@ -289,19 +293,28 @@ export default function Page() {
         />
       )}
 
-      <ErrorOverlay message={optimizeError} onClose={clearOptimizeError} />
-      <ErrorOverlay message={sessionError} onClose={clearSessionError} />
-      <ErrorOverlay
-        message={uploadError}
-        onClose={() => setUploadError(null)}
+      <AlertPopup message={optimizeError} onClose={clearOptimizeError} />
+      <AlertPopup
+        variant="warning"
+        title="Vehicle capacity is limited"
+        message={capacityWarning}
+        onClose={clearCapacityWarning}
+        action={{
+          label: "Optimize Anyway",
+          onClick: optimizeAnyway,
+        }}
+        actionDisabled={isOptimizing}
       />
-      <ErrorOverlay message={parseError} onClose={closeImportModal} />
+      <AlertPopup message={sessionError} onClose={clearSessionError} />
+      <AlertPopup message={uploadError} onClose={() => setUploadError(null)} />
+      <AlertPopup message={parseError} onClose={closeImportModal} />
       <OptimizingModal isOpen={isOptimizing} />
       {needsDepotAddress && (
         <AddressOverlay
           heading="Enter starting location for all driver routes"
           onClose={dismissDepotAddressPrompt}
           onSave={handleStartLocationSave}
+          primaryDisabled={isOptimizing}
         />
       )}
       <MobileSidebar
@@ -310,7 +323,7 @@ export default function Page() {
       />
       <MobileBottomBar
         onSave={handleExportSession}
-        onOptimize={() => void optimize()}
+        onOptimize={startOptimize}
         isOptimizing={isOptimizing}
       />
       <MobileNavbar onMenuClick={() => setIsMobileMenuOpen(true)} />
@@ -331,7 +344,7 @@ export default function Page() {
           >
             <div className={MANAGE_VEHICLE_GROUP}>
               <ManageSectionHeader
-                onOptimize={() => void optimize()}
+                onOptimize={startOptimize}
                 isOptimizing={isOptimizing}
               />
               <VehicleSection

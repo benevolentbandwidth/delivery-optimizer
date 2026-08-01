@@ -34,7 +34,7 @@ export default function MobileNavbar({ onMenuClick }: MobileNavbarProps) {
             />
           </svg>
         </button>
-        <span className={MOBILE_NAVBAR_TITLE}>DELIVERY OPTIMIZER</span>
+        <span className={MOBILE_NAVBAR_TITLE}>Delivery Optimizer</span>
       </div>
     </header>
   );

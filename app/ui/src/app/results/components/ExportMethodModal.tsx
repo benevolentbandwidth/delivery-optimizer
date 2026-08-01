@@ -14,9 +14,9 @@ export const EXPORT_METHOD_OPTIONS = [
   },
   {
     id: "json",
-    title: "Export JSON",
+    title: "Export Routes",
     description:
-      "Download a JSON file per route that you can save, print, or share manually with drivers.",
+      "Download a file per route that you can save, print, or share manually with drivers.",
   },
 ] as const;
 

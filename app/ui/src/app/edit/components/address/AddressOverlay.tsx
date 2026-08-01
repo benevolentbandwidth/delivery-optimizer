@@ -91,6 +91,7 @@ type AddressOverlayProps = {
   initialAddress?: Partial<LocationAddress>;
   onClose: () => void;
   onSave: (address: LocationAddress) => void;
+  primaryDisabled?: boolean;
 };
 
 export default function AddressOverlay({
@@ -99,6 +100,7 @@ export default function AddressOverlay({
   initialAddress,
   onClose,
   onSave,
+  primaryDisabled = false,
 }: AddressOverlayProps) {
   const panelRef = useFocusTrap<HTMLDivElement>(true);
 
@@ -109,6 +111,7 @@ export default function AddressOverlay({
   const [zipCode, setZipCode] = useState(initialAddress?.zipCode ?? "");
   const [country, setCountry] = useState(initialAddress?.country ?? "");
   const [submitted, setSubmitted] = useState(false);
+  const [saveStarted, setSaveStarted] = useState(false);
 
   const line1InputRef = useRef<HTMLInputElement>(null);
   const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -177,6 +180,7 @@ export default function AddressOverlay({
   }
 
   function handleSave() {
+    if (saveStarted || primaryDisabled) return;
     setSubmitted(true);
     const trimmedLine1 = line1.trim();
     const trimmedCity = city.trim();
@@ -188,6 +192,7 @@ export default function AddressOverlay({
       !country
     )
       return;
+    setSaveStarted(true);
     onSave({
       line1: trimmedLine1,
       line2: line2.trim(),
@@ -442,6 +447,8 @@ export default function AddressOverlay({
             type="button"
             onClick={handleSave}
             className={`${OVERLAY_PRIMARY_BTN} ${styles.primaryBtnOverlay}`}
+            disabled={primaryDisabled || saveStarted}
+            aria-busy={primaryDisabled || saveStarted}
           >
             {primaryLabel}
           </button>
