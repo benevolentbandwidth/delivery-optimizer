@@ -129,11 +129,12 @@ function extractRoadPath(
   }
 
   const path: google.maps.LatLng[] = [];
-  for (const [legIndex, leg] of (route.legs ?? []).entries()) {
-    for (const [stepIndex, step] of (leg.steps ?? []).entries()) {
+  for (const leg of route.legs ?? []) {
+    for (const step of leg.steps ?? []) {
       if (!step.path?.length) continue;
-      // Skip the shared boundary point between consecutive steps and legs.
-      const skipFirst = legIndex > 0 || stepIndex > 0;
+      // Skip the shared boundary point only after something has been pushed,
+      // so an empty prior leg does not drop the next leg's first vertex.
+      const skipFirst = path.length > 0;
       path.push(...(skipFirst ? step.path.slice(1) : step.path));
     }
   }
@@ -307,6 +308,35 @@ function RoutePolylinesOverlay({
     };
 
     void (async () => {
+      // Immediate visual feedback for every route (cached road path or
+      // straight-line placeholder) before sequential Directions fetches resolve.
+      // Effect 1 owns creation; setRoutePolyline disposes the prior entry when
+      // the road-following polyline arrives.
+      for (
+        let routeIndex = 0;
+        routeIndex < routesSnapshot.length;
+        routeIndex += 1
+      ) {
+        if (cancelled) return;
+        const route = routesSnapshot[routeIndex]!;
+        const strokeColor = routeColorHex(routeIndex);
+        const path = buildRoutePath(route, null);
+        if (path.length < 2) continue;
+        const cached = directionsCacheRef.current.get(routeCacheKey(path));
+        if (cached && cached.path.length >= 2) {
+          setRoutePolyline(
+            route.vehicleId,
+            new google.maps.Polyline({
+              map,
+              path: cached.path,
+              ...routePolylineOptions(strokeColor),
+            }),
+          );
+        } else {
+          drawFallback(route, strokeColor);
+        }
+      }
+
       // Request one route at a time to avoid Directions API rate-limit failures.
       for (
         let routeIndex = 0;
