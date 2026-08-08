@@ -33,14 +33,19 @@ function parseRouteCsvText(text: string): DriverRoute {
 
     const latStr = value(["lat", "latitude"]);
     const lngStr = value(["lng", "lon", "long", "longitude"]);
-    const lat = Number(latStr);
-    const lng = Number(lngStr);
-    if (!latStr || !lngStr || !Number.isFinite(lat) || !Number.isFinite(lng)) {
+    if (
+      !latStr ||
+      !lngStr ||
+      !Number.isFinite(Number(latStr)) ||
+      !Number.isFinite(Number(lngStr))
+    ) {
       throw new Error(
         "CSV route stops must include valid lat and lng columns.",
       );
     }
 
+    const lat = Number(latStr);
+    const lng = Number(lngStr);
     const sequence = Number(value(["sequence", "stopnumber", "stop"]));
     const packageCount = Number(
       value(["capacityused", "packagecount", "packages", "demand"]),
