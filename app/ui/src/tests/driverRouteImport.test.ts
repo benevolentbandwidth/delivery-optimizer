@@ -222,6 +222,24 @@ describe("driver route import", () => {
     });
   });
 
+  it("rejects route CSV uploads with missing lat or lng values", () => {
+    const missingLat = [
+      "sequence,address,addresseeName,phoneNumber,capacityUsed,note,lat,lng",
+      '1,"100 First St","First Customer","555-555-0101",2,"Leave at front desk",,-121.74',
+    ].join("\n");
+    const missingLng = [
+      "sequence,address,addresseeName,phoneNumber,capacityUsed,note,lat,lng",
+      '1,"100 First St","First Customer","555-555-0101",2,"Leave at front desk",38.54,',
+    ].join("\n");
+
+    expect(() => parseRouteUploadFile("missing-lat.csv", missingLat)).toThrow(
+      "CSV route stops must include valid lat and lng columns.",
+    );
+    expect(() => parseRouteUploadFile("missing-lng.csv", missingLng)).toThrow(
+      "CSV route stops must include valid lat and lng columns.",
+    );
+  });
+
   it("also accepts a direct optimize request JSON file", () => {
     const session = loadSessionFromText(
       JSON.stringify({
