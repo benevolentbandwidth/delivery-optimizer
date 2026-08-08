@@ -6,6 +6,7 @@ import type { DriverRoute } from "@/lib/driver-route/types";
 
 export const STORAGE_KEY = "driver_assist.routeState";
 export const UPLOADED_ROUTE_KEY = "routeFile";
+export const ROUTE_STORE_EVENT = "driver-assist-route-store-updated";
 
 export type UploadedRouteFile = {
   name: string;
@@ -54,4 +55,5 @@ export function persistRoute(route: DriverRoute) {
     STORAGE_KEY,
     JSON.stringify(createPersistedRouteState(route)),
   );
+  window.dispatchEvent(new Event(ROUTE_STORE_EVENT));
 }

@@ -12,6 +12,7 @@
 #include <drogon/drogon.h>
 #include <future>
 #include <iomanip>
+#include <iterator>
 #include <limits>
 #include <memory>
 #include <numeric>
@@ -212,8 +213,24 @@ ReadLegDeparture(const Json::Value& step,
   return delays;
 }
 
+[[nodiscard]] std::vector<std::uint64_t> ReadPayloadJobIds(const Json::Value& payload) {
+  std::vector<std::uint64_t> job_ids;
+  const Json::Value& jobs = payload["jobs"];
+  if (!jobs.isArray()) {
+    return job_ids;
+  }
+
+  job_ids.reserve(jobs.size());
+  for (const Json::Value& job : jobs) {
+    job_ids.push_back(job["id"].isUInt64() ? job["id"].asUInt64() : 0U);
+  }
+
+  return job_ids;
+}
+
 [[nodiscard]] std::vector<int> ReadJobTravelSeconds(const Json::Value& vroom_output,
-                                                    const std::size_t job_count) {
+                                                    const std::vector<std::uint64_t>& job_ids) {
+  const std::size_t job_count = job_ids.size();
   std::vector<int> travel_seconds(job_count, 0);
   const Json::Value& routes = vroom_output["routes"];
   if (!routes.isArray()) {
@@ -237,7 +254,12 @@ ReadLegDeparture(const Json::Value& step,
       }
 
       const std::uint64_t raw_job_id = to["id"].asUInt64();
-      if (raw_job_id == 0U || raw_job_id > job_count) {
+      if (raw_job_id == 0U) {
+        continue;
+      }
+
+      const auto job_id = std::find(job_ids.begin(), job_ids.end(), raw_job_id);
+      if (job_id == job_ids.end()) {
         continue;
       }
 
@@ -245,7 +267,9 @@ ReadLegDeparture(const Json::Value& step,
       const int from_service = from["service"].isInt() ? from["service"].asInt() : 0;
       const int to_arrival = to["arrival"].isInt() ? to["arrival"].asInt() : from_arrival;
       const int leg_seconds = std::max(to_arrival - from_arrival - from_service, 0);
-      travel_seconds[static_cast<std::size_t>(raw_job_id - 1U)] += leg_seconds;
+      const std::size_t job_index = static_cast<std::size_t>(
+          std::distance(job_ids.begin(), job_id));
+      travel_seconds[job_index] += leg_seconds;
     }
   }
 
@@ -253,13 +277,14 @@ ReadLegDeparture(const Json::Value& step,
 }
 
 [[nodiscard]] std::vector<int> BuildWeightedTrafficDelays(const Json::Value& vroom_output,
-                                                          const std::size_t job_count,
+                                                          const std::vector<std::uint64_t>& job_ids,
                                                           const int total_delay_seconds) {
+  const std::size_t job_count = job_ids.size();
   if (job_count == 0U || total_delay_seconds <= 0) {
     return std::vector<int>(job_count, 0);
   }
 
-  const std::vector<int> travel_seconds = ReadJobTravelSeconds(vroom_output, job_count);
+  const std::vector<int> travel_seconds = ReadJobTravelSeconds(vroom_output, job_ids);
   const int total_travel_seconds = std::accumulate(travel_seconds.begin(), travel_seconds.end(), 0);
   if (total_travel_seconds <= 0) {
     return BuildEvenTrafficDelays(job_count, total_delay_seconds);
@@ -740,8 +765,9 @@ Json::Value BuildTrafficAdjustedVroomInput(const OptimizeRequestInput& input,
     return payload;
   }
 
+  const std::vector<std::uint64_t> job_ids = ReadPayloadJobIds(payload);
   const std::vector<int> traffic_delays =
-      BuildWeightedTrafficDelays(vroom_output, input.jobs.size(), traffic.traffic_delay_seconds);
+      BuildWeightedTrafficDelays(vroom_output, job_ids, traffic.traffic_delay_seconds);
   for (Json::ArrayIndex index = 0; index < payload["jobs"].size(); ++index) {
     Json::Value& job = payload["jobs"][index];
     const int current_service = job["service"].isInt() ? job["service"].asInt() : 0;

@@ -6,13 +6,29 @@ import { useRouter } from "next/navigation";
 import { downloadRouteSummary } from "@/lib/driver-route/exportSummary";
 
 import DriverFooter from "../components/DriverFooter";
-import { readSavedRoute } from "../storage";
+import { readSavedRoute, ROUTE_STORE_EVENT, STORAGE_KEY } from "../storage";
 import SummaryStatBlock from "./components/SummaryStatBlock";
 import SummaryStopCard from "./components/SummaryStopCard";
 import { summaryStyles as styles } from "./styles";
 
-function subscribeToRouteStore() {
-  return () => undefined;
+function subscribeToRouteStore(onStoreChange: () => void) {
+  if (typeof window === "undefined") {
+    return () => undefined;
+  }
+
+  const notify = () => onStoreChange();
+  const handleStorage = (event: StorageEvent) => {
+    if (event.key === STORAGE_KEY) {
+      onStoreChange();
+    }
+  };
+
+  window.addEventListener(ROUTE_STORE_EVENT, notify);
+  window.addEventListener("storage", handleStorage);
+  return () => {
+    window.removeEventListener(ROUTE_STORE_EVENT, notify);
+    window.removeEventListener("storage", handleStorage);
+  };
 }
 
 function readEmptyRoute() {

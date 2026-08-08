@@ -38,16 +38,6 @@ function openNavigation(stop: DeliveryStop) {
   );
 }
 
-function openPhone(stop: DeliveryStop) {
-  const phoneNumber = stop.phoneNumber?.trim();
-
-  if (!phoneNumber) {
-    return;
-  }
-
-  window.location.href = `tel:${phoneNumber}`;
-}
-
 export default function DriverAssistPwaPage() {
   const router = useRouter();
   const topRef = useRef<HTMLDivElement>(null);
@@ -260,7 +250,6 @@ export default function DriverAssistPwaPage() {
                 setOpenId(null);
               }}
               onReport={() => openReportDialog(stop.id)}
-              onCall={stop.phoneNumber ? () => openPhone(stop) : undefined}
               onNavigate={() => openNavigation(stop)}
             />
           ))}
