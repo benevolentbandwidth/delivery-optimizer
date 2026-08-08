@@ -29,10 +29,11 @@ export default function DriverAssistSummaryPage() {
   const [exportMessage, setExportMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!route) {
+    const savedRoute = readSavedRoute();
+    if (!savedRoute) {
       router.replace("/upload-route");
     }
-  }, [route, router]);
+  }, [router]);
 
   const totals = useMemo(() => {
     // Failed stops count as remaining because they still need office review.
