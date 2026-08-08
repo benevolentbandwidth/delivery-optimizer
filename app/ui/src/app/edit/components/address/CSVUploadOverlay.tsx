@@ -249,7 +249,14 @@ function MappingFieldSelect({
   }, [open, activeIndex, onChange]);
 
   return (
-    <div ref={containerRef}>
+    <div
+      ref={containerRef}
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+          setOpen(false);
+        }
+      }}
+    >
       <button
         ref={buttonRef}
         type="button"
@@ -285,7 +292,7 @@ function MappingFieldSelect({
               role="option"
               aria-selected={f === value}
               className={
-                f === value || i === activeIndex
+                i === activeIndex
                   ? OVERLAY_AUTOCOMPLETE_ITEM_ACTIVE
                   : OVERLAY_AUTOCOMPLETE_ITEM
               }
