@@ -267,8 +267,8 @@ ReadLegDeparture(const Json::Value& step,
       const int from_service = from["service"].isInt() ? from["service"].asInt() : 0;
       const int to_arrival = to["arrival"].isInt() ? to["arrival"].asInt() : from_arrival;
       const int leg_seconds = std::max(to_arrival - from_arrival - from_service, 0);
-      const std::size_t job_index = static_cast<std::size_t>(
-          std::distance(job_ids.begin(), job_id));
+      const std::size_t job_index =
+          static_cast<std::size_t>(std::distance(job_ids.begin(), job_id));
       travel_seconds[job_index] += leg_seconds;
     }
   }
