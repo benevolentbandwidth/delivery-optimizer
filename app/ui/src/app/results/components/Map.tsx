@@ -130,10 +130,12 @@ function extractRoadPath(
 
   const path: google.maps.LatLng[] = [];
   for (const leg of route.legs ?? []) {
-    for (const [i, step] of (leg.steps ?? []).entries()) {
-      if (step.path?.length) {
-        path.push(...(i === 0 ? step.path : step.path.slice(1)));
-      }
+    for (const step of leg.steps ?? []) {
+      if (!step.path?.length) continue;
+      // Skip the shared boundary point only after something has been pushed,
+      // so an empty prior leg does not drop the next leg's first vertex.
+      const skipFirst = path.length > 0;
+      path.push(...(skipFirst ? step.path.slice(1) : step.path));
     }
   }
   return path;
@@ -312,6 +314,35 @@ function RoutePolylinesOverlay({
     };
 
     void (async () => {
+      // Immediate visual feedback for every route (cached road path or
+      // straight-line placeholder) before sequential Directions fetches resolve.
+      // Effect 1 owns creation; setRoutePolyline disposes the prior entry when
+      // the road-following polyline arrives.
+      for (
+        let routeIndex = 0;
+        routeIndex < routesSnapshot.length;
+        routeIndex += 1
+      ) {
+        if (cancelled) return;
+        const route = routesSnapshot[routeIndex]!;
+        const strokeColor = routeColorHex(routeIndex);
+        const path = buildRoutePath(route, null);
+        if (path.length < 2) continue;
+        const cached = directionsCacheRef.current.get(routeCacheKey(path));
+        if (cached && cached.path.length >= 2) {
+          setRoutePolyline(
+            route.vehicleId,
+            new google.maps.Polyline({
+              map,
+              path: cached.path,
+              ...routePolylineOptions(strokeColor),
+            }),
+          );
+        } else {
+          drawFallback(route, strokeColor);
+        }
+      }
+
       // Request one route at a time to avoid Directions API rate-limit failures.
       for (
         let routeIndex = 0;
@@ -349,29 +380,13 @@ function RoutePolylinesOverlay({
     }
 
     for (const route of routes) {
+      const poly = byVehicle[route.vehicleId];
+      // Effect 1 owns polyline creation; skip until it has written a polyline.
+      if (!poly) continue;
       const committed = buildRoutePath(route, null);
       if (committed.length < 2) continue;
       const key = routeCacheKey(committed);
       const cached = directionsCacheRef.current.get(key);
-      const routeIndex = routes.findIndex(
-        (r) => r.vehicleId === route.vehicleId,
-      );
-      const strokeColor = routeColorHex(routeIndex);
-
-      let poly = byVehicle[route.vehicleId];
-      if (!poly) {
-        // Effect 1 may have cleared refs before this runs; show a path immediately.
-        const path =
-          cached && cached.path.length >= 2 ? cached.path : committed;
-        poly = new google.maps.Polyline({
-          map,
-          path,
-          ...routePolylineOptions(strokeColor),
-        });
-        byVehicle[route.vehicleId] = poly;
-        continue;
-      }
-
       if (cached && cached.path.length >= 2) {
         poly.setPath(cached.path);
       } else {
