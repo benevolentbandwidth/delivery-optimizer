@@ -1,6 +1,5 @@
 #include "deliveryoptimizer/api/optimization_job_store.hpp"
 
-#include "deliveryoptimizer/adapters/json_utils.hpp"
 #include "deliveryoptimizer/api/internal/json_utils.hpp"
 
 #include <drogon/orm/DbClient.h>
@@ -46,15 +45,6 @@ ReadOptionalOutcome(const drogon::orm::Row& row) {
   return deliveryoptimizer::api::ParseSolveRequestOutcome(field.as<std::string>());
 }
 
-[[nodiscard]] std::optional<Json::Value> ReadOptionalJson(const drogon::orm::Row& row,
-                                                          const char* column_name) {
-  const auto field = row[column_name];
-  if (field.isNull()) {
-    return std::nullopt;
-  }
-  return deliveryoptimizer::adapters::ParseJsonText(field.as<std::string>());
-}
-
 [[nodiscard]] std::optional<deliveryoptimizer::api::OptimizationJobRecord>
 ReadJobRecord(const drogon::orm::Result& result) {
   if (result.empty()) {
@@ -81,7 +71,7 @@ ReadJobRecord(const drogon::orm::Result& result) {
       .outcome = ReadOptionalOutcome(row),
       .http_status = ReadOptionalHttpStatus(row),
       .error_message = ReadOptionalText(row, "error_message"),
-      .result_body = ReadOptionalJson(row, "result_json"),
+      .result_json = ReadOptionalText(row, "result_json"),
   };
 }
 
@@ -282,8 +272,8 @@ bool OptimizationJobStore::EnsureSchema(std::string* detail) {
   }
 }
 
-CreateOptimizationJobResult OptimizationJobStore::CreateJob(const std::string& request_id,
-                                                            const std::string& request_json,
+CreateOptimizationJobResult OptimizationJobStore::CreateJob(const std::string_view request_id,
+                                                            const std::string_view request_json,
                                                             const std::size_t jobs,
                                                             const std::size_t vehicles) {
   if (!IsConfigured()) {
@@ -570,7 +560,11 @@ std::size_t OptimizationJobStore::ExpireFinishedJobs() {
 }
 
 std::optional<OptimizationJobRecord> OptimizationJobStore::GetJob(const std::string& job_id) {
-  return ReadJobById(job_id);
+  return ReadJobById(job_id, true);
+}
+
+std::optional<OptimizationJobRecord> OptimizationJobStore::GetJobStatus(const std::string& job_id) {
+  return ReadJobById(job_id, false);
 }
 
 OptimizationJobStoreStats OptimizationJobStore::GetStats() {
@@ -618,21 +612,27 @@ std::size_t OptimizationJobStore::CountHealthyWorkers(const std::chrono::millise
   }
 }
 
-std::optional<OptimizationJobRecord> OptimizationJobStore::ReadJobById(const std::string& job_id) {
+std::optional<OptimizationJobRecord> OptimizationJobStore::ReadJobById(const std::string& job_id,
+                                                                       const bool include_result) {
   if (!IsConfigured()) {
     return std::nullopt;
   }
 
   try {
-    const auto result = client_->execSqlSync(
+    static const std::string kJobWithResultQuery =
         "select id, request_id, status, jobs_count, vehicles_count, "
         "queued_at::text as queued_at, started_at::text as started_at, "
         "completed_at::text as completed_at, expires_at::text as expires_at, "
         "outcome, http_status, error_message, result_json::text as result_json "
-        "from optimization_jobs "
-        "where id = $1",
-        job_id);
-    return ReadJobRecord(result);
+        "from optimization_jobs where id = $1";
+    static const std::string kJobStatusQuery =
+        "select id, request_id, status, jobs_count, vehicles_count, "
+        "queued_at::text as queued_at, started_at::text as started_at, "
+        "completed_at::text as completed_at, expires_at::text as expires_at, "
+        "outcome, http_status, error_message, null::text as result_json "
+        "from optimization_jobs where id = $1";
+    const std::string& query = include_result ? kJobWithResultQuery : kJobStatusQuery;
+    return ReadJobRecord(client_->execSqlSync(query, job_id));
   } catch (...) {
     return std::nullopt;
   }

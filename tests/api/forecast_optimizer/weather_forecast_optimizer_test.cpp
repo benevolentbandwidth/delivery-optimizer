@@ -1,3 +1,4 @@
+#include "deliveryoptimizer/adapters/json_utils.hpp"
 #include "deliveryoptimizer/api/forecast_optimizer.hpp"
 
 #include <gtest/gtest.h>
@@ -5,6 +6,12 @@
 #include <optional>
 
 namespace {
+
+[[nodiscard]] Json::Value ParsePayloadText(const std::string& payload_text) {
+  const auto payload = deliveryoptimizer::adapters::ParseJsonText(payload_text);
+  EXPECT_TRUE(payload.has_value());
+  return payload.value_or(Json::Value{Json::objectValue});
+}
 
 [[nodiscard]] deliveryoptimizer::api::OptimizeRequestInput BuildInput() {
   return deliveryoptimizer::api::OptimizeRequestInput{
@@ -92,8 +99,9 @@ TEST(WeatherForecastOptimizerTest, BelowThresholdWeatherDoesNotChangeVroomInput)
       .openweather_base_url = "",
   };
 
-  const Json::Value payload = deliveryoptimizer::api::BuildWeatherAdjustedVroomInput(
-      input, deliveryoptimizer::api::EstimateWeatherImpact(options, input.jobs.size(), 300));
+  const Json::Value payload =
+      ParsePayloadText(deliveryoptimizer::api::BuildWeatherAdjustedVroomInputText(
+          input, deliveryoptimizer::api::EstimateWeatherImpact(options, input.jobs.size(), 300)));
 
   ASSERT_TRUE(payload["jobs"].isArray());
   ASSERT_EQ(payload["jobs"].size(), 2U);
@@ -112,10 +120,10 @@ TEST(WeatherForecastOptimizerTest, AboveThresholdWeatherAddsServiceTime) {
       .openweather_base_url = "",
   };
 
-  const Json::Value payload = deliveryoptimizer::api::BuildWeatherAdjustedVroomInput(
-      input, deliveryoptimizer::api::EstimateWeatherImpact(options, input.jobs.size(), 300));
   const deliveryoptimizer::api::WeatherImpactEstimate impact =
       deliveryoptimizer::api::EstimateWeatherImpact(options, input.jobs.size(), 300);
+  const Json::Value payload =
+      ParsePayloadText(deliveryoptimizer::api::BuildWeatherAdjustedVroomInputText(input, impact));
   const Json::Value forecast =
       deliveryoptimizer::api::BuildWeatherForecastAnnotation(options, impact);
 

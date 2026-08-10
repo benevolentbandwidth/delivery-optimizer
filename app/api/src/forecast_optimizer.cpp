@@ -398,21 +398,10 @@ WeatherImpactEstimate RecalculateWeatherImpact(const WeatherForecastOptions& opt
   return EstimateRouteWeatherImpact(options, input, *summary_duration);
 }
 
-Json::Value BuildWeatherAdjustedVroomInput(const OptimizeRequestInput& input,
-                                           const WeatherImpactEstimate& impact) {
-  Json::Value payload = BuildVroomInput(input);
-  if (!impact.should_reoptimize) {
-    return payload;
-  }
-
+std::string BuildWeatherAdjustedVroomInputText(const OptimizeRequestInput& input,
+                                               const WeatherImpactEstimate& impact) {
   // Weather delay time so VROOM can still decide the route order before dispatch.
-  for (Json::ArrayIndex index = 0; index < payload["jobs"].size(); ++index) {
-    Json::Value& job = payload["jobs"][index];
-    const int current_service = job["service"].isInt() ? job["service"].asInt() : 0;
-    job["service"] = current_service + impact.delay_seconds_per_stop;
-  }
-
-  return payload;
+  return BuildVroomInputText(input, impact.should_reoptimize ? impact.delay_seconds_per_stop : 0);
 }
 
 Json::Value BuildWeatherForecastAnnotation(const WeatherForecastOptions& options,

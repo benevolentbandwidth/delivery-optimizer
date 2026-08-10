@@ -62,12 +62,13 @@ http_server_wait_until_responding "/health" "${health_file}"
 cat >"${payload_file}" <<'JSON'
 {
   "depot": { "location": [7.4236, 43.7384] },
+  // JsonCpp accepts comments and trailing commas; the queued jsonb payload is canonicalized.
   "vehicles": [
-    { "id": "van-1", "capacity": 8 }
+    { "id": "van-1", "capacity": 8 },
   ],
   "jobs": [
-    { "id": "order-1", "location": [7.4212, 43.7308], "demand": 1 }
-  ]
+    { "id": "order-1", "location": [7.4212, 43.7308], "demand": 1 },
+  ],
 }
 JSON
 

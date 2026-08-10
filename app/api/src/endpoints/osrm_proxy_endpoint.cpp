@@ -93,7 +93,7 @@ void RegisterOsrmProxyEndpoint(drogon::HttpAppFramework& app) {
         if (!IsAllowedService(service_name)) {
           Json::Value body;
           body["error"] = "OSRM service not allowed.";
-          auto response = drogon::HttpResponse::newHttpJsonResponse(body);
+          auto response = drogon::HttpResponse::newHttpJsonResponse(std::move(body));
           response->setStatusCode(drogon::k403Forbidden);
           std::move(callback)(response);
           return;
@@ -102,7 +102,7 @@ void RegisterOsrmProxyEndpoint(drogon::HttpAppFramework& app) {
         if (!IsSafeOsrmPathSuffix(path_suffix)) {
           Json::Value body;
           body["error"] = "OSRM path not allowed.";
-          auto response = drogon::HttpResponse::newHttpJsonResponse(body);
+          auto response = drogon::HttpResponse::newHttpJsonResponse(std::move(body));
           response->setStatusCode(drogon::k403Forbidden);
           std::move(callback)(response);
           return;
@@ -113,9 +113,15 @@ void RegisterOsrmProxyEndpoint(drogon::HttpAppFramework& app) {
         upstream_request->setPassThrough(true);
 
         const auto& query = request->query();
-        const std::string path =
-            query.empty() ? "/" + path_suffix : "/" + path_suffix + "?" + query;
-        upstream_request->setPath(path);
+        std::string path;
+        path.reserve(path_suffix.size() + query.size() + 2U);
+        path.push_back('/');
+        path.append(path_suffix);
+        if (!query.empty()) {
+          path.push_back('?');
+          path.append(query);
+        }
+        upstream_request->setPath(std::move(path));
 
         osrm_client->sendRequest(
             upstream_request,
@@ -128,7 +134,7 @@ void RegisterOsrmProxyEndpoint(drogon::HttpAppFramework& app) {
 
               Json::Value body;
               body["error"] = "OSRM upstream request failed.";
-              auto upstream_error = drogon::HttpResponse::newHttpJsonResponse(body);
+              auto upstream_error = drogon::HttpResponse::newHttpJsonResponse(std::move(body));
               upstream_error->setStatusCode(drogon::k502BadGateway);
               std::move(callback)(upstream_error);
             });

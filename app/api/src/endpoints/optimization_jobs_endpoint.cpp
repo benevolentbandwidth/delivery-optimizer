@@ -19,9 +19,18 @@
 
 namespace {
 
-[[nodiscard]] drogon::HttpResponsePtr BuildJsonResponse(const Json::Value& body,
+[[nodiscard]] drogon::HttpResponsePtr BuildJsonResponse(Json::Value body,
                                                         const drogon::HttpStatusCode code) {
-  auto response = drogon::HttpResponse::newHttpJsonResponse(body);
+  auto response = drogon::HttpResponse::newHttpJsonResponse(std::move(body));
+  response->setStatusCode(code);
+  return response;
+}
+
+[[nodiscard]] drogon::HttpResponsePtr BuildRawJsonResponse(std::string body,
+                                                           const drogon::HttpStatusCode code) {
+  auto response = drogon::HttpResponse::newHttpResponse();
+  response->setContentTypeCode(drogon::CT_APPLICATION_JSON);
+  response->setBody(std::move(body));
   response->setStatusCode(code);
   return response;
 }
@@ -30,14 +39,14 @@ namespace {
                                                          const std::string_view error_message) {
   Json::Value body{Json::objectValue};
   body["error"] = std::string{error_message};
-  return BuildJsonResponse(body, code);
+  return BuildJsonResponse(std::move(body), code);
 }
 
-[[nodiscard]] drogon::HttpResponsePtr BuildValidationResponse(const Json::Value& issues) {
+[[nodiscard]] drogon::HttpResponsePtr BuildValidationResponse(Json::Value issues) {
   Json::Value body{Json::objectValue};
   body["error"] = "Validation failed.";
-  body["issues"] = issues;
-  return BuildJsonResponse(body, drogon::k400BadRequest);
+  body["issues"] = std::move(issues);
+  return BuildJsonResponse(std::move(body), drogon::k400BadRequest);
 }
 
 [[nodiscard]] drogon::HttpResponsePtr BuildOptimizationJobsUnavailableResponse(
@@ -57,7 +66,7 @@ namespace {
         body["detail"] = detail;
       }
     }
-    return BuildJsonResponse(body, drogon::k503ServiceUnavailable);
+    return BuildJsonResponse(std::move(body), drogon::k503ServiceUnavailable);
   }
 
   return BuildErrorResponse(drogon::k503ServiceUnavailable, "Optimization jobs are unavailable.");
@@ -142,12 +151,11 @@ void RegisterOptimizationJobsEndpoints(drogon::HttpAppFramework& app,
 
         lifecycle->jobs = parsed_request->size.jobs;
         lifecycle->vehicles = parsed_request->size.vehicles;
-        const auto context = GetRequestContext(request).value_or(RequestContext{
-            .request_id = lifecycle->request_id,
-            .started_at = lifecycle->request_started_at,
-        });
+        // PostgreSQL's jsonb parser is stricter than JsonCpp (for example, it
+        // rejects comments and trailing commas), so persist the validated DOM.
+        const auto canonical_request_json = internal::RenderJson(*parsed_json);
         const auto created_job =
-            store->CreateJob(context.request_id, internal::RenderJson(*parsed_json),
+            store->CreateJob(lifecycle->request_id, canonical_request_json,
                              parsed_request->size.jobs, parsed_request->size.vehicles);
         if (created_job.status == CreateOptimizationJobStatus::kQueueFull) {
           FinalizeSolveRequest(observability, lifecycle, SolveRequestOutcome::kRejectedQueueFull,
@@ -167,7 +175,7 @@ void RegisterOptimizationJobsEndpoints(drogon::HttpAppFramework& app,
 
         FinalizeSolveRequest(observability, lifecycle, SolveRequestOutcome::kAcceptedAsync, 202U);
         Json::Value body = BuildJobStatusBody(*created_job.record);
-        auto response = BuildJsonResponse(body, drogon::k202Accepted);
+        auto response = BuildJsonResponse(std::move(body), drogon::k202Accepted);
         response->addHeader("Location", "/api/v1/optimization-jobs/" + created_job.record->job_id);
         std::move(callback)(response);
       },
@@ -185,15 +193,15 @@ void RegisterOptimizationJobsEndpoints(drogon::HttpAppFramework& app,
           return;
         }
 
-        const auto job = store->GetJob(job_id);
+        auto job = store->GetJob(job_id);
         if (!job.has_value() || job->state == OptimizationJobState::kExpired) {
           std::move(callback)(
               BuildErrorResponse(drogon::k404NotFound, "Optimization job not found."));
           return;
         }
 
-        if (job->result_body.has_value()) {
-          std::move(callback)(BuildJsonResponse(*job->result_body, drogon::k200OK));
+        if (job->result_json.has_value()) {
+          std::move(callback)(BuildRawJsonResponse(std::move(*job->result_json), drogon::k200OK));
           return;
         }
 
@@ -202,7 +210,7 @@ void RegisterOptimizationJobsEndpoints(drogon::HttpAppFramework& app,
                            job->state == OptimizationJobState::kRunning)
                               ? drogon::k202Accepted
                               : drogon::k409Conflict;
-        std::move(callback)(BuildJsonResponse(body, code));
+        std::move(callback)(BuildJsonResponse(std::move(body), code));
       },
       {drogon::Get});
 
@@ -218,7 +226,7 @@ void RegisterOptimizationJobsEndpoints(drogon::HttpAppFramework& app,
           return;
         }
 
-        const auto job = store->GetJob(job_id);
+        const auto job = store->GetJobStatus(job_id);
         if (!job.has_value()) {
           std::move(callback)(
               BuildErrorResponse(drogon::k404NotFound, "Optimization job not found."));

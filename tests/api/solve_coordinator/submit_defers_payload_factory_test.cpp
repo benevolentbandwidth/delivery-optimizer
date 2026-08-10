@@ -15,7 +15,7 @@ namespace {
 
 class BlockingRunner final : public deliveryoptimizer::api::VroomRunner {
 public:
-  deliveryoptimizer::api::VroomRunResult Run(const Json::Value& input) const override {
+  deliveryoptimizer::api::VroomRunResult Run(const std::string& input) const override {
     (void)input;
     {
       std::lock_guard<std::mutex> lock(mutex_);
@@ -53,7 +53,7 @@ private:
 
 class ImmediateRunner final : public deliveryoptimizer::api::VroomRunner {
 public:
-  deliveryoptimizer::api::VroomRunResult Run(const Json::Value& input) const override {
+  deliveryoptimizer::api::VroomRunResult Run(const std::string& input) const override {
     (void)input;
     {
       std::lock_guard<std::mutex> lock(mutex_);
@@ -108,7 +108,7 @@ TEST(SolveCoordinatorTest, DoesNotInvokePayloadFactoryWhenSolveIsRejectedForSync
       },
       [&payload_factory_called] {
         payload_factory_called.store(true);
-        return Json::Value{Json::objectValue};
+        return "{}";
       },
       [](const deliveryoptimizer::api::CoordinatedSolveResult&) {
         FAIL() << "callback should not run";
@@ -134,7 +134,7 @@ TEST(SolveCoordinatorTest, DoesNotInvokePayloadFactoryWhenSolveIsRejectedForQueu
           },
           [&first_payload_factory_called] {
             first_payload_factory_called.store(true);
-            return Json::Value{Json::objectValue};
+            return "{}";
           },
           [&first_result_promise](const deliveryoptimizer::api::CoordinatedSolveResult& result) {
             first_result_promise.set_value(result);
@@ -150,7 +150,7 @@ TEST(SolveCoordinatorTest, DoesNotInvokePayloadFactoryWhenSolveIsRejectedForQueu
       },
       [&second_payload_factory_called] {
         second_payload_factory_called.store(true);
-        return Json::Value{Json::objectValue};
+        return "{}";
       },
       [](const deliveryoptimizer::api::CoordinatedSolveResult&) {
         FAIL() << "callback should not run";
@@ -192,7 +192,7 @@ TEST(SolveCoordinatorTest, WorkerRejectsQueuedSolveThatExpiredBeforeDequeue) {
               .jobs = 1U,
               .vehicles = 1U,
           },
-          [] { return Json::Value{Json::objectValue}; },
+          [] { return "{}"; },
           [&first_result_promise](const deliveryoptimizer::api::CoordinatedSolveResult& result) {
             first_result_promise.set_value(result);
           }),
@@ -207,7 +207,7 @@ TEST(SolveCoordinatorTest, WorkerRejectsQueuedSolveThatExpiredBeforeDequeue) {
           },
           [&second_payload_factory_called] {
             second_payload_factory_called.store(true);
-            return Json::Value{Json::objectValue};
+            return "{}";
           },
           [&second_result_promise](const deliveryoptimizer::api::CoordinatedSolveResult& result) {
             second_result_promise.set_value(result);
@@ -254,7 +254,7 @@ TEST(SolveCoordinatorTest, QueueTimerExpiresQueuedSolveBehindReservedWorkerSlots
               .jobs = 1U,
               .vehicles = 1U,
           },
-          [] { return Json::Value{Json::objectValue}; },
+          [] { return "{}"; },
           [&first_result_promise](const deliveryoptimizer::api::CoordinatedSolveResult& result) {
             first_result_promise.set_value(result);
           }),
@@ -265,7 +265,7 @@ TEST(SolveCoordinatorTest, QueueTimerExpiresQueuedSolveBehindReservedWorkerSlots
               .jobs = 1U,
               .vehicles = 1U,
           },
-          [] { return Json::Value{Json::objectValue}; },
+          [] { return "{}"; },
           [&second_result_promise](const deliveryoptimizer::api::CoordinatedSolveResult& result) {
             second_result_promise.set_value(result);
           }),
@@ -278,7 +278,7 @@ TEST(SolveCoordinatorTest, QueueTimerExpiresQueuedSolveBehindReservedWorkerSlots
           },
           [&third_payload_factory_called] {
             third_payload_factory_called.store(true);
-            return Json::Value{Json::objectValue};
+            return "{}";
           },
           [&third_result_promise](const deliveryoptimizer::api::CoordinatedSolveResult& result) {
             third_result_promise.set_value(result);
@@ -330,7 +330,7 @@ TEST(SolveCoordinatorTest, DestructorFailsQueuedSolveBeforeActiveWorkerFinishes)
               .jobs = 1U,
               .vehicles = 1U,
           },
-          [] { return Json::Value{Json::objectValue}; },
+          [] { return "{}"; },
           [&first_result_promise](const deliveryoptimizer::api::CoordinatedSolveResult& result) {
             first_result_promise.set_value(result);
           }),
@@ -343,7 +343,7 @@ TEST(SolveCoordinatorTest, DestructorFailsQueuedSolveBeforeActiveWorkerFinishes)
               .jobs = 1U,
               .vehicles = 1U,
           },
-          [] { return Json::Value{Json::objectValue}; },
+          [] { return "{}"; },
           [&second_result_promise](const deliveryoptimizer::api::CoordinatedSolveResult& result) {
             second_result_promise.set_value(result);
           }),
@@ -383,7 +383,7 @@ TEST(SolveCoordinatorTest, AcceptedSolveWithMaximumQueueWaitDoesNotTimeOutImmedi
                 },
                 [&payload_factory_called] {
                   payload_factory_called.store(true);
-                  return Json::Value{Json::objectValue};
+                  return "{}";
                 },
                 [&result_promise](const deliveryoptimizer::api::CoordinatedSolveResult& result) {
                   result_promise.set_value(result);
@@ -407,7 +407,7 @@ TEST(SolveCoordinatorTest, DestructorWaitsForInFlightSolveToFinish) {
                     .jobs = 1U,
                     .vehicles = 1U,
                 },
-                [] { return Json::Value{Json::objectValue}; },
+                [] { return "{}"; },
                 [&result_promise](const deliveryoptimizer::api::CoordinatedSolveResult& result) {
                   result_promise.set_value(result);
                 }),
@@ -448,7 +448,7 @@ TEST(SolveCoordinatorTest, ExtremelyLargeQueueWaitDoesNotExpireQueuedSolveImmedi
               .jobs = 1U,
               .vehicles = 1U,
           },
-          [] { return Json::Value{Json::objectValue}; },
+          [] { return "{}"; },
           [&first_result_promise](const deliveryoptimizer::api::CoordinatedSolveResult& result) {
             first_result_promise.set_value(result);
           }),
@@ -463,7 +463,7 @@ TEST(SolveCoordinatorTest, ExtremelyLargeQueueWaitDoesNotExpireQueuedSolveImmedi
           },
           [&second_payload_factory_called] {
             second_payload_factory_called.store(true);
-            return Json::Value{Json::objectValue};
+            return "{}";
           },
           [&second_result_promise](const deliveryoptimizer::api::CoordinatedSolveResult& result) {
             second_result_promise.set_value(result);
@@ -504,7 +504,7 @@ TEST(SolveCoordinatorTest, RequestsUsingFreeWorkerSlotsDoNotQueueTimeout) {
               .jobs = 1U,
               .vehicles = 1U,
           },
-          [] { return Json::Value{Json::objectValue}; },
+          [] { return "{}"; },
           [&first_result_promise](const deliveryoptimizer::api::CoordinatedSolveResult& result) {
             first_result_promise.set_value(result);
           }),
@@ -515,7 +515,7 @@ TEST(SolveCoordinatorTest, RequestsUsingFreeWorkerSlotsDoNotQueueTimeout) {
               .jobs = 1U,
               .vehicles = 1U,
           },
-          [] { return Json::Value{Json::objectValue}; },
+          [] { return "{}"; },
           [&second_result_promise](const deliveryoptimizer::api::CoordinatedSolveResult& result) {
             second_result_promise.set_value(result);
           }),
@@ -557,7 +557,7 @@ TEST(SolveCoordinatorTest, ReleasesActiveSolveSlotBeforeRunningCompletionCallbac
               .jobs = 1U,
               .vehicles = 1U,
           },
-          [] { return Json::Value{Json::objectValue}; },
+          [] { return "{}"; },
           [&first_callback_started_promise, &release_first_callback_future,
            &first_result_promise](const deliveryoptimizer::api::CoordinatedSolveResult& result) {
             first_callback_started_promise.set_value();
@@ -574,7 +574,7 @@ TEST(SolveCoordinatorTest, ReleasesActiveSolveSlotBeforeRunningCompletionCallbac
           .jobs = 1U,
           .vehicles = 1U,
       },
-      [] { return Json::Value{Json::objectValue}; },
+      [] { return "{}"; },
       [&second_result_promise](const deliveryoptimizer::api::CoordinatedSolveResult& result) {
         second_result_promise.set_value(result);
       });
@@ -614,7 +614,7 @@ TEST(SolveCoordinatorTest, ContinuesRunningQueuedSolvesWhileCompletionCallbackIs
               .jobs = 1U,
               .vehicles = 1U,
           },
-          [] { return Json::Value{Json::objectValue}; },
+          [] { return "{}"; },
           [&first_callback_started_promise, &release_first_callback_future,
            &first_result_promise](const deliveryoptimizer::api::CoordinatedSolveResult& result) {
             first_callback_started_promise.set_value();
@@ -632,7 +632,7 @@ TEST(SolveCoordinatorTest, ContinuesRunningQueuedSolvesWhileCompletionCallbackIs
               .jobs = 1U,
               .vehicles = 1U,
           },
-          [] { return Json::Value{Json::objectValue}; },
+          [] { return "{}"; },
           [&second_result_promise](const deliveryoptimizer::api::CoordinatedSolveResult& result) {
             second_result_promise.set_value(result);
           }),

@@ -227,7 +227,7 @@ void SolveCoordinator::WorkerLoop() {
       continue;
     }
 
-    const VroomRunResult solve_result = runner_->Run(queued_request->payload_factory());
+    VroomRunResult solve_result = runner_->Run(queued_request->payload_factory());
     const auto completed_at = std::chrono::steady_clock::now();
     {
       std::lock_guard<std::mutex> lock(mutex_);
@@ -242,7 +242,7 @@ void SolveCoordinator::WorkerLoop() {
     }
     condition_.notify_all();
 
-    CoordinatedSolveResult coordinated_result = ToCoordinatedSolveResult(solve_result);
+    CoordinatedSolveResult coordinated_result = ToCoordinatedSolveResult(std::move(solve_result));
     EnqueueCompletion(
         [callback = std::move(queued_request->callback),
          result = std::move(coordinated_result)]() mutable { callback(std::move(result)); });

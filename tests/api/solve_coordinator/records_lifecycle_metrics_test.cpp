@@ -18,7 +18,7 @@ using SteadyClock = std::chrono::steady_clock;
 
 class BlockingRunner final : public deliveryoptimizer::api::VroomRunner {
 public:
-  deliveryoptimizer::api::VroomRunResult Run(const Json::Value& input) const override {
+  deliveryoptimizer::api::VroomRunResult Run(const std::string& input) const override {
     (void)input;
     {
       std::lock_guard<std::mutex> lock(mutex_);
@@ -57,7 +57,7 @@ private:
 
 class ImmediateRunner final : public deliveryoptimizer::api::VroomRunner {
 public:
-  deliveryoptimizer::api::VroomRunResult Run(const Json::Value& input) const override {
+  deliveryoptimizer::api::VroomRunResult Run(const std::string& input) const override {
     (void)input;
     return deliveryoptimizer::api::VroomRunResult{
         .status = deliveryoptimizer::api::VroomRunStatus::kSuccess,
@@ -102,7 +102,7 @@ TEST(SolveCoordinatorLifecycleTest, RecordsLifecycleAndGaugeTransitionsForSucces
                     .jobs = 1U,
                     .vehicles = 1U,
                 },
-                [] { return Json::Value{Json::objectValue}; },
+                [] { return "{}"; },
                 [&result_promise](const deliveryoptimizer::api::CoordinatedSolveResult& result) {
                   result_promise.set_value(result);
                 },
@@ -142,7 +142,7 @@ TEST(SolveCoordinatorLifecycleTest, RecordsAcceptedBeforeCompletionCallbackRuns)
                     .jobs = 1U,
                     .vehicles = 1U,
                 },
-                [] { return Json::Value{Json::objectValue}; },
+                [] { return "{}"; },
                 [&metrics_promise,
                  observability](const deliveryoptimizer::api::CoordinatedSolveResult& result) {
                   EXPECT_EQ(result.status,
@@ -187,7 +187,7 @@ TEST(SolveCoordinatorLifecycleTest, RecordsQueuedTimeoutAndQueueGaugeTransitions
               .jobs = 1U,
               .vehicles = 1U,
           },
-          [] { return Json::Value{Json::objectValue}; },
+          [] { return "{}"; },
           [&first_result_promise](const deliveryoptimizer::api::CoordinatedSolveResult& result) {
             first_result_promise.set_value(result);
           },
@@ -201,7 +201,7 @@ TEST(SolveCoordinatorLifecycleTest, RecordsQueuedTimeoutAndQueueGaugeTransitions
               .jobs = 1U,
               .vehicles = 1U,
           },
-          [] { return Json::Value{Json::objectValue}; },
+          [] { return "{}"; },
           [&second_result_promise](const deliveryoptimizer::api::CoordinatedSolveResult& result) {
             second_result_promise.set_value(result);
           },

@@ -1,13 +1,15 @@
 #include "deliveryoptimizer/api/solve_execution.hpp"
 
+#include <utility>
+
 namespace deliveryoptimizer::api {
 
-CoordinatedSolveResult ToCoordinatedSolveResult(const VroomRunResult& result) {
+CoordinatedSolveResult ToCoordinatedSolveResult(VroomRunResult&& result) {
   switch (result.status) {
   case VroomRunStatus::kSuccess:
     return CoordinatedSolveResult{
         .status = CoordinatedSolveStatus::kSucceeded,
-        .output = result.output,
+        .output = std::move(result.output),
     };
   case VroomRunStatus::kTimedOut:
     return CoordinatedSolveResult{
@@ -25,15 +27,16 @@ CoordinatedSolveResult ToCoordinatedSolveResult(const VroomRunResult& result) {
 }
 
 SolveExecutionResult BuildSolveExecutionResult(const OptimizeRequestInput& input,
-                                               const CoordinatedSolveResult& result,
-                                               const std::optional<Json::Value>& forecast) {
+                                               CoordinatedSolveResult result,
+                                               std::optional<Json::Value> forecast) {
   switch (result.status) {
   case CoordinatedSolveStatus::kSucceeded:
     if (result.output.has_value()) {
       return SolveExecutionResult{
           .outcome = SolveRequestOutcome::kSucceeded,
           .http_status = 200U,
-          .response_body = BuildOptimizeSuccessBody(input, *result.output, forecast),
+          .response_body =
+              BuildOptimizeSuccessBody(input, std::move(*result.output), std::move(forecast)),
           .error_message = {},
       };
     }

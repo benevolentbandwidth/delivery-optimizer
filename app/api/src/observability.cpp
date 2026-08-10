@@ -1,10 +1,11 @@
 #include "deliveryoptimizer/api/observability.hpp"
 
+#include "deliveryoptimizer/api/internal/json_utils.hpp"
+
 #include <array>
 #include <cstddef>
 #include <iomanip>
 #include <iostream>
-#include <json/json.h>
 #include <limits>
 #include <ostream>
 #include <sstream>
@@ -412,29 +413,27 @@ void ObservabilityRegistry::LogSolveRequest(const SolveLifecycle& lifecycle,
   const auto completed_at = lifecycle.completed_at.value_or(SteadyClock::now());
   const auto request_duration = completed_at - lifecycle.request_started_at;
 
-  Json::Value log_line{Json::objectValue};
-  log_line["request_id"] = lifecycle.request_id;
-  log_line["method"] = lifecycle.method;
-  log_line["path"] = lifecycle.path;
-  log_line["jobs"] = static_cast<Json::UInt64>(lifecycle.jobs);
-  log_line["vehicles"] = static_cast<Json::UInt64>(lifecycle.vehicles);
-  log_line["queue_depth"] = static_cast<Json::UInt64>(lifecycle.queue_depth);
-  log_line["inflight_solves"] = static_cast<Json::UInt64>(lifecycle.inflight_solves);
-  log_line["outcome"] = std::string{ToOutcomeString(outcome)};
-  log_line["http_status"] = http_status;
-  log_line["queue_wait_ms"] =
-      static_cast<Json::Int64>(DurationToMilliseconds(lifecycle.queue_wait_duration));
-  log_line["solve_duration_ms"] =
-      static_cast<Json::Int64>(DurationToMilliseconds(lifecycle.solve_duration));
-  log_line["request_duration_ms"] =
-      static_cast<Json::Int64>(DurationToMilliseconds(request_duration));
-
-  Json::StreamWriterBuilder writer_builder;
-  writer_builder["indentation"] = "";
-  writer_builder["commentStyle"] = "None";
-  writer_builder["emitUTF8"] = true;
-
-  const std::string rendered_line = Json::writeString(writer_builder, log_line);
+  // The log line is a flat object of scalars, so it is rendered directly instead
+  // of building a Json::Value tree + writer per request (~20 allocations saved).
+  std::string rendered_line;
+  rendered_line.reserve(320U);
+  rendered_line += "{\"request_id\":";
+  internal::AppendEscapedJsonString(rendered_line, lifecycle.request_id);
+  internal::AppendJsonField(rendered_line, "method", lifecycle.method);
+  internal::AppendJsonField(rendered_line, "path", lifecycle.path);
+  internal::AppendJsonField(rendered_line, "jobs", lifecycle.jobs);
+  internal::AppendJsonField(rendered_line, "vehicles", lifecycle.vehicles);
+  internal::AppendJsonField(rendered_line, "queue_depth", lifecycle.queue_depth);
+  internal::AppendJsonField(rendered_line, "inflight_solves", lifecycle.inflight_solves);
+  internal::AppendJsonField(rendered_line, "outcome", ToOutcomeString(outcome));
+  internal::AppendJsonField(rendered_line, "http_status", http_status);
+  internal::AppendJsonField(rendered_line, "queue_wait_ms",
+                            DurationToMilliseconds(lifecycle.queue_wait_duration));
+  internal::AppendJsonField(rendered_line, "solve_duration_ms",
+                            DurationToMilliseconds(lifecycle.solve_duration));
+  internal::AppendJsonField(rendered_line, "request_duration_ms",
+                            DurationToMilliseconds(request_duration));
+  rendered_line.push_back('}');
 
   bool notify_writer = false;
   {
@@ -447,7 +446,7 @@ void ObservabilityRegistry::LogSolveRequest(const SolveLifecycle& lifecycle,
         pending_log_lines_.pop_front();
         tracker_write_failures_.fetch_add(1U, std::memory_order_relaxed);
       }
-      pending_log_lines_.push_back(rendered_line);
+      pending_log_lines_.push_back(std::move(rendered_line));
       notify_writer = true;
     }
   }
