@@ -455,6 +455,10 @@ export const ADDRESS_ROW_LOCKED_NOTES_BTN = `${ADDRESS_ROW_LOCKED_PLAIN_TEXT} ${
 export const ADDRESS_ROW_LOCKED_NOTES_TEXT =
   "overflow-hidden [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:3]";
 
+// "Optimized" badge on delivery cards whose stop was included in the last optimize run.
+export const ADDRESS_ROW_OPTIMIZED_BADGE =
+  "self-start bg-[var(--edit-container-active)] px-2 py-[3px] rounded-[4px] font-semibold text-[12px] leading-[16px] text-[var(--edit-text-primary)] whitespace-nowrap";
+
 export const MOBILE_LOCKED_CLICKABLE =
   "cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--edit-teal-300)]";
 
@@ -702,6 +706,8 @@ export const MOBILE_ADDR_EDIT_SECTION = "flex flex-col gap-2";
 
 export const MOBILE_ADDR_EDIT_SECTION_LABEL =
   "font-semibold text-[16px] leading-[1.5] text-[var(--edit-text-primary)]";
+
+export const MOBILE_ADDR_RECIPIENT_LABEL_ROW = "flex items-center gap-2";
 
 export const MOBILE_ADDR_EDIT_NAME_ROW = "flex items-center gap-2";
 

@@ -49,6 +49,8 @@ import {
   ADDRESS_ROW_LOCKED_NOTES_BTN,
   ADDRESS_ROW_LOCKED_NOTES_TEXT,
   ADDRESS_ROW_GEOCODE_ERROR_LOCKED,
+  ADDRESS_ROW_OPTIMIZED_BADGE,
+  MOBILE_ADDR_RECIPIENT_LABEL_ROW,
   MOBILE_ADDR_CARD_EDIT_CONTENT,
   MOBILE_ADDR_EDIT_SECTION,
   MOBILE_ADDR_EDIT_SECTION_LABEL,
@@ -110,6 +112,7 @@ type AddressCardProps = {
   addressTouched: boolean;
   geocodeFailed: boolean;
   outOfRegionFailed: boolean;
+  isOptimized: boolean;
 };
 
 function StepperInput({
@@ -198,6 +201,10 @@ function StepperInput({
   );
 }
 
+function OptimizedBadge() {
+  return <span className={ADDRESS_ROW_OPTIMIZED_BADGE}>Optimized</span>;
+}
+
 function AutoResizeNotesTextarea({
   value,
   onChange,
@@ -255,6 +262,7 @@ export default function AddressCard({
   addressTouched,
   geocodeFailed,
   outOfRegionFailed,
+  isOptimized,
 }: AddressCardProps) {
   const [manualExpanded, setManualExpanded] = useState(false);
   const [overlayOpen, setOverlayOpen] = useState(false);
@@ -281,6 +289,7 @@ export default function AddressCard({
                 <>
                   {/* Recipient column — locked */}
                   <div className={ADDRESS_ROW_LOCKED_RECIPIENT_COL}>
+                    {isOptimized && <OptimizedBadge />}
                     {hasRecipientContact(a) && (
                       <button
                         type="button"
@@ -571,7 +580,12 @@ export default function AddressCard({
           /* Summarized state (Figma 8325:7892) */
           <div className={MOBILE_ADDR_SUMMARY_CONTENT}>
             <div className={MOBILE_ADDR_SUMMARY_SECTION}>
-              <span className={MOBILE_ADDR_EDIT_SECTION_LABEL}>Recipient</span>
+              <div className={MOBILE_ADDR_RECIPIENT_LABEL_ROW}>
+                <span className={MOBILE_ADDR_EDIT_SECTION_LABEL}>
+                  Recipient
+                </span>
+                {isOptimized && <OptimizedBadge />}
+              </div>
               <div className={MOBILE_ADDR_LOCKED_RECIPIENT_LINES}>
                 {hasRecipientContact(a) && (
                   <span className={MOBILE_ADDR_LOCKED_VALUE}>
@@ -625,9 +639,12 @@ export default function AddressCard({
               <div className={MOBILE_ADDR_CARD_EDIT_CONTENT}>
                 {/* Recipient */}
                 <div className={MOBILE_ADDR_EDIT_SECTION}>
-                  <span className={MOBILE_ADDR_EDIT_SECTION_LABEL}>
-                    Recipient
-                  </span>
+                  <div className={MOBILE_ADDR_RECIPIENT_LABEL_ROW}>
+                    <span className={MOBILE_ADDR_EDIT_SECTION_LABEL}>
+                      Recipient
+                    </span>
+                    {isOptimized && <OptimizedBadge />}
+                  </div>
                   <button
                     type="button"
                     onClick={() => unlockAddress(a.id)}

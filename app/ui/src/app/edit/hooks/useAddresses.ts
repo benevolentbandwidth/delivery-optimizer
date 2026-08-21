@@ -2,7 +2,7 @@
  * Address list state: paged stops, lock/edit workflow, and validation for "add next".
  */
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import type { AddressCard } from "@/app/edit/types/delivery";
 import Fuse from "fuse.js";
 
@@ -10,6 +10,20 @@ export const ADDRESS_PAGE_SIZE_OPTIONS = [5, 10, 20, 30] as const;
 
 export function useAddresses() {
   const [addresses, setAddresses] = useState<AddressCard[]>([]);
+
+  // Monotonic high-water mark for address ids: never reissue an id that's
+  // already appeared, even after its address is deleted (deleted addresses
+  // can still be referenced by a stale optimize-results snapshot).
+  const highestIdRef = useRef(0);
+  useEffect(() => {
+    for (const a of addresses) {
+      if (a.id > highestIdRef.current) highestIdRef.current = a.id;
+    }
+  }, [addresses]);
+  const reserveId = useCallback(() => {
+    highestIdRef.current += 1;
+    return highestIdRef.current;
+  }, []);
 
   // Search: fuzzy filter across name, phone, address, and notes.
   const [searchQuery, _setSearchQuery] = useState("");
@@ -100,7 +114,7 @@ export function useAddresses() {
     if (addresses.length === 0) {
       setAddresses([
         {
-          id: 1,
+          id: reserveId(),
           locked: false,
           editingExisting: false,
           recipientName: "",
@@ -131,13 +145,12 @@ export function useAddresses() {
       return;
     }
 
-    const newId = addresses.reduce((max, a) => Math.max(max, a.id), 0) + 1;
     setAddresses([
       ...addresses.map((a) =>
         a.locked ? a : { ...a, locked: true, editingExisting: false },
       ),
       {
-        id: newId,
+        id: reserveId(),
         locked: false,
         editingExisting: false,
         recipientName: "",
@@ -154,7 +167,7 @@ export function useAddresses() {
     setTouchedIds(new Set());
     _setSearchQuery("");
     setAddressPage(Math.ceil((addresses.length + 1) / addressesPerPage));
-  }, [addresses, addressesPerPage]);
+  }, [addresses, addressesPerPage, reserveId]);
 
   const deleteAddress = useCallback(
     (id: number) => {
@@ -275,6 +288,7 @@ export function useAddresses() {
     unlockAddress,
     confirmAddress,
     importAddresses,
+    reserveId,
     touchedIds,
     addressPage,
     setAddressPage,

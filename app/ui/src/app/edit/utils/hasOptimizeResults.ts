@@ -26,3 +26,27 @@ export function clearOptimizeResults(): void {
   sessionStorage.removeItem("optimizeResults");
   window.dispatchEvent(new Event("optimize-results-updated"));
 }
+
+let cachedRaw: string | null = null;
+let cachedIds: number[] = [];
+
+/** Address ids that appear as a stop in the last completed optimize run. */
+export function readOptimizedAddressIds(): number[] {
+  if (typeof window === "undefined") return cachedIds;
+
+  const stored = sessionStorage.getItem("optimizeResults");
+  if (stored === cachedRaw) return cachedIds;
+  cachedRaw = stored;
+
+  try {
+    const parsed: unknown = stored ? JSON.parse(stored) : [];
+    cachedIds = Array.isArray(parsed)
+      ? (parsed as Route[])
+          .flatMap((r) => (r.stops ?? []).map((s) => Number(s.id)))
+          .filter((n) => !Number.isNaN(n))
+      : [];
+  } catch {
+    cachedIds = [];
+  }
+  return cachedIds;
+}

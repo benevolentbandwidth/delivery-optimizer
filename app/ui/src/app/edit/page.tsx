@@ -36,6 +36,7 @@ import DragDropOverlay from "@/app/edit/components/shared/DragDropOverlay";
 import { useVehicles } from "@/app/edit/hooks/useVehicles";
 import { useAddresses } from "@/app/edit/hooks/useAddresses";
 import { useOptimize } from "@/app/edit/hooks/useOptimize";
+import { useOptimizedAddressIds } from "@/app/edit/hooks/useOptimizedAddressIds";
 import { useCallback, useEffect, useState } from "react";
 import { loadSessionFromFile } from "@/lib/session/importSession";
 import { downloadSessionSave } from "@/lib/session/exportSession";
@@ -53,13 +54,6 @@ import AddressOverlay, {
 import type { AddressCard } from "@/app/edit/types/delivery";
 
 type StoredUploadFile = { name: string; content: string };
-
-function reindexAddresses(addresses: AddressCard[]): AddressCard[] {
-  return addresses.map((address, index) => ({
-    ...address,
-    id: index + 1,
-  }));
-}
 
 export default function Page() {
   const vehicleState = useVehicles();
@@ -96,6 +90,8 @@ export default function Page() {
     vehicleState.setVehiclesStartLocation,
     addressState.cacheAddressLocation,
   );
+
+  const optimizedAddressIds = useOptimizedAddressIds();
 
   const [isHydrated, setIsHydrated] = useState(false);
 
@@ -278,9 +274,10 @@ export default function Page() {
             setPendingCSVFile(null);
           }}
           importAddresses={(cards: AddressCard[]) =>
-            addressState.importAddresses(
-              reindexAddresses([...addressState.addresses, ...cards]),
-            )
+            addressState.importAddresses([
+              ...addressState.addresses,
+              ...cards.map((c) => ({ ...c, id: addressState.reserveId() })),
+            ])
           }
           onInvalidFile={() => {
             setIsUploadOverlayOpen(false);
@@ -358,6 +355,7 @@ export default function Page() {
                 {...addressState}
                 geocodeFailedIds={geocodeFailedAddressIds}
                 outOfRegionIds={outOfRegionAddressIds}
+                optimizedIds={optimizedAddressIds}
                 onOpenUploadOverlay={() => setIsUploadOverlayOpen(true)}
               />
               <AddressPagination {...addressState} />

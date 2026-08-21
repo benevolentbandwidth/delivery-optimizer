@@ -51,6 +51,7 @@ type AddressSectionProps = {
   searchQuery: string;
   setSearchQuery: (q: string) => void;
   outOfRegionIds: number[];
+  optimizedIds: number[];
   onOpenUploadOverlay: () => void;
 };
 
@@ -69,6 +70,7 @@ export default function AddressSection({
   searchQuery,
   setSearchQuery,
   outOfRegionIds,
+  optimizedIds,
   onOpenUploadOverlay,
 }: AddressSectionProps) {
   const [addressToDeleteId, setAddressToDeleteId] = useState<number | null>(
@@ -181,6 +183,7 @@ export default function AddressSection({
                   addressTouched={touchedIds.has(a.id)}
                   geocodeFailed={geocodeFailedIds.includes(a.id)}
                   outOfRegionFailed={outOfRegionIds.includes(a.id)}
+                  isOptimized={a.locked && optimizedIds.includes(a.id)}
                 />
               ))
             )}
