@@ -84,6 +84,8 @@ export function vroomToRoutes(
         phoneNumber: address?.phoneNumber || undefined,
         deliveryWindowStart: address?.deliveryTimeStart?.trim() || undefined,
         deliveryWindowEnd: address?.deliveryTimeEnd?.trim() || undefined,
+        serviceMinutes:
+          step.service != null ? Math.round(step.service / 60) : undefined,
       };
     });
 
@@ -100,6 +102,10 @@ export function vroomToRoutes(
             lng: startStep.location[0],
             address: vehicle?.startLocation || depotAddress || "",
           }
+        : undefined,
+      // The start step's arrival is when the driver leaves the depot.
+      startTime: startStep
+        ? secondsToTimeString(startStep.arrival % 86400)
         : undefined,
     };
   });

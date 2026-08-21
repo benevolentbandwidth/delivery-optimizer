@@ -26,6 +26,8 @@ export interface Stop {
   /** When both set (from delivery window picks), displayed as “start – end” on results */
   deliveryWindowStart?: string;
   deliveryWindowEnd?: string;
+  /** Dwell time at this stop in minutes, from the VROOM step's service duration */
+  serviceMinutes?: number;
 }
 
 // Data that a single route contains (one driver, their stops in order, and the path to draw for the route)
@@ -38,8 +40,9 @@ export interface Route {
   distanceMi?: number; // total distance for route in miles
   estimatedTimeMinutes?: number; // total estimated time in minutes
   startLocation?: { lat: number; lng: number; address: string }; // depot/origin for this route
+  startTime?: string; // depot departure time, e.g. "9:00 AM" (from the VROOM start step)
   driverPhoneNumber?: string; // driver's WhatsApp-reachable number, entered via Send Routes modal
-  lastSentAt?: string; // ISO timestamp set after a successful mock WhatsApp send; drives the "Sent" badge
+  lastSentAt?: string; // ISO timestamp set after a successful WhatsApp send; drives the "Sent" badge
 }
 
 export interface PendingPinMove {

@@ -9,7 +9,6 @@ spec:
         run.googleapis.com/container-dependencies: '{"api":["osrm","postgres"]}'
         autoscaling.knative.dev/minScale: "0"
         autoscaling.knative.dev/maxScale: "4"
-        run.googleapis.com/secrets: WHATSAPP_ACCESS_TOKEN:projects/926978903214/secrets/WHATSAPP_ACCESS_TOKEN,WHATSAPP_PHONE_NUMBER_ID:projects/926978903214/secrets/WHATSAPP_PHONE_NUMBER_ID
     spec:
       containerConcurrency: 80
       timeoutSeconds: 300
@@ -32,21 +31,6 @@ spec:
               value: osrm
             - name: DELIVERYOPTIMIZER_PG_DSN
               value: host=localhost port=5432 dbname=deliveryoptimizer user=deliveryoptimizer password=deliveryoptimizer
-            - name: WHATSAPP_ACCESS_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: WHATSAPP_ACCESS_TOKEN
-                  key: latest
-            - name: WHATSAPP_PHONE_NUMBER_ID
-              valueFrom:
-                secretKeyRef:
-                  name: WHATSAPP_PHONE_NUMBER_ID
-                  key: latest
-            - name: WHATSAPP_SEND_ROUTE_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: WHATSAPP_SEND_ROUTE_SECRET
-                  key: latest
           resources:
             limits:
               memory: 1Gi

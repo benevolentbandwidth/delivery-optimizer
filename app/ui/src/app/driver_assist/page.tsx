@@ -88,7 +88,7 @@ export default function DriverAssistPwaPage() {
         setError(
           importError instanceof Error
             ? importError.message
-            : "Please upload a valid JSON file.",
+            : "Please upload the route PDF you were sent.",
         );
       }
     }
@@ -143,7 +143,7 @@ export default function DriverAssistPwaPage() {
       setError(
         importError instanceof Error
           ? importError.message
-          : "Please upload a valid JSON file.",
+          : "Please upload the route PDF you were sent.",
       );
     } finally {
       setIsImporting(false);
@@ -223,7 +223,7 @@ export default function DriverAssistPwaPage() {
           <input
             ref={inputRef}
             type="file"
-            accept="application/json,.json"
+            accept="application/pdf,.pdf"
             style={styles.hiddenInput}
             onChange={(event) => {
               const file = event.target.files?.[0];
@@ -236,7 +236,7 @@ export default function DriverAssistPwaPage() {
             onClick={() => inputRef.current?.click()}
             disabled={isImporting}
           >
-            {isImporting ? "Uploading..." : "Upload JSON"}
+            {isImporting ? "Uploading..." : "Upload route PDF"}
           </button>
           {error ? <p style={styles.errorText}>{error}</p> : null}
         </section>
