@@ -795,14 +795,17 @@ export const ALERT_POPUP_FOOTER = "flex items-center justify-end gap-2";
 export const CSV_UPLOAD_OVERLAY_PANEL =
   "bg-[var(--edit-bg-primary)] flex flex-col gap-[14px] items-end overflow-hidden p-4 lg:p-6 rounded-[6px] w-full lg:max-w-[800px] mx-2 lg:mx-4 shadow-lg max-h-[90dvh]";
 
+export const CSV_UPLOAD_OVERLAY_PANEL_TALL =
+  "bg-[var(--edit-bg-primary)] flex flex-col gap-[14px] items-end overflow-hidden p-4 lg:p-6 rounded-[6px] w-full lg:max-w-[800px] mx-2 lg:mx-4 shadow-lg min-h-[360px] max-h-[90dvh]";
+
 export const CSV_UPLOAD_OVERLAY_INNER =
-  "flex flex-col gap-[16px] items-end w-full";
+  "flex flex-col gap-[16px] items-end w-full flex-1 min-h-0";
 
 export const CSV_UPLOAD_OVERLAY_CONTENT =
-  "flex flex-col gap-[16px] items-center w-full";
+  "flex flex-col gap-[16px] items-center w-full flex-1 min-h-0";
 
 export const CSV_UPLOAD_OVERLAY_TOP =
-  "flex flex-col gap-[24px] items-start w-full";
+  "flex flex-col gap-[24px] items-start w-full flex-1 min-h-0";
 
 export const CSV_UPLOAD_DROP_ZONE =
   "bg-[var(--edit-stone-50)] border border-[var(--edit-stone-200)] border-dashed flex flex-col h-[200px] items-center justify-center overflow-clip pt-[24px] pb-[16px] rounded-[6px] w-full";
@@ -843,6 +846,9 @@ export const CSV_UPLOAD_FILE_CHIP_SIZE =
 
 export const CSV_UPLOAD_FILE_CHIP_REMOVE =
   "flex items-center justify-center size-4 text-[var(--edit-text-primary)] hover:opacity-70 transition-opacity cursor-pointer";
+
+export const CSV_UPLOAD_SELECT_PLACEHOLDER =
+  "font-normal text-[16px] leading-6 text-[var(--edit-stone-600)] pointer-events-none flex-1 truncate";
 
 // ── SpinnerIcon ───────────────────────────────────────────────────────────────
 

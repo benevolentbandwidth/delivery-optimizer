@@ -1,6 +1,14 @@
 "use client";
 
-import { useRef, useState, useCallback, useMemo, useEffect } from "react";
+import {
+  useRef,
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+  useLayoutEffect,
+  type CSSProperties,
+} from "react";
 import {
   OVERLAY_BACKDROP,
   OVERLAY_HEADER,
@@ -10,6 +18,7 @@ import {
   OVERLAY_CANCEL_BTN,
   OVERLAY_PRIMARY_BTN,
   CSV_UPLOAD_OVERLAY_PANEL,
+  CSV_UPLOAD_OVERLAY_PANEL_TALL,
   CSV_UPLOAD_OVERLAY_INNER,
   CSV_UPLOAD_OVERLAY_CONTENT,
   CSV_UPLOAD_OVERLAY_TOP,
@@ -26,6 +35,14 @@ import {
   CSV_UPLOAD_FILE_CHIP_RIGHT,
   CSV_UPLOAD_FILE_CHIP_SIZE,
   CSV_UPLOAD_FILE_CHIP_REMOVE,
+  OVERLAY_SELECT_WRAPPER,
+  OVERLAY_SELECT_VALUE,
+  OVERLAY_SELECT_ICON,
+  CSV_UPLOAD_SELECT_PLACEHOLDER,
+  OVERLAY_AUTOCOMPLETE_DROPDOWN,
+  OVERLAY_AUTOCOMPLETE_ITEM,
+  OVERLAY_AUTOCOMPLETE_ITEM_ACTIVE,
+  OVERLAY_AUTOCOMPLETE_ITEM_TEXT,
 } from "@/app/edit/formStyles.v2";
 import AlertPopup from "@/app/edit/components/shared/AlertPopup";
 import type { AddressCard } from "@/app/edit/types/delivery";
@@ -57,6 +74,22 @@ type CSVUploadOverlayProps = {
   onInvalidFile?: () => void;
   initialFile?: File;
 };
+
+const CHEVRON_DOWN_ICON = (
+  <svg
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden
+  >
+    <polyline points="6 9 12 15 18 9" />
+  </svg>
+);
 
 const MAX_CSV_BYTES = 10 * 1024 * 1024;
 
@@ -104,6 +137,181 @@ function buildAddressCards(
       });
       return card;
     });
+}
+
+// ─── Custom mapping dropdown (matches overlay design instead of native <select>) ─
+
+const MAPPING_FIELD_OPTIONS = Object.keys(FIELD_LABELS) as Exclude<
+  MappableField,
+  ""
+>[];
+
+// Leading "" entry lets users clear an incorrect mapping back to unmapped.
+const MAPPING_FIELD_VALUES: MappableField[] = ["", ...MAPPING_FIELD_OPTIONS];
+
+function MappingFieldSelect({
+  header,
+  value,
+  onChange,
+}: {
+  header: string;
+  value: MappableField;
+  onChange: (field: MappableField) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const optionRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [menuStyle, setMenuStyle] = useState<CSSProperties>({});
+
+  useLayoutEffect(() => {
+    if (open) {
+      const currentIndex = MAPPING_FIELD_VALUES.indexOf(value);
+      setActiveIndex(currentIndex >= 0 ? currentIndex : 0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    optionRefs.current[activeIndex]?.scrollIntoView({ block: "nearest" });
+  }, [open, activeIndex]);
+
+  useLayoutEffect(() => {
+    if (!open || !buttonRef.current) return;
+    const r = buttonRef.current.getBoundingClientRect();
+    const GAP = 4;
+    const MENU_MAX_HEIGHT = 192; // matches max-h-48 on OVERLAY_AUTOCOMPLETE_DROPDOWN
+    const spaceBelow = window.innerHeight - r.bottom - GAP;
+    const spaceAbove = r.top - GAP;
+    const openUpward = spaceBelow < MENU_MAX_HEIGHT && spaceAbove > spaceBelow;
+    setMenuStyle(
+      openUpward
+        ? {
+            bottom: window.innerHeight - r.top + GAP,
+            left: r.left,
+            width: r.width,
+            maxHeight: Math.min(MENU_MAX_HEIGHT, spaceAbove),
+          }
+        : {
+            top: r.bottom + GAP,
+            left: r.left,
+            width: r.width,
+            maxHeight: Math.min(MENU_MAX_HEIGHT, spaceBelow),
+          },
+    );
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    function handlePointerDown(e: MouseEvent) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
+        setOpen(false);
+      }
+    }
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setOpen(false);
+      } else if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setActiveIndex((i) => Math.min(i + 1, MAPPING_FIELD_VALUES.length - 1));
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setActiveIndex((i) => Math.max(i - 1, 0));
+      } else if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        const chosen = MAPPING_FIELD_VALUES[activeIndex];
+        if (chosen !== undefined) {
+          onChange(chosen);
+          setOpen(false);
+        }
+      }
+    }
+    function handleScroll(e: Event) {
+      if (menuRef.current && menuRef.current.contains(e.target as Node)) {
+        return;
+      }
+      setOpen(false);
+    }
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("scroll", handleScroll, true);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("scroll", handleScroll, true);
+    };
+  }, [open, activeIndex, onChange]);
+
+  return (
+    <div
+      ref={containerRef}
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+          setOpen(false);
+        }
+      }}
+    >
+      <button
+        ref={buttonRef}
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className={OVERLAY_SELECT_WRAPPER}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label={`Map ${header} column`}
+      >
+        <span
+          className={
+            value ? OVERLAY_SELECT_VALUE : CSV_UPLOAD_SELECT_PLACEHOLDER
+          }
+        >
+          {value ? FIELD_LABELS[value as Exclude<MappableField, "">] : "Select"}
+        </span>
+        <span className={OVERLAY_SELECT_ICON}>{CHEVRON_DOWN_ICON}</span>
+      </button>
+      {open && (
+        <div
+          ref={menuRef}
+          className={OVERLAY_AUTOCOMPLETE_DROPDOWN}
+          role="listbox"
+          aria-label={`${header} field options`}
+          style={menuStyle}
+        >
+          {MAPPING_FIELD_VALUES.map((f, i) => (
+            <div
+              key={f || "__clear__"}
+              ref={(el) => {
+                optionRefs.current[i] = el;
+              }}
+              role="option"
+              aria-selected={f === value}
+              className={
+                i === activeIndex
+                  ? OVERLAY_AUTOCOMPLETE_ITEM_ACTIVE
+                  : OVERLAY_AUTOCOMPLETE_ITEM
+              }
+              onMouseEnter={() => setActiveIndex(i)}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                onChange(f);
+                setOpen(false);
+              }}
+            >
+              <span className={OVERLAY_AUTOCOMPLETE_ITEM_TEXT}>
+                {f ? FIELD_LABELS[f] : "Select"}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 // ─── Step 1: Column Mapper ────────────────────────────────────────────────────
@@ -161,7 +369,7 @@ function StepColumnMapper({
             Match your CSV columns to our fields
           </p>
 
-          <div className="w-full border border-[var(--edit-stone-200)] rounded-[8px] overflow-hidden">
+          <div className="w-full border border-[var(--edit-stone-200)] rounded-[8px] overflow-hidden flex flex-col flex-1 min-h-0">
             <div
               className="grid gap-x-4 px-4 py-3 border-b border-[var(--edit-stone-200)] bg-[var(--edit-bg-primary)]"
               style={{ gridTemplateColumns: "1fr 1.4fr 1fr" }}
@@ -178,68 +386,25 @@ function StepColumnMapper({
               )}
             </div>
 
-            <div className="overflow-y-auto max-h-[340px]">
-              {headers.map((header, idx) => (
+            <div className="overflow-y-auto flex-1 min-h-0">
+              {headers.map((header) => (
                 <div
                   key={header}
                   className="grid gap-x-4 px-4 py-3 items-center bg-[var(--edit-bg-primary)]"
                   style={{
                     gridTemplateColumns: "1fr 1.4fr 1fr",
-                    borderBottom:
-                      idx < headers.length - 1
-                        ? "1px solid var(--edit-stone-200)"
-                        : "none",
+                    borderBottom: "1px solid var(--edit-stone-200)",
                   }}
                 >
-                  <span className="font-normal text-[14px] leading-[1.5] text-[var(--edit-text-primary)]">
+                  <span className="font-normal text-[16px] leading-6 text-[var(--edit-text-primary)]">
                     {header.charAt(0).toUpperCase() + header.slice(1)}
                   </span>
 
-                  <div className="relative border border-[var(--edit-stone-200)] rounded-[6px] h-10 flex items-center overflow-hidden">
-                    <select
-                      value={mapping[header] ?? ""}
-                      onChange={(e) =>
-                        onMappingChange(header, e.target.value as MappableField)
-                      }
-                      className="absolute inset-0 w-full h-full appearance-none bg-transparent px-3 pr-10 text-[14px] leading-[1.5] text-[var(--edit-text-primary)] cursor-pointer truncate"
-                    >
-                      <option
-                        value=""
-                        className="bg-[var(--edit-bg-primary)] text-[var(--edit-text-primary)]"
-                      >
-                        Select
-                      </option>
-                      {(
-                        Object.keys(FIELD_LABELS) as Exclude<
-                          MappableField,
-                          ""
-                        >[]
-                      ).map((f) => (
-                        <option
-                          key={f}
-                          value={f}
-                          className="bg-[var(--edit-bg-primary)] text-[var(--edit-text-primary)]"
-                        >
-                          {FIELD_LABELS[f]}
-                        </option>
-                      ))}
-                    </select>
-                    <svg
-                      className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none rotate-90"
-                      width="16"
-                      height="16"
-                      viewBox="0 0 16 16"
-                      fill="none"
-                    >
-                      <path
-                        d="M6 4l4 4-4 4"
-                        stroke="var(--edit-text-primary)"
-                        strokeWidth="1.4"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </div>
+                  <MappingFieldSelect
+                    header={header}
+                    value={mapping[header] ?? ""}
+                    onChange={(field) => onMappingChange(header, field)}
+                  />
 
                   <div className="flex flex-col gap-[2px] overflow-hidden">
                     {previewRows.map((row, i) => {
@@ -352,7 +517,7 @@ function StepRowSelector({
             Review and select information to import
           </p>
 
-          <div className="w-full overflow-x-auto overflow-y-auto max-h-[380px]">
+          <div className="w-full overflow-x-auto overflow-y-auto flex-1 min-h-0">
             <table
               className="border-collapse w-full"
               style={{ minWidth: `${52 + mappedHeaders.length * COL_MIN}px` }}
@@ -675,7 +840,7 @@ export default function CSVUploadOverlay({
     return (
       <div className={OVERLAY_BACKDROP} onClick={handleClose}>
         <div
-          className={CSV_UPLOAD_OVERLAY_PANEL}
+          className={CSV_UPLOAD_OVERLAY_PANEL_TALL}
           onClick={(e) => e.stopPropagation()}
           role="dialog"
           aria-modal="true"
