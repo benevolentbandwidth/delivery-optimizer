@@ -7,6 +7,7 @@
 #include "deliveryoptimizer/api/solve_execution.hpp"
 #include "deliveryoptimizer/api/vroom_runner.hpp"
 
+#include <atomic>
 #include <drogon/drogon.h>
 #include <json/json.h>
 #include <memory>
@@ -35,6 +36,10 @@ struct SyncSolveContext {
   std::function<void(const drogon::HttpResponsePtr&)> response_callback;
   drogon::HttpResponsePtr pending_response;
   trantor::EventLoop* response_loop{nullptr};
+  // Guards against double completion: response_callback is moved out on the
+  // event loop, so a second invocation would otherwise call an empty
+  // std::function and terminate the process.
+  std::atomic<bool> responded{false};
   std::optional<Json::Value> forecast;
   int weather_service_adjustment_seconds{0};
 };
@@ -113,6 +118,10 @@ BuildSolveExecutionResponse(deliveryoptimizer::api::SolveExecutionResult result)
 
 void CompleteAndRespond(const std::shared_ptr<SyncSolveContext>& context,
                         CompletedResponse completed_response) {
+  if (context->responded.exchange(true)) {
+    return;
+  }
+
   FinalizeSolveRequest(context->observability, LifecycleHandle(context), completed_response.outcome,
                        static_cast<std::uint16_t>(completed_response.response->getStatusCode()));
 

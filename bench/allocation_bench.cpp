@@ -204,6 +204,8 @@ void PrintResult(const ScenarioResult& result) {
   deliveryoptimizer::api::OptimizeRequestInput input{
       .depot_lon = 7.4236,
       .depot_lat = 43.7384,
+      .vehicles = {},
+      .jobs = {},
   };
   input.vehicles.reserve(static_cast<std::size_t>(vehicle_count));
   for (int index = 0; index < vehicle_count; ++index) {

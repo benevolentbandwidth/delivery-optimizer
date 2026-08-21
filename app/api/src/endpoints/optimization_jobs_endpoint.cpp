@@ -1,5 +1,6 @@
 #include "deliveryoptimizer/api/endpoints/optimization_jobs_endpoint.hpp"
 
+#include "deliveryoptimizer/adapters/json_utils.hpp"
 #include "deliveryoptimizer/api/internal/json_utils.hpp"
 #include "deliveryoptimizer/api/observability.hpp"
 #include "deliveryoptimizer/api/optimization_job_runtime.hpp"
@@ -200,7 +201,11 @@ void RegisterOptimizationJobsEndpoints(drogon::HttpAppFramework& app,
           return;
         }
 
-        if (job->result_json.has_value()) {
+        // result_json is served verbatim, so re-validate it: the column is jsonb
+        // today, but a migration/backfill or driver defect could store text that is
+        // not JSON. Unparsable results fall through to the status branch below.
+        if (job->result_json.has_value() &&
+            deliveryoptimizer::adapters::ParseJsonText(*job->result_json).has_value()) {
           std::move(callback)(BuildRawJsonResponse(std::move(*job->result_json), drogon::k200OK));
           return;
         }

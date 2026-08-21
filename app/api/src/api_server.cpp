@@ -73,6 +73,9 @@ int RunApiServer() {
     if (request != nullptr && request->body().size() > kMaxRequestBodyBytes) {
       auto response = drogon::HttpResponse::newHttpResponse();
       response->setStatusCode(drogon::k413RequestEntityTooLarge);
+      // GetRequestContext aliases into request->attributes(). Nothing erases or
+      // replaces that entry after EnsureRequestContext, so the pointer stays
+      // valid for the lifetime of this request object; do not retain it beyond.
       if (const RequestContext* context = GetRequestContext(request); context != nullptr) {
         response->removeHeader(RequestIdHeaderName());
         response->addHeader(RequestIdHeaderName(), context->request_id);
@@ -94,6 +97,9 @@ int RunApiServer() {
           return;
         }
 
+        // Aliases into request->attributes(); valid because nothing mutates that
+        // entry after EnsureRequestContext. Do not retain the pointer beyond this
+        // advice, and never erase/replace the attribute in future code paths.
         const RequestContext* context = GetRequestContext(request);
         if (context == nullptr) {
           return;
