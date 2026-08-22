@@ -42,6 +42,10 @@ type ScreenshotState = {
   name: string;
 };
 
+type GetDisplayMediaOptions = DisplayMediaStreamOptions & {
+  selfBrowserSurface?: "include" | "exclude";
+};
+
 type FeedbackResponse = {
   ok?: boolean;
   issueUrl?: string;
@@ -67,6 +71,7 @@ export default function FeedbackLauncher() {
   const [lastClientError, setLastClientError] = useState<string | null>(null);
   const [submitState, setSubmitState] = useState<SubmitState>({ kind: "idle" });
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+  const previewRef = useRef<HTMLDivElement | null>(null);
 
   const canSubmit = useMemo(
     () => submitState.kind !== "submitting" && message.trim().length >= 8,
@@ -115,6 +120,14 @@ export default function FeedbackLauncher() {
     if (isOpen) closeButtonRef.current?.focus();
   }, [isOpen]);
 
+  useEffect(() => {
+    if (screenshot)
+      previewRef.current?.scrollIntoView({
+        block: "center",
+        behavior: "smooth",
+      });
+  }, [screenshot]);
+
   const resetAndClose = useCallback(() => {
     setIsOpen(false);
     setSubmitState({ kind: "idle" });
@@ -132,21 +145,39 @@ export default function FeedbackLauncher() {
     setSubmitState({ kind: "idle" });
     let stream: MediaStream | null = null;
     try {
-      stream = await navigator.mediaDevices.getDisplayMedia({
+      const captureOptions: GetDisplayMediaOptions = {
         video: { displaySurface: "browser" },
         audio: false,
-      });
+        selfBrowserSurface: "include",
+      };
+      stream = await navigator.mediaDevices.getDisplayMedia(captureOptions);
       const video = document.createElement("video");
       video.srcObject = stream;
       video.muted = true;
       await video.play();
 
-      await new Promise<void>((resolve) => {
-        if (video.videoWidth > 0) {
+      await new Promise<void>((resolve, reject) => {
+        if (video.readyState >= 2 && video.videoWidth > 0) {
           resolve();
           return;
         }
-        video.onloadedmetadata = () => resolve();
+        const timeout = window.setTimeout(() => {
+          cleanup();
+          reject(new Error("Screenshot capture timed out."));
+        }, 10000);
+        const cleanup = () => {
+          window.clearTimeout(timeout);
+          video.onloadeddata = null;
+          video.onerror = null;
+        };
+        video.onloadeddata = () => {
+          cleanup();
+          resolve();
+        };
+        video.onerror = () => {
+          cleanup();
+          reject(new Error("Screenshot stream could not be read."));
+        };
       });
 
       const canvas = document.createElement("canvas");
@@ -306,7 +337,11 @@ export default function FeedbackLauncher() {
               </button>
             </div>
 
-            <form className={styles.form} onSubmit={submitFeedback}>
+            <form
+              id="feedback-form"
+              className={styles.form}
+              onSubmit={submitFeedback}
+            >
               <div className={styles.label}>
                 Type
                 <div
@@ -332,7 +367,12 @@ export default function FeedbackLauncher() {
               </div>
 
               <label className={styles.label}>
-                What happened?
+                <span className={styles.labelHeading}>
+                  What happened?{" "}
+                  <span className={styles.requiredMark} aria-hidden="true">
+                    *
+                  </span>
+                </span>
                 <textarea
                   className={styles.textarea}
                   value={message}
@@ -344,19 +384,18 @@ export default function FeedbackLauncher() {
               </label>
 
               <label className={styles.label}>
-                How can we reproduce it?{" "}
-                <span className={styles.optional}>Optional</span>
+                How can we reproduce it?
                 <textarea
                   className={styles.textarea}
                   value={reproductionSteps}
                   onChange={(event) => setReproductionSteps(event.target.value)}
                   maxLength={3000}
-                  placeholder="Steps, page, route state, or anything you tried before refreshing."
+                  placeholder="Steps, page, route state, or anything you tried before refreshing. Optional."
                 />
               </label>
 
               <label className={styles.label}>
-                Contact email <span className={styles.optional}>Optional</span>
+                Contact email
                 <input
                   className={styles.input}
                   value={contactEmail}
@@ -377,42 +416,42 @@ export default function FeedbackLauncher() {
                 />
               </label>
 
-              <div className={styles.screenshotRow}>
-                <p className={styles.screenshotText}>
-                  Screenshot is optional. Your browser will ask what to share
-                  before anything is captured.
-                </p>
-                <button
-                  type="button"
-                  className={styles.captureButton}
-                  onClick={() => void captureScreenshot()}
-                  disabled={submitState.kind === "submitting"}
-                >
-                  Capture
-                </button>
-              </div>
-
-              {screenshot && (
-                <div className={styles.preview}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={screenshot.dataUrl}
-                    alt="Feedback screenshot preview"
-                  />
-                  <div className={styles.previewActions}>
-                    <span className={styles.previewName}>
-                      {screenshot.name}
-                    </span>
+              <div className={styles.screenshotCard}>
+                <div className={styles.screenshotCardHeader}>
+                  <button
+                    type="button"
+                    className={styles.captureButton}
+                    onClick={() => void captureScreenshot()}
+                    disabled={submitState.kind === "submitting"}
+                  >
+                    {screenshot ? "Recapture" : "Capture"}
+                  </button>
+                  {screenshot && (
                     <button
                       type="button"
-                      className={styles.secondaryButton}
+                      className={styles.closeButton}
                       onClick={() => setScreenshot(null)}
+                      aria-label="Remove screenshot"
                     >
-                      Remove
+                      &times;
                     </button>
-                  </div>
+                  )}
                 </div>
-              )}
+                {screenshot ? (
+                  <div ref={previewRef} className={styles.screenshotPreview}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={screenshot.dataUrl}
+                      alt="Feedback screenshot preview"
+                    />
+                  </div>
+                ) : (
+                  <p className={styles.screenshotText}>
+                    Screenshot is optional. Your browser will ask what to share
+                    before anything is captured.
+                  </p>
+                )}
+              </div>
 
               {submitState.kind === "error" && (
                 <div
@@ -442,26 +481,27 @@ export default function FeedbackLauncher() {
                   ) : null}
                 </div>
               )}
-
-              <div className={styles.footer}>
-                <button
-                  type="button"
-                  className={styles.secondaryButton}
-                  onClick={resetAndClose}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className={styles.primaryButton}
-                  disabled={!canSubmit}
-                >
-                  {submitState.kind === "submitting"
-                    ? "Sending..."
-                    : "Send feedback"}
-                </button>
-              </div>
             </form>
+
+            <div className={styles.footer}>
+              <button
+                type="button"
+                className={styles.secondaryButton}
+                onClick={resetAndClose}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                form="feedback-form"
+                className={styles.primaryButton}
+                disabled={!canSubmit}
+              >
+                {submitState.kind === "submitting"
+                  ? "Sending..."
+                  : "Send feedback"}
+              </button>
+            </div>
           </section>
         </div>
       )}

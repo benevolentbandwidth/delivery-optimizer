@@ -115,6 +115,8 @@
 .panel {
   width: min(100%, 460px);
   min-height: 100%;
+  max-height: 100vh;
+  max-height: 100dvh;
   background: #fdfdfc;
   color: #272725;
   border-left: 1px solid #dcdbd8;
@@ -125,6 +127,7 @@
 }
 
 .header {
+  flex-shrink: 0;
   display: flex;
   justify-content: space-between;
   gap: 16px;
@@ -175,9 +178,10 @@
 .form {
   display: flex;
   flex: 1;
+  min-height: 0;
   flex-direction: column;
   gap: 18px;
-  padding: 20px 24px 24px;
+  padding: 20px 24px 12px;
   overflow-y: auto;
 }
 
@@ -191,9 +195,12 @@
   font-weight: 700;
 }
 
-.optional {
-  color: #777673;
-  font-weight: 500;
+.labelHeading {
+  display: block;
+}
+
+.requiredMark {
+  color: #c23b22;
 }
 
 .segmented {
@@ -242,15 +249,21 @@
   color: #908f8c;
 }
 
-.screenshotRow {
+.screenshotCard {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  flex-direction: column;
+  gap: 10px;
   border: 1px solid #dcdbd8;
   border-radius: 8px;
   background: #f8f7f5;
   padding: 12px;
+}
+
+.screenshotCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .screenshotText {
@@ -301,36 +314,19 @@
   opacity: 0.55;
 }
 
-.preview {
+.screenshotPreview {
   border: 1px solid #dcdbd8;
   border-radius: 8px;
   overflow: hidden;
   background: #ffffff;
 }
 
-.preview img {
+.screenshotPreview img {
   display: block;
   width: 100%;
   max-height: 180px;
   object-fit: contain;
   background: #f8f7f5;
-}
-
-.previewActions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 10px 12px;
-}
-
-.previewName {
-  min-width: 0;
-  color: #464544;
-  font-size: 12px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .status {
@@ -354,8 +350,10 @@
   display: flex;
   justify-content: flex-end;
   gap: 8px;
-  margin-top: auto;
-  padding-top: 2px;
+  flex-shrink: 0;
+  padding: 12px 24px calc(16px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid #dcdbd8;
+  background: #fdfdfc;
 }
 
 .honeypot {
@@ -378,7 +376,9 @@
 
   .panel {
     width: 100%;
+    min-height: 82vh;
     min-height: 82dvh;
+    max-height: 92vh;
     max-height: 92dvh;
     border-left: 0;
     border-top: 1px solid #dcdbd8;
