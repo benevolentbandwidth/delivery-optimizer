@@ -1,6 +1,7 @@
 import { ZodError, z } from "zod";
 
-import type { DeliveryStop, DriverRoute, OptimizeRequestLike } from "./types";
+import { createPendingDeliveryStop } from "./createDeliveryStop";
+import type { DriverRoute, OptimizeRequestLike } from "./types";
 import { transformSessionToDriverRoute } from "./transformSession";
 import {
   migrateSessionSaveFile,
@@ -174,20 +175,19 @@ function transformResultsRouteToDriverRoute(
   route: z.infer<typeof resultsRouteSchema>,
 ): DriverRoute {
   const orderedStops = [...route.stops].sort((a, b) => a.sequence - b.sequence);
-  const stops: DeliveryStop[] = orderedStops.map((stop, index) => ({
-    id: String(stop.id),
-    stopNumber: index + 1,
-    address: stop.address || "No address provided",
-    customerName: stop.addresseeName || `Stop ${index + 1}`,
-    phoneNumber: stop.phoneNumber,
-    packageCount: stop.capacityUsed ?? 1,
-    notes: stop.note || "",
-    status: "pending",
-    lat: stop.lat,
-    lng: stop.lng,
-    completedAt: undefined,
-    failureReason: undefined,
-  }));
+  const stops = orderedStops.map((stop, index) =>
+    createPendingDeliveryStop({
+      id: stop.id,
+      index,
+      address: stop.address,
+      customerName: stop.addresseeName,
+      phoneNumber: stop.phoneNumber,
+      packageCount: stop.capacityUsed,
+      notes: stop.note,
+      lat: stop.lat,
+      lng: stop.lng,
+    }),
+  );
 
   return {
     driverName: route.driverName || "driver_assist",
