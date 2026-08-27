@@ -185,6 +185,26 @@ describe("driver route import", () => {
     });
   });
 
+  it("preserves a zero-capacity stop from a Results page route export", () => {
+    const route = parseRouteUploadText(
+      JSON.stringify({
+        vehicleId: "vehicle-7",
+        stops: [
+          {
+            id: "zero-demand-stop",
+            address: "100 First St",
+            lat: 38.54,
+            lng: -121.74,
+            sequence: 1,
+            capacityUsed: 0,
+          },
+        ],
+      }),
+    );
+
+    expect(route.stops[0].packageCount).toBe(0);
+  });
+
   it("loads a route CSV upload into the driver_assist route shape", () => {
     const route = parseRouteUploadFile(
       "driver-route.csv",

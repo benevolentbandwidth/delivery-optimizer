@@ -44,7 +44,7 @@ const resultsRouteStopSchema = z.object({
   lat: z.number(),
   lng: z.number(),
   sequence: z.number().int().nonnegative(),
-  capacityUsed: z.number().positive().optional(),
+  capacityUsed: z.number().nonnegative().optional(),
   note: z.string().optional(),
   addresseeName: z.string().optional(),
   phoneNumber: z.string().optional(),
