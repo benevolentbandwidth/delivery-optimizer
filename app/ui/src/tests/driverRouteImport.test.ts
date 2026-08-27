@@ -4,8 +4,6 @@ import {
   parseRouteUploadFile,
   parseRouteUploadText,
 } from "@/app/upload-route/routeUploadValidation";
-import { loadSessionFromText } from "@/lib/driver-route/importSession";
-import { transformSessionToDriverRoute } from "@/lib/driver-route/transformSession";
 import { buildSessionSave } from "@/lib/session/exportSession";
 
 describe("driver route import", () => {
@@ -62,7 +60,7 @@ describe("driver route import", () => {
   });
 
   it("loads the same saved session shape when vehicle start location is absent", () => {
-    const session = loadSessionFromText(
+    const route = parseRouteUploadText(
       JSON.stringify(
         buildSessionSave(
           {
@@ -89,7 +87,7 @@ describe("driver route import", () => {
       ),
     );
 
-    expect(transformSessionToDriverRoute(session)).toMatchObject({
+    expect(route).toMatchObject({
       driverName: "driver3",
       routeLabel: "Route 3 - 1 stops",
       stops: [
@@ -101,12 +99,6 @@ describe("driver route import", () => {
         },
       ],
     });
-  });
-
-  it("rejects files that do not match the saved session contract", () => {
-    expect(() => loadSessionFromText(JSON.stringify({ version: 1 }))).toThrow(
-      'Invalid save file format at "savedAt".',
-    );
   });
 
   it("rejects invalid upload-route files before handing them to driver_assist", () => {
@@ -273,7 +265,7 @@ describe("driver route import", () => {
   });
 
   it("also accepts a direct optimize request JSON file", () => {
-    const session = loadSessionFromText(
+    const route = parseRouteUploadText(
       JSON.stringify({
         deliveries: [
           {
@@ -295,7 +287,7 @@ describe("driver route import", () => {
       }),
     );
 
-    expect(transformSessionToDriverRoute(session)).toMatchObject({
+    expect(route).toMatchObject({
       driverName: "driver2",
       stops: [
         {

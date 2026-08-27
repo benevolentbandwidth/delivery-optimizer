@@ -8,8 +8,6 @@ import {
   sessionSaveDataSchema,
 } from "@/lib/validation/session.schema";
 
-const MAX_SESSION_FILE_BYTES = 1_000_000;
-
 const persistedStopSchema = z.object({
   id: z.string(),
   stopNumber: z.number(),
@@ -56,47 +54,6 @@ const resultsRouteSchema = z.object({
   driverName: z.string().optional(),
   stops: z.array(resultsRouteStopSchema).min(1),
 });
-
-// Guard the browser import path before we spend time parsing a file.
-export async function loadSessionFromFile(
-  file: Pick<File, "name" | "size" | "type" | "text">,
-): Promise<OptimizeRequestLike> {
-  const isJson =
-    file.type === "application/json" ||
-    file.name.toLowerCase().endsWith(".json");
-
-  if (!isJson) {
-    throw new Error("Please select a valid .json save file.");
-  }
-
-  if (file.size > MAX_SESSION_FILE_BYTES) {
-    throw new Error("File is too large to import.");
-  }
-
-  const text = await file.text();
-  return loadSessionFromText(text);
-}
-
-export function loadSessionFromText(text: string): OptimizeRequestLike {
-  if (text.length === 0) {
-    throw new Error("Invalid file contents.");
-  }
-
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(text);
-  } catch {
-    throw new Error("This file is not valid JSON.");
-  }
-
-  try {
-    return loadSessionFromParsedJson(parsed);
-  } catch (error) {
-    throw new Error(
-      formatValidationError(error) ?? "Invalid save file format.",
-    );
-  }
-}
 
 export function loadDriverRouteFromText(text: string): DriverRoute {
   if (text.length === 0) {
