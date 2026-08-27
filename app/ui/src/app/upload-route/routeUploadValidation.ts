@@ -1,6 +1,7 @@
 import { parseCsvToRows } from "@/app/edit/hooks/useCSVImport";
+import { createPendingDeliveryStop } from "@/lib/driver-route/createDeliveryStop";
 import { loadDriverRouteFromText } from "@/lib/driver-route/importSession";
-import type { DeliveryStop, DriverRoute } from "@/lib/driver-route/types";
+import type { DriverRoute } from "@/lib/driver-route/types";
 
 export const ROUTE_UPLOAD_ERROR_KEY = "routeUploadError";
 
@@ -55,28 +56,30 @@ function parseRouteCsvText(text: string): DriverRoute {
     ]);
     const packageCount = Number(packageCountText);
 
-    return {
+    const validPackageCount =
+      packageCountText !== "" &&
+      Number.isFinite(packageCount) &&
+      packageCount >= 0
+        ? packageCount
+        : undefined;
+
+    return createPendingDeliveryStop({
       id: value(["id", "stopid"]) || String(index + 1),
-      stopNumber:
-        Number.isFinite(sequence) && sequence > 0 ? sequence : index + 1,
-      address: value(["address"]) || "No address provided",
-      customerName:
-        value(["addresseename", "recipientname", "customername", "name"]) ||
-        `Stop ${index + 1}`,
+      index: Number.isFinite(sequence) && sequence > 0 ? sequence - 1 : index,
+      address: value(["address"]),
+      customerName: value([
+        "addresseename",
+        "recipientname",
+        "customername",
+        "name",
+      ]),
+      customerNameFallback: `Stop ${index + 1}`,
       phoneNumber: value(["phonenumber", "phone"]) || undefined,
-      packageCount:
-        packageCountText !== "" &&
-        Number.isFinite(packageCount) &&
-        packageCount >= 0
-          ? packageCount
-          : 1,
-      notes: value(["note", "notes"]) || "",
-      status: "pending",
+      packageCount: validPackageCount,
+      notes: value(["note", "notes"]),
       lat,
       lng,
-      completedAt: undefined,
-      failureReason: undefined,
-    } satisfies DeliveryStop;
+    });
   });
 
   stops.sort((a, b) => a.stopNumber - b.stopNumber);
