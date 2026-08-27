@@ -47,9 +47,13 @@ function parseRouteCsvText(text: string): DriverRoute {
     const lat = Number(latStr);
     const lng = Number(lngStr);
     const sequence = Number(value(["sequence", "stopnumber", "stop"]));
-    const packageCount = Number(
-      value(["capacityused", "packagecount", "packages", "demand"]),
-    );
+    const packageCountText = value([
+      "capacityused",
+      "packagecount",
+      "packages",
+      "demand",
+    ]);
+    const packageCount = Number(packageCountText);
 
     return {
       id: value(["id", "stopid"]) || String(index + 1),
@@ -61,7 +65,11 @@ function parseRouteCsvText(text: string): DriverRoute {
         `Stop ${index + 1}`,
       phoneNumber: value(["phonenumber", "phone"]) || undefined,
       packageCount:
-        Number.isFinite(packageCount) && packageCount > 0 ? packageCount : 1,
+        packageCountText !== "" &&
+        Number.isFinite(packageCount) &&
+        packageCount >= 0
+          ? packageCount
+          : 1,
       notes: value(["note", "notes"]) || "",
       status: "pending",
       lat,

@@ -242,6 +242,18 @@ describe("driver route import", () => {
     });
   });
 
+  it("preserves a zero package count from a route CSV upload", () => {
+    const route = parseRouteUploadFile(
+      "zero-package-route.csv",
+      [
+        "sequence,address,capacityUsed,lat,lng",
+        '1,"100 First St",0,38.54,-121.74',
+      ].join("\n"),
+    );
+
+    expect(route.stops[0].packageCount).toBe(0);
+  });
+
   it("rejects route CSV uploads with missing lat or lng values", () => {
     const missingLat = [
       "sequence,address,addresseeName,phoneNumber,capacityUsed,note,lat,lng",
