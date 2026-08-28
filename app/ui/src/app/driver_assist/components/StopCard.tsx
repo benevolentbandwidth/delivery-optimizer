@@ -18,7 +18,6 @@ type StopCardProps = {
   onChangeNote: (value: string) => void;
   onComplete: () => void;
   onReport?: () => void;
-  onCall?: () => void;
   onNavigate?: () => void;
 };
 
@@ -29,7 +28,6 @@ export default function StopCard({
   onChangeNote,
   onComplete,
   onReport,
-  onCall,
   onNavigate,
 }: StopCardProps) {
   // Completed and failed stops are read-only history items in this card.
@@ -39,6 +37,7 @@ export default function StopCard({
   const completedAtText = stop.completedAt
     ? new Date(stop.completedAt).toLocaleString()
     : null;
+  const phoneNumber = stop.phoneNumber?.trim();
   const packageText =
     stop.packageCount === 1 ? "1 package" : `${stop.packageCount} packages`;
 
@@ -111,18 +110,14 @@ export default function StopCard({
             <div
               style={{
                 ...styles.buttonRow,
-                ...(onCall ? {} : styles.singleButtonRow),
+                ...(phoneNumber ? {} : styles.singleButtonRow),
               }}
             >
-              {onCall ? (
-                <button
-                  type="button"
-                  style={styles.actionButton}
-                  onClick={onCall}
-                >
+              {phoneNumber ? (
+                <a href={`tel:${phoneNumber}`} style={styles.actionButton}>
                   <PhoneIcon />
                   Call
-                </button>
+                </a>
               ) : null}
               <button
                 type="button"
