@@ -3,6 +3,7 @@
 #include "deliveryoptimizer/api/optimize_request.hpp"
 
 #include <algorithm>
+#include <atomic>
 #include <charconv>
 #include <chrono>
 #include <cmath>
@@ -20,6 +21,7 @@
 #include <sstream>
 #include <string>
 #include <string_view>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -45,6 +47,7 @@ constexpr std::string_view kGoogleMapsBaseUrlEnv = "GOOGLE_MAPS_BASE_URL";
 constexpr std::string_view kDefaultGoogleMapsBaseUrl = "https://maps.googleapis.com";
 constexpr int kOpenWeatherTimeoutSeconds = 4;
 constexpr int kGoogleMapsTimeoutSeconds = 4;
+constexpr std::size_t kMaxConcurrentTrafficRequests = 4U;
 constexpr int kDefaultWeatherThresholdSeconds = 300;
 constexpr double kDefaultWeatherThresholdPercent = 5.0;
 constexpr int kDefaultTrafficThresholdSeconds = 300;
@@ -618,10 +621,29 @@ ReadRouteTraffic(const TrafficForecastOptions& options, const Json::Value& vroom
     };
   }
 
+  const std::vector<TrafficLeg> legs = ReadTrafficLegs(vroom_output, route_start_time);
+  std::vector<TrafficDelayEstimate> estimates(legs.size());
+  std::atomic_size_t next_leg{0U};
+  const std::size_t worker_count = std::min(kMaxConcurrentTrafficRequests, legs.size());
+
+  std::vector<std::jthread> workers;
+  workers.reserve(worker_count);
+  for (std::size_t worker = 0U; worker < worker_count; ++worker) {
+    workers.emplace_back([&options, &legs, &estimates, &next_leg] {
+      while (true) {
+        const std::size_t index = next_leg.fetch_add(1U);
+        if (index >= legs.size()) {
+          return;
+        }
+        estimates[index] = FetchTrafficDelay(options, legs[index]);
+      }
+    });
+  }
+  workers.clear();
+
   int delay_seconds = 0;
   bool saw_traffic = false;
-  for (const TrafficLeg& leg : ReadTrafficLegs(vroom_output, route_start_time)) {
-    const TrafficDelayEstimate estimate = FetchTrafficDelay(options, leg);
+  for (const TrafficDelayEstimate& estimate : estimates) {
     if (!estimate.available) {
       continue;
     }
