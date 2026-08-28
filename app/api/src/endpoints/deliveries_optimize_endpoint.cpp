@@ -13,7 +13,6 @@
 #include <memory>
 #include <optional>
 #include <string_view>
-#include <thread>
 #include <trantor/net/EventLoop.h>
 #include <utility>
 
@@ -113,51 +112,46 @@ void FinishWithTraffic(
     return;
   }
 
-  std::thread([coordinator, optimize_request = std::move(optimize_request), request_size,
-               traffic_options = std::move(traffic_options), forecast = std::move(forecast),
-               weather_impact, respond_with_completion = std::move(respond_with_completion),
-               weather_result = std::move(weather_result)]() mutable {
-    std::optional<Json::Value> final_forecast = forecast;
-    const Json::Value& route_output = *weather_result.output;
+  std::optional<Json::Value> final_forecast = std::move(forecast);
+  const Json::Value& route_output = *weather_result.output;
 
-    const deliveryoptimizer::api::TrafficDelayEstimate traffic_delay =
-        deliveryoptimizer::api::ReadRouteTraffic(
-            traffic_options, route_output,
-            deliveryoptimizer::api::ReadRouteStartTime(*optimize_request));
-    const deliveryoptimizer::api::TrafficImpact traffic =
-        deliveryoptimizer::api::EstimateTrafficImpact(
-            traffic_options, deliveryoptimizer::api::ReadVroomDuration(route_output).value_or(0),
-            traffic_delay.delay_seconds, traffic_delay.source);
-    if (final_forecast.has_value()) {
-      deliveryoptimizer::api::AddTrafficForecast(*final_forecast, traffic_options, traffic);
+  const deliveryoptimizer::api::TrafficDelayEstimate traffic_delay =
+      deliveryoptimizer::api::ReadRouteTraffic(
+          traffic_options, route_output,
+          deliveryoptimizer::api::ReadRouteStartTime(*optimize_request));
+  const deliveryoptimizer::api::TrafficImpact traffic =
+      deliveryoptimizer::api::EstimateTrafficImpact(
+          traffic_options, deliveryoptimizer::api::ReadVroomDuration(route_output).value_or(0),
+          traffic_delay.delay_seconds, traffic_delay.source);
+  if (final_forecast.has_value()) {
+    deliveryoptimizer::api::AddTrafficForecast(*final_forecast, traffic_options, traffic);
+  }
+
+  if (traffic.should_reoptimize) {
+    Json::Value route_output_copy = route_output;
+    const deliveryoptimizer::api::SolveAdmissionStatus traffic_rerun_status = coordinator->Submit(
+        request_size,
+        [optimize_request, weather_impact, traffic, route_output_copy] {
+          return deliveryoptimizer::api::BuildTrafficAdjustedVroomInput(
+              *optimize_request, weather_impact, traffic, route_output_copy);
+        },
+        [optimize_request, final_forecast, respond_with_completion](
+            const deliveryoptimizer::api::CoordinatedSolveResult& traffic_result) mutable {
+          const deliveryoptimizer::api::SolveExecutionResult response_result =
+              deliveryoptimizer::api::BuildSolveExecutionResult(*optimize_request, traffic_result,
+                                                                final_forecast);
+          respond_with_completion(BuildSolveExecutionResponse(response_result));
+        });
+    if (traffic_rerun_status != deliveryoptimizer::api::SolveAdmissionStatus::kAccepted) {
+      respond_with_completion(BuildAdmissionRejectionResponse(traffic_rerun_status));
     }
+    return;
+  }
 
-    if (traffic.should_reoptimize) {
-      Json::Value route_output_copy = route_output;
-      const deliveryoptimizer::api::SolveAdmissionStatus traffic_rerun_status = coordinator->Submit(
-          request_size,
-          [optimize_request, weather_impact, traffic, route_output_copy] {
-            return deliveryoptimizer::api::BuildTrafficAdjustedVroomInput(
-                *optimize_request, weather_impact, traffic, route_output_copy);
-          },
-          [optimize_request, final_forecast, respond_with_completion](
-              const deliveryoptimizer::api::CoordinatedSolveResult& traffic_result) mutable {
-            const deliveryoptimizer::api::SolveExecutionResult response_result =
-                deliveryoptimizer::api::BuildSolveExecutionResult(*optimize_request, traffic_result,
-                                                                  final_forecast);
-            respond_with_completion(BuildSolveExecutionResponse(response_result));
-          });
-      if (traffic_rerun_status != deliveryoptimizer::api::SolveAdmissionStatus::kAccepted) {
-        respond_with_completion(BuildAdmissionRejectionResponse(traffic_rerun_status));
-      }
-      return;
-    }
-
-    const deliveryoptimizer::api::SolveExecutionResult response_result =
-        deliveryoptimizer::api::BuildSolveExecutionResult(*optimize_request, weather_result,
-                                                          final_forecast);
-    respond_with_completion(BuildSolveExecutionResponse(response_result));
-  }).detach();
+  const deliveryoptimizer::api::SolveExecutionResult response_result =
+      deliveryoptimizer::api::BuildSolveExecutionResult(*optimize_request, weather_result,
+                                                        final_forecast);
+  respond_with_completion(BuildSolveExecutionResponse(response_result));
 }
 
 } // namespace
