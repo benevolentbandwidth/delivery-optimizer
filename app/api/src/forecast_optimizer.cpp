@@ -321,6 +321,39 @@ ReadLegDeparture(const Json::Value& step,
   return delays;
 }
 
+template <typename Result, typename ParseResponse>
+[[nodiscard]] Result FetchJsonWithTimeout(const std::string& base_url, const std::string& path,
+                                          const int timeout_seconds, Result fallback,
+                                          ParseResponse parse_response) {
+  auto client = drogon::HttpClient::newHttpClient(base_url);
+  auto request = drogon::HttpRequest::newHttpRequest();
+  request->setMethod(drogon::Get);
+  request->setPath(path);
+
+  auto promise = std::make_shared<std::promise<Result>>();
+  auto future = promise->get_future();
+  client->sendRequest(
+      request,
+      [promise, fallback, parse_response = std::move(parse_response)](
+          const drogon::ReqResult result, const drogon::HttpResponsePtr& response) mutable {
+        if (result != drogon::ReqResult::Ok || response == nullptr ||
+            response->getStatusCode() != drogon::k200OK) {
+          promise->set_value(fallback);
+          return;
+        }
+
+        const auto body = response->getJsonObject();
+        promise->set_value(body == nullptr ? fallback : parse_response(*body));
+      },
+      timeout_seconds);
+
+  if (future.wait_for(std::chrono::seconds{timeout_seconds + 1}) != std::future_status::ready) {
+    return fallback;
+  }
+
+  return future.get();
+}
+
 } // namespace
 
 namespace deliveryoptimizer::api {
@@ -389,56 +422,23 @@ FetchOpenWeatherDelayEstimate(const WeatherForecastOptions& options, const Coord
     };
   }
 
-  auto client = drogon::HttpClient::newHttpClient(options.openweather_base_url);
-  auto request = drogon::HttpRequest::newHttpRequest();
-  request->setMethod(drogon::Get);
-  request->setPath(BuildOpenWeatherPath(coordinate, options.openweather_api_key));
-
-  auto promise = std::make_shared<std::promise<OpenWeatherDelayEstimate>>();
-  auto future = promise->get_future();
-  client->sendRequest(
-      request,
-      [promise, route_start_time, route_duration_seconds](const drogon::ReqResult result,
-                                                          const drogon::HttpResponsePtr& response) {
-        if (result != drogon::ReqResult::Ok || response == nullptr ||
-            response->getStatusCode() != drogon::k200OK) {
-          promise->set_value(OpenWeatherDelayEstimate{
-              .available = false,
-              .delay_seconds_per_stop = 0,
-              .source = "",
-          });
-          return;
-        }
-
-        const auto body = response->getJsonObject();
-        if (body == nullptr) {
-          promise->set_value(OpenWeatherDelayEstimate{
-              .available = false,
-              .delay_seconds_per_stop = 0,
-              .source = "",
-          });
-          return;
-        }
-
-        promise->set_value(OpenWeatherDelayEstimate{
+  const OpenWeatherDelayEstimate unavailable{
+      .available = false,
+      .delay_seconds_per_stop = 0,
+      .source = "",
+  };
+  return FetchJsonWithTimeout(
+      options.openweather_base_url,
+      BuildOpenWeatherPath(coordinate, options.openweather_api_key), kOpenWeatherTimeoutSeconds,
+      unavailable,
+      [route_start_time, route_duration_seconds](const Json::Value& body) {
+        return OpenWeatherDelayEstimate{
             .available = true,
             .delay_seconds_per_stop =
-                ReadOpenWeatherDelay(*body, route_start_time, route_duration_seconds),
+                ReadOpenWeatherDelay(body, route_start_time, route_duration_seconds),
             .source = "openweather",
-        });
-      },
-      kOpenWeatherTimeoutSeconds);
-
-  if (future.wait_for(std::chrono::seconds{kOpenWeatherTimeoutSeconds + 1}) !=
-      std::future_status::ready) {
-    return OpenWeatherDelayEstimate{
-        .available = false,
-        .delay_seconds_per_stop = 0,
-        .source = "",
-    };
-  }
-
-  return future.get();
+        };
+      });
 }
 
 int ReadOpenWeatherDelay(const Json::Value& body,
@@ -529,47 +529,23 @@ TrafficDelayEstimate FetchTrafficDelay(const TrafficForecastOptions& options,
     };
   }
 
-  auto client = drogon::HttpClient::newHttpClient(options.google_maps_base_url);
-  auto request = drogon::HttpRequest::newHttpRequest();
-  request->setMethod(drogon::Get);
-  request->setPath(BuildTrafficPath(leg.origin, leg.destination, leg.departure_time,
-                                    options.google_maps_api_key));
-
-  auto promise = std::make_shared<std::promise<TrafficDelayEstimate>>();
-  auto future = promise->get_future();
-  client->sendRequest(
-      request,
-      [promise](const drogon::ReqResult result, const drogon::HttpResponsePtr& response) {
-        if (result != drogon::ReqResult::Ok || response == nullptr ||
-            response->getStatusCode() != drogon::k200OK) {
-          promise->set_value(TrafficDelayEstimate{
-              .available = false,
-              .delay_seconds = 0,
-              .source = "",
-          });
-          return;
-        }
-
-        const auto body = response->getJsonObject();
-        const std::optional<int> delay = body == nullptr ? std::nullopt : ReadTrafficDelay(*body);
-        promise->set_value(TrafficDelayEstimate{
+  const TrafficDelayEstimate unavailable{
+      .available = false,
+      .delay_seconds = 0,
+      .source = "",
+  };
+  return FetchJsonWithTimeout(
+      options.google_maps_base_url,
+      BuildTrafficPath(leg.origin, leg.destination, leg.departure_time,
+                       options.google_maps_api_key),
+      kGoogleMapsTimeoutSeconds, unavailable, [](const Json::Value& body) {
+        const std::optional<int> delay = ReadTrafficDelay(body);
+        return TrafficDelayEstimate{
             .available = delay.has_value(),
             .delay_seconds = delay.value_or(0),
             .source = delay.has_value() ? "google_maps" : "",
-        });
-      },
-      kGoogleMapsTimeoutSeconds);
-
-  if (future.wait_for(std::chrono::seconds{kGoogleMapsTimeoutSeconds + 1}) !=
-      std::future_status::ready) {
-    return TrafficDelayEstimate{
-        .available = false,
-        .delay_seconds = 0,
-        .source = "",
-    };
-  }
-
-  return future.get();
+        };
+      });
 }
 
 std::vector<TrafficLeg>
