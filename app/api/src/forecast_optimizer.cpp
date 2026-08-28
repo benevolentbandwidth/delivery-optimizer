@@ -428,9 +428,8 @@ FetchOpenWeatherDelayEstimate(const WeatherForecastOptions& options, const Coord
       .source = "",
   };
   return FetchJsonWithTimeout(
-      options.openweather_base_url,
-      BuildOpenWeatherPath(coordinate, options.openweather_api_key), kOpenWeatherTimeoutSeconds,
-      unavailable,
+      options.openweather_base_url, BuildOpenWeatherPath(coordinate, options.openweather_api_key),
+      kOpenWeatherTimeoutSeconds, unavailable,
       [route_start_time, route_duration_seconds](const Json::Value& body) {
         return OpenWeatherDelayEstimate{
             .available = true,
@@ -534,18 +533,17 @@ TrafficDelayEstimate FetchTrafficDelay(const TrafficForecastOptions& options,
       .delay_seconds = 0,
       .source = "",
   };
-  return FetchJsonWithTimeout(
-      options.google_maps_base_url,
-      BuildTrafficPath(leg.origin, leg.destination, leg.departure_time,
-                       options.google_maps_api_key),
-      kGoogleMapsTimeoutSeconds, unavailable, [](const Json::Value& body) {
-        const std::optional<int> delay = ReadTrafficDelay(body);
-        return TrafficDelayEstimate{
-            .available = delay.has_value(),
-            .delay_seconds = delay.value_or(0),
-            .source = delay.has_value() ? "google_maps" : "",
-        };
-      });
+  return FetchJsonWithTimeout(options.google_maps_base_url,
+                              BuildTrafficPath(leg.origin, leg.destination, leg.departure_time,
+                                               options.google_maps_api_key),
+                              kGoogleMapsTimeoutSeconds, unavailable, [](const Json::Value& body) {
+                                const std::optional<int> delay = ReadTrafficDelay(body);
+                                return TrafficDelayEstimate{
+                                    .available = delay.has_value(),
+                                    .delay_seconds = delay.value_or(0),
+                                    .source = delay.has_value() ? "google_maps" : "",
+                                };
+                              });
 }
 
 std::vector<TrafficLeg>
