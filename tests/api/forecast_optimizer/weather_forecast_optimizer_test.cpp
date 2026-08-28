@@ -126,7 +126,6 @@ TEST(WeatherForecastOptimizerTest, AboveThresholdWeatherAddsServiceTime) {
   EXPECT_EQ(forecast["weather_delay_seconds"].asInt(), 400);
   EXPECT_TRUE(forecast["reoptimization"]["applied"].asBool());
 }
-
 TEST(WeatherForecastOptimizerTest, ReadsVroomSummaryDuration) {
   Json::Value output{Json::objectValue};
   output["summary"] = Json::Value{Json::objectValue};
@@ -240,4 +239,255 @@ TEST(WeatherForecastOptimizerTest, RefinesForecastWithVroomSummaryDuration) {
   EXPECT_FALSE(forecast.isMember("predicted_duration_seconds"));
   EXPECT_EQ(forecast["planned_start_time"].asInt64(), 600);
   EXPECT_EQ(forecast["estimated_finish_time"].asInt64(), 1960);
+}
+
+TEST(TrafficForecastOptimizerTest, DisabledTrafficHasNoImpact) {
+  const deliveryoptimizer::api::TrafficForecastOptions options{
+      .enabled = false,
+      .reoptimize_threshold_seconds = 100,
+      .reoptimize_threshold_percent = 0.0,
+      .google_maps_api_key = "",
+      .google_maps_base_url = "",
+  };
+
+  const deliveryoptimizer::api::TrafficImpact impact =
+      deliveryoptimizer::api::EstimateTrafficImpact(options, 900, 300, "google_maps");
+
+  EXPECT_EQ(impact.traffic_delay_seconds, 0);
+  EXPECT_FALSE(impact.should_reoptimize);
+  EXPECT_EQ(impact.source, "disabled");
+}
+
+TEST(TrafficForecastOptimizerTest, BelowThresholdTrafficDoesNotReoptimize) {
+  const deliveryoptimizer::api::TrafficForecastOptions options{
+      .enabled = true,
+      .reoptimize_threshold_seconds = 300,
+      .reoptimize_threshold_percent = 0.0,
+      .google_maps_api_key = "",
+      .google_maps_base_url = "",
+  };
+
+  const deliveryoptimizer::api::TrafficImpact impact =
+      deliveryoptimizer::api::EstimateTrafficImpact(options, 900, 120, "google_maps");
+
+  EXPECT_EQ(impact.traffic_delay_seconds, 120);
+  EXPECT_EQ(impact.traffic_adjusted_duration_seconds, 1020);
+  EXPECT_FALSE(impact.should_reoptimize);
+}
+
+TEST(TrafficForecastOptimizerTest, AboveThresholdTrafficReoptimizes) {
+  const deliveryoptimizer::api::TrafficForecastOptions options{
+      .enabled = true,
+      .reoptimize_threshold_seconds = 100,
+      .reoptimize_threshold_percent = 0.0,
+      .google_maps_api_key = "",
+      .google_maps_base_url = "",
+  };
+
+  const deliveryoptimizer::api::TrafficImpact impact =
+      deliveryoptimizer::api::EstimateTrafficImpact(options, 900, 180, "google_maps");
+
+  EXPECT_EQ(impact.traffic_delay_seconds, 180);
+  EXPECT_TRUE(impact.should_reoptimize);
+}
+TEST(TrafficForecastOptimizerTest, AboveThresholdTrafficAddsServiceTime) {
+  const auto input = BuildInput();
+  Json::Value output{Json::objectValue};
+  output["routes"] = Json::Value{Json::arrayValue};
+  Json::Value route{Json::objectValue};
+  route["steps"] = Json::Value{Json::arrayValue};
+
+  Json::Value start{Json::objectValue};
+  start["arrival"] = 0;
+  start["location"] = Json::Value{Json::arrayValue};
+  start["location"].append(-121.7405);
+  start["location"].append(38.5449);
+
+  Json::Value first_stop{Json::objectValue};
+  first_stop["type"] = "job";
+  first_stop["id"] = 1;
+  first_stop["arrival"] = 300;
+  first_stop["service"] = 180;
+  first_stop["location"] = Json::Value{Json::arrayValue};
+  first_stop["location"].append(-121.748);
+  first_stop["location"].append(38.545);
+
+  Json::Value second_stop{Json::objectValue};
+  second_stop["type"] = "job";
+  second_stop["id"] = 2;
+  second_stop["arrival"] = 1080;
+  second_stop["service"] = 120;
+  second_stop["location"] = Json::Value{Json::arrayValue};
+  second_stop["location"].append(-121.752);
+  second_stop["location"].append(38.548);
+
+  route["steps"].append(start);
+  route["steps"].append(first_stop);
+  route["steps"].append(second_stop);
+  output["routes"].append(route);
+
+  const deliveryoptimizer::api::WeatherImpactEstimate weather{};
+  const deliveryoptimizer::api::TrafficImpact traffic{
+      .baseline_duration_seconds = 900,
+      .traffic_delay_seconds = 180,
+      .traffic_adjusted_duration_seconds = 1080,
+      .reoptimize_threshold_seconds = 100,
+      .should_reoptimize = true,
+      .source = "google_maps",
+  };
+
+  const Json::Value payload =
+      deliveryoptimizer::api::BuildTrafficAdjustedVroomInput(input, weather, traffic, output);
+
+  ASSERT_TRUE(payload["jobs"].isArray());
+  ASSERT_EQ(payload["jobs"].size(), 2U);
+  EXPECT_EQ(payload["jobs"][0]["service"].asInt(), 240);
+  EXPECT_EQ(payload["jobs"][1]["service"].asInt(), 240);
+}
+TEST(TrafficForecastOptimizerTest, BuildsGoogleTrafficPath) {
+  const std::string path = deliveryoptimizer::api::BuildTrafficPath(
+      deliveryoptimizer::api::Coordinate{.lon = -121.7405, .lat = 38.5449},
+      deliveryoptimizer::api::Coordinate{.lon = -121.752, .lat = 38.548},
+      std::chrono::sys_seconds{std::chrono::seconds{1800}}, "test-key");
+
+  EXPECT_NE(path.find("/maps/api/distancematrix/json?"), std::string::npos);
+  EXPECT_NE(path.find("origins=38.544900,-121.740500"), std::string::npos);
+  EXPECT_NE(path.find("destinations=38.548000,-121.752000"), std::string::npos);
+  EXPECT_NE(path.find("departure_time=1800"), std::string::npos);
+  EXPECT_NE(path.find("traffic_model=best_guess"), std::string::npos);
+  EXPECT_NE(path.find("key=test-key"), std::string::npos);
+}
+
+TEST(TrafficForecastOptimizerTest, ReadsGoogleTrafficDelay) {
+  Json::Value body{Json::objectValue};
+  body["rows"] = Json::Value{Json::arrayValue};
+  Json::Value row{Json::objectValue};
+  row["elements"] = Json::Value{Json::arrayValue};
+  Json::Value leg{Json::objectValue};
+  leg["status"] = "OK";
+  leg["duration"]["value"] = 600;
+  leg["duration_in_traffic"]["value"] = 780;
+  row["elements"].append(leg);
+  body["rows"].append(row);
+
+  const std::optional<int> delay = deliveryoptimizer::api::ReadTrafficDelay(body);
+
+  ASSERT_TRUE(delay.has_value());
+  EXPECT_EQ(*delay, 180);
+}
+
+TEST(TrafficForecastOptimizerTest, IgnoresMissingTrafficDuration) {
+  const Json::Value body{Json::objectValue};
+
+  EXPECT_FALSE(deliveryoptimizer::api::ReadTrafficDelay(body).has_value());
+}
+TEST(TrafficForecastOptimizerTest, AddsTrafficForecastBlock) {
+  Json::Value forecast{Json::objectValue};
+  const deliveryoptimizer::api::TrafficForecastOptions options{
+      .enabled = true,
+      .reoptimize_threshold_seconds = 100,
+      .reoptimize_threshold_percent = 0.0,
+      .google_maps_api_key = "",
+      .google_maps_base_url = "",
+  };
+  const deliveryoptimizer::api::TrafficImpact impact{
+      .baseline_duration_seconds = 900,
+      .traffic_delay_seconds = 180,
+      .traffic_adjusted_duration_seconds = 1080,
+      .reoptimize_threshold_seconds = 100,
+      .should_reoptimize = true,
+      .source = "google_maps",
+  };
+
+  deliveryoptimizer::api::AddTrafficForecast(forecast, options, impact);
+
+  EXPECT_EQ(forecast["traffic"]["status"].asString(), "evaluated");
+  EXPECT_EQ(forecast["traffic"]["provider"].asString(), "google_maps");
+  EXPECT_EQ(forecast["traffic"]["traffic_delay_seconds"].asInt(), 180);
+  EXPECT_TRUE(forecast["traffic"]["reoptimization"]["applied"].asBool());
+}
+TEST(TrafficForecastOptimizerTest, ReadsTrafficLegsFromVroomSteps) {
+  // These arrivals already include the route start time.
+  constexpr int kRouteStart = 1767225600;
+
+  Json::Value output{Json::objectValue};
+  output["routes"] = Json::Value{Json::arrayValue};
+
+  Json::Value route{Json::objectValue};
+  route["steps"] = Json::Value{Json::arrayValue};
+
+  Json::Value start{Json::objectValue};
+  start["arrival"] = kRouteStart;
+  start["location"] = Json::Value{Json::arrayValue};
+  start["location"].append(-121.7405);
+  start["location"].append(38.5449);
+
+  Json::Value stop{Json::objectValue};
+  stop["arrival"] = kRouteStart + 600;
+  stop["service"] = 120;
+  stop["location"] = Json::Value{Json::arrayValue};
+  stop["location"].append(-121.752);
+  stop["location"].append(38.548);
+
+  Json::Value end{Json::objectValue};
+  end["arrival"] = kRouteStart + 1200;
+  end["location"] = Json::Value{Json::arrayValue};
+  end["location"].append(-121.7405);
+  end["location"].append(38.5449);
+
+  route["steps"].append(start);
+  route["steps"].append(stop);
+  route["steps"].append(end);
+  output["routes"].append(route);
+
+  const std::vector<deliveryoptimizer::api::TrafficLeg> legs =
+      deliveryoptimizer::api::ReadTrafficLegs(
+          output, std::chrono::sys_seconds{std::chrono::seconds{kRouteStart}});
+
+  ASSERT_EQ(legs.size(), 2U);
+  EXPECT_EQ(legs[0].departure_time.time_since_epoch(), std::chrono::seconds{kRouteStart});
+  EXPECT_EQ(legs[1].departure_time.time_since_epoch(), std::chrono::seconds{kRouteStart + 720});
+  EXPECT_DOUBLE_EQ(legs[0].origin.lon, -121.7405);
+  EXPECT_DOUBLE_EQ(legs[0].destination.lon, -121.752);
+}
+TEST(TrafficForecastOptimizerTest, ReadsRelativeTrafficLegDepartures) {
+  constexpr int kRouteStart = 1767225600;
+
+  Json::Value output{Json::objectValue};
+  output["routes"] = Json::Value{Json::arrayValue};
+
+  Json::Value route{Json::objectValue};
+  route["steps"] = Json::Value{Json::arrayValue};
+
+  Json::Value start{Json::objectValue};
+  start["arrival"] = 0;
+  start["location"] = Json::Value{Json::arrayValue};
+  start["location"].append(-121.7405);
+  start["location"].append(38.5449);
+
+  Json::Value stop{Json::objectValue};
+  stop["arrival"] = 600;
+  stop["service"] = 120;
+  stop["location"] = Json::Value{Json::arrayValue};
+  stop["location"].append(-121.752);
+  stop["location"].append(38.548);
+
+  Json::Value end{Json::objectValue};
+  end["arrival"] = 1200;
+  end["location"] = Json::Value{Json::arrayValue};
+  end["location"].append(-121.7405);
+  end["location"].append(38.5449);
+
+  route["steps"].append(start);
+  route["steps"].append(stop);
+  route["steps"].append(end);
+  output["routes"].append(route);
+
+  const std::vector<deliveryoptimizer::api::TrafficLeg> legs =
+      deliveryoptimizer::api::ReadTrafficLegs(
+          output, std::chrono::sys_seconds{std::chrono::seconds{kRouteStart}});
+
+  ASSERT_EQ(legs.size(), 2U);
+  EXPECT_EQ(legs[0].departure_time.time_since_epoch(), std::chrono::seconds{kRouteStart});
+  EXPECT_EQ(legs[1].departure_time.time_since_epoch(), std::chrono::seconds{kRouteStart + 720});
 }
