@@ -45,9 +45,10 @@ target_include_directories(deliveryoptimizer_tests PRIVATE "${CMAKE_SOURCE_DIR}/
 target_link_libraries(
   deliveryoptimizer_tests
   PRIVATE
+    GTest::gtest_main
+    GTest::gtest
     deliveryoptimizer::adapters
     Drogon::Drogon
-    GTest::gtest_main
     JsonCpp::JsonCpp
 )
 add_dependencies(deliveryoptimizer_tests deliveryoptimizer_api)

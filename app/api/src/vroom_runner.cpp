@@ -6,16 +6,15 @@
 #include <algorithm>
 #include <array>
 #include <cerrno>
+#include <charconv>
 #include <chrono>
 #include <cstdlib>
 #include <filesystem>
-#include <fstream>
 #include <limits>
 #include <memory>
 #include <string>
 #include <string_view>
 #include <utility>
-#include <vector>
 
 #ifndef _WIN32
 #include <fcntl.h>
@@ -53,12 +52,50 @@ constexpr int kDefaultVroomTimeoutSecondsInt = 30;
 
 #else
 
-constexpr std::string_view kVroomStdoutPath = "/dev/stdout";
 constexpr std::size_t kMaxVroomOutputBytes = 8U * 1024U * 1024U;
 
 struct SpawnArguments {
-  std::vector<std::string> storage;
-  std::vector<char*> argv;
+  SpawnArguments(const deliveryoptimizer::api::VroomRuntimeConfig& runtime_config,
+                 const std::string& input_file_path) {
+    const auto [timeout_end, timeout_error] =
+        std::to_chars(timeout_storage.data(), timeout_storage.data() + timeout_storage.size() - 1U,
+                      runtime_config.timeout_seconds);
+    if (timeout_error != std::errc{}) {
+      timeout_storage[0] = '3';
+      timeout_storage[1] = '0';
+      timeout_storage[2] = '\0';
+    } else {
+      *timeout_end = '\0';
+    }
+
+    // posix_spawn takes char* const argv[] and does not write through it.
+    argv = {
+        const_cast<char*>(runtime_config.vroom_bin.c_str()),
+        const_cast<char*>("--router"),
+        const_cast<char*>(runtime_config.vroom_router.c_str()),
+        const_cast<char*>("--host"),
+        const_cast<char*>(runtime_config.vroom_host.c_str()),
+        const_cast<char*>("--port"),
+        const_cast<char*>(runtime_config.vroom_port.c_str()),
+        const_cast<char*>("--limit"),
+        timeout_storage.data(),
+        const_cast<char*>("--input"),
+        const_cast<char*>(input_file_path.c_str()),
+        const_cast<char*>("--output"),
+        const_cast<char*>("/dev/stdout"),
+        nullptr,
+    };
+  }
+
+  SpawnArguments(const SpawnArguments&) = delete;
+  SpawnArguments& operator=(const SpawnArguments&) = delete;
+  SpawnArguments(SpawnArguments&&) = delete;
+  SpawnArguments& operator=(SpawnArguments&&) = delete;
+
+  // Inline storage keeps argv allocation-free. Moving is disabled because argv
+  // contains a pointer into this buffer.
+  std::array<char, 32> timeout_storage{};
+  std::array<char*, 14> argv{};
 };
 
 enum class DrainReadStatus : std::uint8_t {
@@ -157,25 +194,25 @@ public:
       return std::nullopt;
     }
 
-    std::string template_path = (temp_dir / (std::string{prefix} + "XXXXXX")).string();
-    std::vector<char> writable_template(template_path.begin(), template_path.end());
-    writable_template.push_back('\0');
+    std::string template_path = (temp_dir / std::string{prefix}).string();
+    template_path += "XXXXXX";
 
-    const int file_descriptor = mkstemp(writable_template.data());
+    const int file_descriptor = mkstemp(template_path.data());
     if (file_descriptor == -1) {
       return std::nullopt;
     }
-    (void)close(file_descriptor);
 
-    return ScopedTempFile(std::string{writable_template.data()});
+    return ScopedTempFile(std::move(template_path), ScopedFileDescriptor{file_descriptor});
   }
 
-  explicit ScopedTempFile(std::string path) : path_(std::move(path)) {}
+  ScopedTempFile(std::string path, ScopedFileDescriptor file_descriptor)
+      : path_(std::move(path)), file_descriptor_(std::move(file_descriptor)) {}
 
   ScopedTempFile(const ScopedTempFile&) = delete;
   ScopedTempFile& operator=(const ScopedTempFile&) = delete;
 
-  ScopedTempFile(ScopedTempFile&& other) noexcept : path_(std::move(other.path_)) {
+  ScopedTempFile(ScopedTempFile&& other) noexcept
+      : path_(std::move(other.path_)), file_descriptor_(std::move(other.file_descriptor_)) {
     other.path_.clear();
   }
 
@@ -186,6 +223,7 @@ public:
 
     RemoveFile();
     path_ = std::move(other.path_);
+    file_descriptor_ = std::move(other.file_descriptor_);
     other.path_.clear();
     return *this;
   }
@@ -194,17 +232,40 @@ public:
 
   [[nodiscard]] const std::string& path() const { return path_; }
 
+  [[nodiscard]] bool WriteAndClose(const std::string_view text) {
+    std::size_t written = 0U;
+    while (written < text.size()) {
+      const ssize_t write_size =
+          write(file_descriptor_.Get(), text.data() + written, text.size() - written);
+      if (write_size > 0) {
+        written += static_cast<std::size_t>(write_size);
+        continue;
+      }
+      if (write_size < 0 && errno == EINTR) {
+        continue;
+      }
+
+      file_descriptor_.Reset(-1);
+      return false;
+    }
+
+    file_descriptor_.Reset(-1);
+    return true;
+  }
+
 private:
   void RemoveFile() {
     if (path_.empty()) {
       return;
     }
 
+    file_descriptor_.Reset(-1);
     std::error_code error;
     (void)std::filesystem::remove(path_, error);
   }
 
   std::string path_;
+  ScopedFileDescriptor file_descriptor_;
 };
 
 [[nodiscard]] int ParseTimeoutSeconds(const std::string& value, const int default_timeout_seconds) {
@@ -219,20 +280,6 @@ private:
   return static_cast<int>(parsed);
 }
 
-[[nodiscard]] bool WritePayloadToFile(const std::string& path, const Json::Value& input_payload) {
-  Json::StreamWriterBuilder writer_builder;
-  writer_builder["indentation"] = "";
-  const std::string payload_text = Json::writeString(writer_builder, input_payload);
-
-  std::ofstream input_stream(path, std::ios::binary | std::ios::trunc);
-  if (!input_stream.is_open()) {
-    return false;
-  }
-
-  input_stream << payload_text;
-  return input_stream.good();
-}
-
 [[nodiscard]] std::optional<PipeEnds> CreatePipeEnds() {
   std::array<int, 2> pipe_file_descriptors{-1, -1};
   if (pipe(pipe_file_descriptors.data()) != 0) {
@@ -243,34 +290,6 @@ private:
       .read_end = ScopedFileDescriptor{pipe_file_descriptors[0]},
       .write_end = ScopedFileDescriptor{pipe_file_descriptors[1]},
   };
-}
-
-[[nodiscard]] SpawnArguments
-BuildSpawnArguments(const deliveryoptimizer::api::VroomRuntimeConfig& runtime_config,
-                    const std::string& input_file_path) {
-  SpawnArguments spawn_arguments;
-  spawn_arguments.storage = {
-      runtime_config.vroom_bin,
-      "--router",
-      runtime_config.vroom_router,
-      "--host",
-      runtime_config.vroom_host,
-      "--port",
-      runtime_config.vroom_port,
-      "--limit",
-      std::to_string(runtime_config.timeout_seconds),
-      "--input",
-      input_file_path,
-      "--output",
-      std::string{kVroomStdoutPath},
-  };
-
-  spawn_arguments.argv.reserve(spawn_arguments.storage.size() + 1U);
-  for (std::string& argument : spawn_arguments.storage) {
-    spawn_arguments.argv.push_back(argument.data());
-  }
-  spawn_arguments.argv.push_back(nullptr);
-  return spawn_arguments;
 }
 
 [[nodiscard]] bool TryWaitForProcessExit(const pid_t process_id, int& command_status,
@@ -430,16 +449,16 @@ namespace deliveryoptimizer::api {
 ProcessVroomRunner::ProcessVroomRunner(VroomRuntimeConfig runtime_config)
     : runtime_config_(std::move(runtime_config)) {}
 
-VroomRunResult ProcessVroomRunner::Run(const Json::Value& input_payload) const {
+VroomRunResult ProcessVroomRunner::Run(const std::string& input_payload) const {
 #ifdef _WIN32
   (void)input_payload;
   return VroomRunResult{.status = VroomRunStatus::kFailed, .output = std::nullopt};
 #else
-  const auto input_file = ScopedTempFile::Create("deliveryoptimizer-vroom-input-");
+  auto input_file = ScopedTempFile::Create("deliveryoptimizer-vroom-input-");
   if (!input_file.has_value()) {
     return VroomRunResult{.status = VroomRunStatus::kFailed, .output = std::nullopt};
   }
-  if (!WritePayloadToFile(input_file->path(), input_payload)) {
+  if (!input_file->WriteAndClose(input_payload)) {
     return VroomRunResult{.status = VroomRunStatus::kFailed, .output = std::nullopt};
   }
 
@@ -465,7 +484,7 @@ VroomRunResult ProcessVroomRunner::Run(const Json::Value& input_payload) const {
     return VroomRunResult{.status = VroomRunStatus::kFailed, .output = std::nullopt};
   }
 
-  SpawnArguments spawn_arguments = BuildSpawnArguments(runtime_config_, input_file->path());
+  SpawnArguments spawn_arguments{runtime_config_, input_file->path()};
   pid_t vroom_pid = -1;
   const int spawn_status =
       posix_spawn(&vroom_pid, runtime_config_.vroom_bin.c_str(), spawn_actions.Get(), nullptr,

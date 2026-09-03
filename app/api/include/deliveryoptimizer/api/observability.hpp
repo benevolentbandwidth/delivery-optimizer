@@ -22,6 +22,13 @@ namespace deliveryoptimizer::api {
 
 inline constexpr std::string_view kRequestIdHeader = "X-Request-Id";
 
+// drogon's header APIs take const std::string&, so allocate the header name once
+// per process instead of constructing a fresh std::string on every call.
+[[nodiscard]] inline const std::string& RequestIdHeaderName() {
+  static const std::string name{kRequestIdHeader};
+  return name;
+}
+
 struct RequestContext {
   std::string request_id;
   std::chrono::steady_clock::time_point started_at;
@@ -66,8 +73,9 @@ struct ObservabilityOptions {
 };
 
 void EnsureRequestContext(const drogon::HttpRequestPtr& request);
-[[nodiscard]] std::optional<RequestContext>
-GetRequestContext(const drogon::HttpRequestPtr& request);
+// The returned pointer is owned by request->attributes() and remains valid while
+// that request attribute is not erased. Reading context should not copy its UUID.
+[[nodiscard]] const RequestContext* GetRequestContext(const drogon::HttpRequestPtr& request);
 [[nodiscard]] SolveLifecycle CreateSolveLifecycle(const drogon::HttpRequestPtr& request);
 [[nodiscard]] std::string_view ToOutcomeString(SolveRequestOutcome outcome);
 void FinalizeSolveRequest(const std::shared_ptr<ObservabilityRegistry>& observability,

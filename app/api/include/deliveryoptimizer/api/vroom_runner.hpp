@@ -35,14 +35,14 @@ public:
   VroomRunner& operator=(VroomRunner&&) = default;
   virtual ~VroomRunner() = default;
 
-  [[nodiscard]] virtual VroomRunResult Run(const Json::Value& input_payload) const = 0;
+  [[nodiscard]] virtual VroomRunResult Run(const std::string& input_payload) const = 0;
 };
 
 class ProcessVroomRunner final : public VroomRunner {
 public:
   explicit ProcessVroomRunner(VroomRuntimeConfig runtime_config);
 
-  [[nodiscard]] VroomRunResult Run(const Json::Value& input_payload) const override;
+  [[nodiscard]] VroomRunResult Run(const std::string& input_payload) const override;
 
 private:
   VroomRuntimeConfig runtime_config_;

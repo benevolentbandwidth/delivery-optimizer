@@ -61,7 +61,8 @@ TEST(OptimizeRequestTest, BuildOptimizeSuccessBodyPreservesExternalIdsForSignedP
   vroom_output["unassigned"] = Json::Value{Json::arrayValue};
   vroom_output["unassigned"].append(unassigned_entry);
 
-  const Json::Value body = deliveryoptimizer::api::BuildOptimizeSuccessBody(input, vroom_output);
+  const Json::Value body =
+      deliveryoptimizer::api::BuildOptimizeSuccessBody(input, std::move(vroom_output));
 
   ASSERT_TRUE(body["routes"].isArray());
   ASSERT_EQ(body["routes"].size(), 1U);

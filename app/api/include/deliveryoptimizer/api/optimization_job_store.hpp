@@ -49,7 +49,9 @@ struct OptimizationJobRecord {
   std::optional<SolveRequestOutcome> outcome;
   std::optional<std::uint16_t> http_status;
   std::optional<std::string> error_message;
-  std::optional<Json::Value> result_body;
+  // Stored JSON is already validated when the job completes. Keep it as text
+  // so status reads do not parse a potentially large result tree unnecessarily.
+  std::optional<std::string> result_json;
 };
 
 struct ClaimedOptimizationJob {
@@ -93,8 +95,8 @@ public:
   [[nodiscard]] bool Ping(std::string* detail = nullptr);
   [[nodiscard]] bool EnsureSchema(std::string* detail = nullptr);
 
-  [[nodiscard]] CreateOptimizationJobResult CreateJob(const std::string& request_id,
-                                                      const std::string& request_json,
+  [[nodiscard]] CreateOptimizationJobResult CreateJob(std::string_view request_id,
+                                                      std::string_view request_json,
                                                       std::size_t jobs, std::size_t vehicles);
 
   [[nodiscard]] std::optional<ClaimedOptimizationJob> ClaimNextJob(const std::string& worker_id);
@@ -117,11 +119,12 @@ public:
   [[nodiscard]] std::size_t ExpireFinishedJobs();
 
   [[nodiscard]] std::optional<OptimizationJobRecord> GetJob(const std::string& job_id);
+  [[nodiscard]] std::optional<OptimizationJobRecord> GetJobStatus(const std::string& job_id);
   [[nodiscard]] OptimizationJobStoreStats GetStats();
   [[nodiscard]] std::size_t CountHealthyWorkers(std::chrono::milliseconds max_age);
 
 private:
-  std::optional<OptimizationJobRecord> ReadJobById(const std::string& job_id);
+  std::optional<OptimizationJobRecord> ReadJobById(const std::string& job_id, bool include_result);
 
   OptimizationJobStoreConfig config_;
   std::shared_ptr<drogon::orm::DbClient> client_;

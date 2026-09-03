@@ -10,6 +10,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 option(DELIVERYOPTIMIZER_ENABLE_WARNINGS "Enable strict compiler warnings." ON)
 option(DELIVERYOPTIMIZER_ENABLE_TESTS "Build unit tests." ON)
 option(DELIVERYOPTIMIZER_ENABLE_SANITIZERS "Enable sanitizer instrumentation for Debug builds." OFF)
+option(DELIVERYOPTIMIZER_ENABLE_BENCHMARKS "Build the allocation benchmark harness." OFF)
 option(
   DELIVERYOPTIMIZER_LINK_COMPILE_COMMANDS_IN_SOURCE
   "Create a source-tree compile_commands.json symlink for editor tooling."
@@ -95,6 +96,10 @@ add_subdirectory(libs/domain)
 add_subdirectory(libs/application)
 add_subdirectory(libs/adapters)
 add_subdirectory(app/api)
+
+if(DELIVERYOPTIMIZER_ENABLE_BENCHMARKS)
+  add_subdirectory(bench)
+endif()
 
 if(DELIVERYOPTIMIZER_ENABLE_TESTS)
   include(CTest)

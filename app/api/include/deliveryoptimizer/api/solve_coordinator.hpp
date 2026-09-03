@@ -42,7 +42,8 @@ class SolveCoordinator {
 public:
   // Completion callbacks run on the coordinator's completion workers, not on solver workers.
   using CompletionCallback = std::function<void(CoordinatedSolveResult)>;
-  using PayloadFactory = std::function<Json::Value()>;
+  // Produces the VROOM payload as text; invoked on solver workers.
+  using PayloadFactory = std::function<std::string()>;
 
   SolveCoordinator(SolveAdmissionConfig config, std::shared_ptr<const VroomRunner> runner,
                    SolveCoordinatorOptions options = {},

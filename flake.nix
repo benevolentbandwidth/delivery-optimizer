@@ -48,9 +48,11 @@
               pkgs.git
               pkgs.jq
               pkgs.ninja
+              pkgs.nixd
               pkgs.pkg-config
               pkgs.postgresql
               pkgs.python3
+              pkgs.typescript-language-server
             ];
 
             env = {
