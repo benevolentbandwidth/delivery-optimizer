@@ -8,12 +8,14 @@ import HiFiUploadPage from "@/app/components/HiFiUploadPage";
 import { createUploadOperation } from "@/app/utils/uploadOperation";
 
 import {
-  parseRouteUploadFile,
+  loadDriverRouteFromFile,
+  MAX_ROUTE_FILE_BYTES,
   ROUTE_UPLOAD_ERROR_KEY,
+  validateRouteUploadFile,
 } from "./routeUploadValidation";
+import { storeUploadedRoute } from "@/app/driver_assist/storage";
 
-const MAX_FILE_MB = 10;
-const MAX_FILE_BYTES = MAX_FILE_MB * 1024 * 1024;
+const MAX_FILE_MB = MAX_ROUTE_FILE_BYTES / (1024 * 1024);
 
 export default function UploadRoutePage() {
   const router = useRouter();
@@ -40,13 +42,14 @@ export default function UploadRoutePage() {
 
   const handleFile = (f: File) => {
     setError(null);
-    const fileName = f.name.toLowerCase();
-    if (!fileName.endsWith(".json") && !fileName.endsWith(".csv")) {
-      setError("Only .json or .csv route files are accepted.");
-      return;
-    }
-    if (f.size > MAX_FILE_BYTES) {
-      setError(`File exceeds the ${MAX_FILE_MB} MB limit.`);
+    try {
+      validateRouteUploadFile(f);
+    } catch (validationError) {
+      setError(
+        validationError instanceof Error
+          ? validationError.message
+          : "Please select a valid route file.",
+      );
       return;
     }
     setFile(f);
@@ -81,15 +84,11 @@ export default function UploadRoutePage() {
     setError(null);
 
     try {
-      const text = await file.text();
+      const uploadedRoute = await loadDriverRouteFromFile(file);
       if (!isCurrentOperation()) return;
-      parseRouteUploadFile(file.name, text);
-      sessionStorage.setItem(
-        "routeFile",
-        JSON.stringify({ name: file.name, content: text }),
-      );
+      storeUploadedRoute(uploadedRoute);
       if (!isCurrentOperation()) return;
-      router.push("/driver-view");
+      router.push("/driver_assist");
     } catch (err) {
       if (isCurrentOperation()) {
         setError(

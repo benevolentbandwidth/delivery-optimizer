@@ -13,16 +13,13 @@ import StatBlock from "./components/StatBlock";
 import StopCard from "./components/StopCard";
 import { WarningIcon } from "./components/icons";
 import {
-  clearUploadedRouteFile,
+  clearUploadedRoute,
   persistRoute,
   readSavedRoute,
-  readUploadedRouteFile,
+  readUploadedRoute,
 } from "./storage";
 import { styles } from "./styles";
-import {
-  parseRouteUploadFile,
-  ROUTE_UPLOAD_ERROR_KEY,
-} from "@/app/upload-route/routeUploadValidation";
+import { ROUTE_UPLOAD_ERROR_KEY } from "@/app/upload-route/routeUploadValidation";
 
 function openNavigation(stop: DeliveryStop) {
   // Prefer exact coordinates from the route file; fall back to the address if
@@ -64,21 +61,17 @@ export default function DriverAssistPwaPage() {
   const [hasCheckedRoute, setHasCheckedRoute] = useState(false);
 
   useEffect(() => {
-    // The upload page hands off the raw JSON through sessionStorage so this
-    // page can import once, save the driver shape, and avoid bouncing back.
-    const uploadedRoute = readUploadedRouteFile();
+    // The upload page hands off the validated route through sessionStorage so
+    // this page can persist it without parsing the source file a second time.
+    const uploadedRoute = readUploadedRoute();
 
     if (uploadedRoute) {
       try {
-        const nextRoute = parseRouteUploadFile(
-          uploadedRoute.name,
-          uploadedRoute.content,
-        );
-        persistRoute(nextRoute);
-        clearUploadedRouteFile();
+        persistRoute(uploadedRoute);
+        clearUploadedRoute();
         queueMicrotask(() => {
-          setRoute(nextRoute);
-          setOpenId(nextRoute.stops[0]?.id || null);
+          setRoute(uploadedRoute);
+          setOpenId(uploadedRoute.stops[0]?.id || null);
           setHasCheckedRoute(true);
         });
         return;
@@ -87,7 +80,7 @@ export default function DriverAssistPwaPage() {
           importError instanceof Error
             ? importError.message
             : "Please upload a valid JSON file.";
-        clearUploadedRouteFile();
+        clearUploadedRoute();
         sessionStorage.setItem(ROUTE_UPLOAD_ERROR_KEY, message);
         router.replace("/upload-route");
         return;

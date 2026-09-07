@@ -7,6 +7,40 @@ import { loadDriverRouteFromText } from "@/lib/driver-route/importSession";
 import type { DriverRoute } from "@/lib/driver-route/types";
 
 export const ROUTE_UPLOAD_ERROR_KEY = "routeUploadError";
+export const MAX_ROUTE_FILE_BYTES = 1024 * 1024;
+
+const JSON_ROUTE_FILE_TYPES = new Set(["application/json", "text/json"]);
+const CSV_ROUTE_FILE_TYPES = new Set([
+  "text/csv",
+  "application/csv",
+  "application/vnd.ms-excel",
+  "text/plain",
+]);
+
+type RouteUploadFile = Pick<File, "name" | "size" | "type" | "text">;
+
+export function validateRouteUploadFile(
+  file: Pick<RouteUploadFile, "name" | "size" | "type">,
+) {
+  const fileName = file.name.toLowerCase();
+  const isJson = fileName.endsWith(".json");
+  const isCsv = fileName.endsWith(".csv");
+  if (!isJson && !isCsv) {
+    throw new Error("Only .json or .csv route files are accepted.");
+  }
+  if (file.size > MAX_ROUTE_FILE_BYTES) {
+    throw new Error("Route files must be 1 MB or smaller.");
+  }
+  const acceptedTypes = isJson ? JSON_ROUTE_FILE_TYPES : CSV_ROUTE_FILE_TYPES;
+  if (file.type && !acceptedTypes.has(file.type.toLowerCase())) {
+    throw new Error("The selected file has an unsupported content type.");
+  }
+}
+
+export async function loadDriverRouteFromFile(file: RouteUploadFile) {
+  validateRouteUploadFile(file);
+  return parseRouteUploadFile(file.name, await file.text());
+}
 
 export function parseRouteUploadText(text: string) {
   return loadDriverRouteFromText(text);

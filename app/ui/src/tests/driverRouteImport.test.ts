@@ -1,12 +1,42 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
+  loadDriverRouteFromFile,
+  MAX_ROUTE_FILE_BYTES,
   parseRouteUploadFile,
   parseRouteUploadText,
 } from "@/app/upload-route/routeUploadValidation";
 import { buildSessionSave } from "@/lib/session/exportSession";
 
 describe("driver route import", () => {
+  it("rejects oversized route files before reading them", async () => {
+    const readText = vi.fn(async () => "{}");
+
+    await expect(
+      loadDriverRouteFromFile({
+        name: "route.json",
+        size: MAX_ROUTE_FILE_BYTES + 1,
+        type: "application/json",
+        text: readText,
+      }),
+    ).rejects.toThrow("Route files must be 1 MB or smaller.");
+    expect(readText).not.toHaveBeenCalled();
+  });
+
+  it("rejects unsupported route MIME types before reading them", async () => {
+    const readText = vi.fn(async () => "{}");
+
+    await expect(
+      loadDriverRouteFromFile({
+        name: "route.json",
+        size: 2,
+        type: "image/png",
+        text: readText,
+      }),
+    ).rejects.toThrow("The selected file has an unsupported content type.");
+    expect(readText).not.toHaveBeenCalled();
+  });
+
   it("loads a saved route-manager session into the driver_assist route shape", () => {
     const route = parseRouteUploadText(
       JSON.stringify(
