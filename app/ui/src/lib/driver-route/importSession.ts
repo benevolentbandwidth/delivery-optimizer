@@ -1,6 +1,6 @@
 import { ZodError, z } from "zod";
 
-import { createPendingDeliveryStop } from "./createDeliveryStop";
+import { createImportedRoute } from "./createImportedRoute";
 import type { DriverRoute, OptimizeRequestLike } from "./types";
 import { transformSessionToDriverRoute } from "./transformSession";
 import {
@@ -131,11 +131,12 @@ function loadSessionFromParsedJson(parsed: unknown): OptimizeRequestLike {
 function transformResultsRouteToDriverRoute(
   route: z.infer<typeof resultsRouteSchema>,
 ): DriverRoute {
-  const orderedStops = [...route.stops].sort((a, b) => a.sequence - b.sequence);
-  const stops = orderedStops.map((stop, index) =>
-    createPendingDeliveryStop({
+  return createImportedRoute({
+    driverName: route.driverName || "driver_assist",
+    routeLabel: (stopCount) => `Route ${route.vehicleId} - ${stopCount} stops`,
+    stops: route.stops.map((stop) => ({
       id: stop.id,
-      index,
+      sequence: stop.sequence,
       address: stop.address,
       customerName: stop.addresseeName,
       phoneNumber: stop.phoneNumber,
@@ -143,12 +144,6 @@ function transformResultsRouteToDriverRoute(
       notes: stop.note,
       lat: stop.lat,
       lng: stop.lng,
-    }),
-  );
-
-  return {
-    driverName: route.driverName || "driver_assist",
-    routeLabel: `Route ${route.vehicleId} - ${stops.length} stops`,
-    stops,
-  };
+    })),
+  });
 }

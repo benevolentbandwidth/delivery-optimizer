@@ -246,6 +246,20 @@ describe("driver route import", () => {
     expect(route.stops[0].packageCount).toBe(0);
   });
 
+  it("orders zero-based CSV sequences independently of file position", () => {
+    const route = parseRouteUploadFile(
+      "zero-based-route.csv",
+      [
+        "sequence,id,address,lat,lng",
+        '1,"second","200 Second St",38.55,-121.75',
+        '0,"first","100 First St",38.54,-121.74',
+      ].join("\n"),
+    );
+
+    expect(route.stops.map((stop) => stop.id)).toEqual(["first", "second"]);
+    expect(route.stops.map((stop) => stop.stopNumber)).toEqual([1, 2]);
+  });
+
   it("rejects route CSV uploads with missing lat or lng values", () => {
     const missingLat = [
       "sequence,address,addresseeName,phoneNumber,capacityUsed,note,lat,lng",

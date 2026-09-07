@@ -1,5 +1,8 @@
-import { parseCsvToRows } from "@/app/edit/hooks/useCSVImport";
-import { createPendingDeliveryStop } from "@/lib/driver-route/createDeliveryStop";
+import { parseCsvToRows } from "@/lib/csv/parseCsvToRows";
+import {
+  createImportedRoute,
+  type ImportedRouteStop,
+} from "@/lib/driver-route/createImportedRoute";
 import { loadDriverRouteFromText } from "@/lib/driver-route/importSession";
 import type { DriverRoute } from "@/lib/driver-route/types";
 
@@ -25,15 +28,17 @@ function parseRouteCsvText(text: string): DriverRoute {
     );
   }
 
-  const headers = rows[0].map(normalizeHeader);
-  const stops = rows.slice(1).map((row, index) => {
-    const value = (names: string[]) => {
-      const headerIndex = headers.findIndex((header) => names.includes(header));
-      return headerIndex >= 0 ? row[headerIndex]?.trim() || "" : "";
-    };
-
-    const latStr = value(["lat", "latitude"]);
-    const lngStr = value(["lng", "lon", "long", "longitude"]);
+  const headerIndexes = new Map(
+    rows[0].map((header, index) => [normalizeHeader(header), index]),
+  );
+  const stops: ImportedRouteStop[] = rows.slice(1).map((row, index) => {
+    const latStr = getRowValue(row, headerIndexes, ["lat", "latitude"]);
+    const lngStr = getRowValue(row, headerIndexes, [
+      "lng",
+      "lon",
+      "long",
+      "longitude",
+    ]);
     if (
       !latStr ||
       !lngStr ||
@@ -47,8 +52,13 @@ function parseRouteCsvText(text: string): DriverRoute {
 
     const lat = Number(latStr);
     const lng = Number(lngStr);
-    const sequence = Number(value(["sequence", "stopnumber", "stop"]));
-    const packageCountText = value([
+    const sequenceText = getRowValue(row, headerIndexes, [
+      "sequence",
+      "stopnumber",
+      "stop",
+    ]);
+    const sequence = Number(sequenceText);
+    const packageCountText = getRowValue(row, headerIndexes, [
       "capacityused",
       "packagecount",
       "packages",
@@ -63,34 +73,50 @@ function parseRouteCsvText(text: string): DriverRoute {
         ? packageCount
         : undefined;
 
-    return createPendingDeliveryStop({
-      id: value(["id", "stopid"]) || String(index + 1),
-      index: Number.isFinite(sequence) && sequence > 0 ? sequence - 1 : index,
-      address: value(["address"]),
-      customerName: value([
+    return {
+      id:
+        getRowValue(row, headerIndexes, ["id", "stopid"]) || String(index + 1),
+      sequence:
+        sequenceText !== "" && Number.isFinite(sequence) && sequence >= 0
+          ? sequence
+          : index,
+      address: getRowValue(row, headerIndexes, ["address"]),
+      customerName: getRowValue(row, headerIndexes, [
         "addresseename",
         "recipientname",
         "customername",
         "name",
       ]),
-      customerNameFallback: `Stop ${index + 1}`,
-      phoneNumber: value(["phonenumber", "phone"]) || undefined,
+      phoneNumber:
+        getRowValue(row, headerIndexes, ["phonenumber", "phone"]) || undefined,
       packageCount: validPackageCount,
-      notes: value(["note", "notes"]),
+      notes: getRowValue(row, headerIndexes, ["note", "notes"]),
       lat,
       lng,
-    });
+    };
   });
 
-  stops.sort((a, b) => a.stopNumber - b.stopNumber);
-
-  return {
+  return createImportedRoute({
     driverName: "driver_assist",
-    routeLabel: `CSV route - ${stops.length} stops`,
-    stops: stops.map((stop, index) => ({ ...stop, stopNumber: index + 1 })),
-  };
+    routeLabel: (stopCount) => `CSV route - ${stopCount} stops`,
+    stops,
+  });
 }
 
 function normalizeHeader(header: string) {
   return header.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function getRowValue(
+  row: string[],
+  headerIndexes: ReadonlyMap<string, number>,
+  names: string[],
+) {
+  for (const name of names) {
+    const index = headerIndexes.get(name);
+    if (index !== undefined) {
+      return row[index]?.trim() || "";
+    }
+  }
+  return "";
 }

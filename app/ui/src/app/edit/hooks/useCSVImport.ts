@@ -21,6 +21,7 @@
  */
 
 import { useState, useCallback } from "react";
+import { parseCsvToRows } from "@/lib/csv/parseCsvToRows";
 
 export function useCSVImport() {
   const [csvData, setCsvData] = useState<string[][]>([]);
@@ -150,58 +151,4 @@ function parseJsonToRows(text: string): string[][] {
   );
 
   return [headers, ...dataRows];
-}
-
-/**
- * Minimal RFC-4180 CSV parser — handles quoted fields, embedded commas,
- * CRLF and LF line endings.
- */
-export function parseCsvToRows(text: string): string[][] {
-  const rows: string[][] = [];
-  let currentRow: string[] = [];
-  let currentField = "";
-  let inQuotes = false;
-
-  for (let i = 0; i < text.length; i++) {
-    const ch = text[i];
-    const next = text[i + 1];
-
-    if (inQuotes) {
-      if (ch === '"' && next === '"') {
-        currentField += '"';
-        i++;
-      } else if (ch === '"') {
-        inQuotes = false;
-      } else {
-        currentField += ch;
-      }
-    } else {
-      if (ch === '"') {
-        inQuotes = true;
-      } else if (ch === ",") {
-        currentRow.push(currentField.trim());
-        currentField = "";
-      } else if (ch === "\r" && next === "\n") {
-        currentRow.push(currentField.trim());
-        rows.push(currentRow);
-        currentRow = [];
-        currentField = "";
-        i++;
-      } else if (ch === "\n" || ch === "\r") {
-        currentRow.push(currentField.trim());
-        rows.push(currentRow);
-        currentRow = [];
-        currentField = "";
-      } else {
-        currentField += ch;
-      }
-    }
-  }
-
-  if (currentField !== "" || currentRow.length > 0) {
-    currentRow.push(currentField.trim());
-    rows.push(currentRow);
-  }
-
-  return rows.filter((row) => row.some((cell) => cell !== ""));
 }
