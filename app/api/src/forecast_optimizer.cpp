@@ -185,6 +185,9 @@ void SetRouteTimes(const std::optional<std::chrono::sys_seconds> planned_start_t
 [[nodiscard]] std::chrono::sys_seconds
 ReadLegDeparture(const Json::Value& step,
                  const std::optional<std::chrono::sys_seconds> route_start_time) {
+  constexpr std::chrono::seconds kMaxRelativeArrivalOffset = std::chrono::days{7};
+  const auto now =
+      std::chrono::time_point_cast<std::chrono::seconds>(std::chrono::system_clock::now());
   const int arrival = step["arrival"].isInt() ? step["arrival"].asInt() : 0;
   const int service = step["service"].isInt() ? step["service"].asInt() : 0;
   const std::chrono::seconds offset{std::max(arrival + service, 0)};
@@ -193,14 +196,15 @@ ReadLegDeparture(const Json::Value& step,
         std::chrono::duration_cast<std::chrono::seconds>(route_start_time->time_since_epoch());
     // Large arrivals are Unix timestamps; smaller arrivals are route offsets.
     if (offset >= route_start_seconds - std::chrono::hours{24}) {
-      return std::chrono::sys_seconds{offset};
+      return std::max(std::chrono::sys_seconds{offset}, now);
     }
 
-    return *route_start_time + offset;
+    return std::max(*route_start_time + std::min(offset, kMaxRelativeArrivalOffset), now);
   }
 
-  return std::chrono::time_point_cast<std::chrono::seconds>(std::chrono::system_clock::now()) +
-         offset;
+  // Without a route start, a Unix timestamp in arrival would otherwise be
+  // interpreted as a multi-decade relative offset. Ignore implausible offsets.
+  return now + (offset <= kMaxRelativeArrivalOffset ? offset : std::chrono::seconds{0});
 }
 
 [[nodiscard]] std::vector<int> BuildEvenTrafficDelays(const std::size_t job_count,
@@ -613,7 +617,10 @@ ReadRouteTraffic(const TrafficForecastOptions& options, const Json::Value& vroom
       }
     });
   }
-  workers.clear();
+  // Explicitly wait for every request worker; these workers do not support cancellation.
+  for (std::jthread& worker : workers) {
+    worker.join();
+  }
 
   int delay_seconds = 0;
   bool saw_traffic = false;
@@ -817,6 +824,27 @@ void AddTrafficForecast(Json::Value& forecast, const TrafficForecastOptions& opt
                                                       : "traffic_delay_below_threshold";
   traffic["reoptimization"] = std::move(reoptimization);
   forecast["traffic"] = std::move(traffic);
+}
+
+TrafficPostprocessPlan PrepareTrafficPostprocessing(const TrafficForecastOptions& options,
+                                                    const OptimizeRequestInput& input,
+                                                    const WeatherImpactEstimate& weather,
+                                                    const Json::Value& route_output,
+                                                    Json::Value& forecast) {
+  const TrafficDelayEstimate traffic_delay =
+      ReadRouteTraffic(options, route_output, ReadRouteStartTime(input));
+  TrafficImpact impact = EstimateTrafficImpact(options, ReadVroomDuration(route_output).value_or(0),
+                                               traffic_delay.delay_seconds, traffic_delay.source);
+  AddTrafficForecast(forecast, options, impact);
+
+  std::optional<Json::Value> adjusted_vroom_input;
+  if (impact.should_reoptimize) {
+    adjusted_vroom_input = BuildTrafficAdjustedVroomInput(input, weather, impact, route_output);
+  }
+  return TrafficPostprocessPlan{
+      .impact = std::move(impact),
+      .adjusted_vroom_input = std::move(adjusted_vroom_input),
+  };
 }
 
 } // namespace deliveryoptimizer::api

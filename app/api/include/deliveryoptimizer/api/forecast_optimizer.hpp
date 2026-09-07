@@ -69,6 +69,11 @@ struct TrafficLeg {
   std::chrono::sys_seconds departure_time;
 };
 
+struct TrafficPostprocessPlan {
+  TrafficImpact impact;
+  std::optional<Json::Value> adjusted_vroom_input;
+};
+
 [[nodiscard]] WeatherForecastOptions ResolveWeatherForecastOptionsFromEnv();
 
 [[nodiscard]] TrafficForecastOptions ResolveTrafficForecastOptionsFromEnv();
@@ -140,5 +145,9 @@ ReadRouteStartTime(const OptimizeRequestInput& input);
 
 void AddTrafficForecast(Json::Value& forecast, const TrafficForecastOptions& options,
                         const TrafficImpact& impact);
+
+[[nodiscard]] TrafficPostprocessPlan PrepareTrafficPostprocessing(
+    const TrafficForecastOptions& options, const OptimizeRequestInput& input,
+    const WeatherImpactEstimate& weather, const Json::Value& route_output, Json::Value& forecast);
 
 } // namespace deliveryoptimizer::api

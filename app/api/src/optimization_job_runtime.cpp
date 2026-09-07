@@ -2,6 +2,7 @@
 
 #include "deliveryoptimizer/adapters/json_utils.hpp"
 #include "deliveryoptimizer/api/forecast_optimizer.hpp"
+#include "deliveryoptimizer/api/internal/json_utils.hpp"
 #include "deliveryoptimizer/api/optimize_request.hpp"
 #include "deliveryoptimizer/api/solve_execution.hpp"
 
@@ -169,15 +170,14 @@ void OptimizationJobRuntime::WorkerLoop(const std::stop_token stop_token,
               runner_->Run(BuildWeatherAdjustedVroomInputText(parsed_request->input, impact)));
         }
         if (final_result.output.has_value()) {
-          const TrafficDelayEstimate traffic_delay = ReadRouteTraffic(
-              traffic_options_, *final_result.output, ReadRouteStartTime(parsed_request->input));
-          const TrafficImpact traffic = EstimateTrafficImpact(
-              traffic_options_, ReadVroomDuration(*final_result.output).value_or(0),
-              traffic_delay.delay_seconds, traffic_delay.source);
-          AddTrafficForecast(*forecast, traffic_options_, traffic);
-          if (traffic.should_reoptimize) {
-            final_result = ToCoordinatedSolveResult(runner_->Run(BuildTrafficAdjustedVroomInput(
-                parsed_request->input, impact, traffic, *final_result.output)));
+          TrafficPostprocessPlan traffic_plan = PrepareTrafficPostprocessing(
+              traffic_options_, parsed_request->input, impact, *final_result.output, *forecast);
+          if (traffic_plan.adjusted_vroom_input.has_value()) {
+            CoordinatedSolveResult baseline_result = std::move(final_result);
+            CoordinatedSolveResult rerun_result = ToCoordinatedSolveResult(
+                runner_->Run(internal::RenderJson(*traffic_plan.adjusted_vroom_input)));
+            final_result =
+                PreferSuccessfulRerun(std::move(baseline_result), std::move(rerun_result));
           }
         }
       }
