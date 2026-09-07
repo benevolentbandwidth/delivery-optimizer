@@ -225,6 +225,7 @@ export const styles: Record<string, CSSProperties> = {
     justifyContent: "center",
     minHeight: 42,
     padding: "0 8px",
+    textDecoration: "none",
   },
   primaryActionButton: {
     alignItems: "center",

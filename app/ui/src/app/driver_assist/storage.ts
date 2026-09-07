@@ -13,17 +13,30 @@ export type UploadedRouteFile = {
   content: string;
 };
 
+let cachedSavedRouteText: string | null | undefined;
+let cachedSavedRoute: DriverRoute | null = null;
+
 // Saved progress is the driver's working copy of the route.
 export function readSavedRoute(): DriverRoute | null {
   if (typeof window === "undefined") return null;
 
   try {
     const saved = window.localStorage.getItem(STORAGE_KEY);
-    if (!saved) return null;
-    return parsePersistedRouteState(JSON.parse(saved)).route;
+    if (saved === cachedSavedRouteText) {
+      return cachedSavedRoute;
+    }
+    cachedSavedRouteText = saved;
+    if (!saved) {
+      cachedSavedRoute = null;
+      return null;
+    }
+    cachedSavedRoute = parsePersistedRouteState(JSON.parse(saved)).route;
+    return cachedSavedRoute;
   } catch {
     // Bad localStorage should not strand the driver on a broken route.
     window.localStorage.removeItem(STORAGE_KEY);
+    cachedSavedRouteText = null;
+    cachedSavedRoute = null;
     return null;
   }
 }
@@ -51,9 +64,9 @@ export function clearUploadedRouteFile() {
 
 // Store the route with a small version wrapper so future shape changes have room.
 export function persistRoute(route: DriverRoute) {
-  window.localStorage.setItem(
-    STORAGE_KEY,
-    JSON.stringify(createPersistedRouteState(route)),
-  );
+  const serializedRoute = JSON.stringify(createPersistedRouteState(route));
+  window.localStorage.setItem(STORAGE_KEY, serializedRoute);
+  cachedSavedRouteText = serializedRoute;
+  cachedSavedRoute = route;
   window.dispatchEvent(new Event(ROUTE_STORE_EVENT));
 }

@@ -114,7 +114,12 @@ export default function StopCard({
               }}
             >
               {phoneNumber ? (
-                <a href={`tel:${phoneNumber}`} style={styles.actionButton}>
+                <a
+                  href={`tel:${phoneNumber}`}
+                  role="button"
+                  aria-label={`Call ${stop.customerName}`}
+                  style={styles.actionButton}
+                >
                   <PhoneIcon />
                   Call
                 </a>
