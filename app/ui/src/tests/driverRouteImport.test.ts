@@ -1,12 +1,44 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
-import { loadSessionFromText } from "@/lib/driver-route/importSession";
-import { transformSessionToDriverRoute } from "@/lib/driver-route/transformSession";
+import {
+  loadDriverRouteFromFile,
+  MAX_ROUTE_FILE_BYTES,
+  parseRouteUploadFile,
+  parseRouteUploadText,
+} from "@/app/upload-route/routeUploadValidation";
 import { buildSessionSave } from "@/lib/session/exportSession";
 
 describe("driver route import", () => {
+  it("rejects oversized route files before reading them", async () => {
+    const readText = vi.fn(async () => "{}");
+
+    await expect(
+      loadDriverRouteFromFile({
+        name: "route.json",
+        size: MAX_ROUTE_FILE_BYTES + 1,
+        type: "application/json",
+        text: readText,
+      }),
+    ).rejects.toThrow("Route files must be 1 MB or smaller.");
+    expect(readText).not.toHaveBeenCalled();
+  });
+
+  it("rejects unsupported route MIME types before reading them", async () => {
+    const readText = vi.fn(async () => "{}");
+
+    await expect(
+      loadDriverRouteFromFile({
+        name: "route.json",
+        size: 2,
+        type: "image/png",
+        text: readText,
+      }),
+    ).rejects.toThrow("The selected file has an unsupported content type.");
+    expect(readText).not.toHaveBeenCalled();
+  });
+
   it("loads a saved route-manager session into the driver_assist route shape", () => {
-    const session = loadSessionFromText(
+    const route = parseRouteUploadText(
       JSON.stringify(
         buildSessionSave(
           {
@@ -35,7 +67,7 @@ describe("driver route import", () => {
       ),
     );
 
-    expect(transformSessionToDriverRoute(session)).toEqual({
+    expect(route).toEqual({
       driverName: "driver1",
       routeLabel: "Route 7 - 1 stops",
       stops: [
@@ -58,7 +90,7 @@ describe("driver route import", () => {
   });
 
   it("loads the same saved session shape when vehicle start location is absent", () => {
-    const session = loadSessionFromText(
+    const route = parseRouteUploadText(
       JSON.stringify(
         buildSessionSave(
           {
@@ -85,7 +117,7 @@ describe("driver route import", () => {
       ),
     );
 
-    expect(transformSessionToDriverRoute(session)).toMatchObject({
+    expect(route).toMatchObject({
       driverName: "driver3",
       routeLabel: "Route 3 - 1 stops",
       stops: [
@@ -99,14 +131,185 @@ describe("driver route import", () => {
     });
   });
 
-  it("rejects files that do not match the saved session contract", () => {
-    expect(() => loadSessionFromText(JSON.stringify({ version: 1 }))).toThrow(
+  it("rejects invalid upload-route files before handing them to driver_assist", () => {
+    expect(() => parseRouteUploadText(JSON.stringify({ version: 1 }))).toThrow(
       'Invalid save file format at "savedAt".',
     );
   });
 
-  it("also accepts the same session data shape without the save envelope", () => {
-    const session = loadSessionFromText(
+  it("loads a Results page route export into the driver_assist route shape", () => {
+    const route = parseRouteUploadText(
+      JSON.stringify({
+        vehicleId: "vehicle-7",
+        driverName: "Driver Export",
+        stops: [
+          {
+            id: "stop-later",
+            address: "200 Second St",
+            lat: 38.55,
+            lng: -121.75,
+            sequence: 2,
+            capacityUsed: 4,
+            timeWindow: { kind: "by", time: "13:00" },
+            note: "Ring bell",
+            addresseeName: "Second Customer",
+            phoneNumber: "555-555-0202",
+          },
+          {
+            id: "stop-first",
+            address: "100 First St",
+            lat: 38.54,
+            lng: -121.74,
+            sequence: 1,
+            capacityUsed: 2,
+            timeWindow: { kind: "from", time: "09:00" },
+            note: "Leave at front desk",
+            addresseeName: "First Customer",
+            phoneNumber: "555-555-0101",
+          },
+        ],
+      }),
+    );
+
+    expect(route).toEqual({
+      driverName: "Driver Export",
+      routeLabel: "Route vehicle-7 - 2 stops",
+      stops: [
+        {
+          id: "stop-first",
+          stopNumber: 1,
+          address: "100 First St",
+          customerName: "First Customer",
+          phoneNumber: "555-555-0101",
+          packageCount: 2,
+          notes: "Leave at front desk",
+          status: "pending",
+          lat: 38.54,
+          lng: -121.74,
+          completedAt: undefined,
+          failureReason: undefined,
+        },
+        {
+          id: "stop-later",
+          stopNumber: 2,
+          address: "200 Second St",
+          customerName: "Second Customer",
+          phoneNumber: "555-555-0202",
+          packageCount: 4,
+          notes: "Ring bell",
+          status: "pending",
+          lat: 38.55,
+          lng: -121.75,
+          completedAt: undefined,
+          failureReason: undefined,
+        },
+      ],
+    });
+  });
+
+  it("preserves a zero-capacity stop from a Results page route export", () => {
+    const route = parseRouteUploadText(
+      JSON.stringify({
+        vehicleId: "vehicle-7",
+        stops: [
+          {
+            id: "zero-demand-stop",
+            address: "100 First St",
+            lat: 38.54,
+            lng: -121.74,
+            sequence: 1,
+            capacityUsed: 0,
+          },
+        ],
+      }),
+    );
+
+    expect(route.stops[0].packageCount).toBe(0);
+  });
+
+  it("loads a route CSV upload into the driver_assist route shape", () => {
+    const route = parseRouteUploadFile(
+      "driver-route.csv",
+      [
+        "sequence,address,addresseeName,phoneNumber,capacityUsed,note,lat,lng",
+        '2,"200 Second St","Second Customer","555-555-0202",4,"Ring bell",38.55,-121.75',
+        '1,"100 First St","First Customer","555-555-0101",2,"Leave at front desk",38.54,-121.74',
+      ].join("\n"),
+    );
+
+    expect(route).toMatchObject({
+      routeLabel: "CSV route - 2 stops",
+      stops: [
+        {
+          stopNumber: 1,
+          address: "100 First St",
+          customerName: "First Customer",
+          phoneNumber: "555-555-0101",
+          packageCount: 2,
+          notes: "Leave at front desk",
+          lat: 38.54,
+          lng: -121.74,
+        },
+        {
+          stopNumber: 2,
+          address: "200 Second St",
+          customerName: "Second Customer",
+          phoneNumber: "555-555-0202",
+          packageCount: 4,
+          notes: "Ring bell",
+          lat: 38.55,
+          lng: -121.75,
+        },
+      ],
+    });
+  });
+
+  it("preserves a zero package count from a route CSV upload", () => {
+    const route = parseRouteUploadFile(
+      "zero-package-route.csv",
+      [
+        "sequence,address,capacityUsed,lat,lng",
+        '1,"100 First St",0,38.54,-121.74',
+      ].join("\n"),
+    );
+
+    expect(route.stops[0].packageCount).toBe(0);
+  });
+
+  it("orders zero-based CSV sequences independently of file position", () => {
+    const route = parseRouteUploadFile(
+      "zero-based-route.csv",
+      [
+        "sequence,id,address,lat,lng",
+        '1,"second","200 Second St",38.55,-121.75',
+        '0,"first","100 First St",38.54,-121.74',
+      ].join("\n"),
+    );
+
+    expect(route.stops.map((stop) => stop.id)).toEqual(["first", "second"]);
+    expect(route.stops.map((stop) => stop.stopNumber)).toEqual([1, 2]);
+  });
+
+  it("rejects route CSV uploads with missing lat or lng values", () => {
+    const missingLat = [
+      "sequence,address,addresseeName,phoneNumber,capacityUsed,note,lat,lng",
+      '1,"100 First St","First Customer","555-555-0101",2,"Leave at front desk",,-121.74',
+    ].join("\n");
+    const missingLng = [
+      "sequence,address,addresseeName,phoneNumber,capacityUsed,note,lat,lng",
+      '1,"100 First St","First Customer","555-555-0101",2,"Leave at front desk",38.54,',
+    ].join("\n");
+
+    expect(() => parseRouteUploadFile("missing-lat.csv", missingLat)).toThrow(
+      "CSV route stops must include valid lat and lng columns.",
+    );
+    expect(() => parseRouteUploadFile("missing-lng.csv", missingLng)).toThrow(
+      "CSV route stops must include valid lat and lng columns.",
+    );
+  });
+
+  it("also accepts a direct optimize request JSON file", () => {
+    const route = parseRouteUploadText(
       JSON.stringify({
         deliveries: [
           {
@@ -128,7 +331,7 @@ describe("driver route import", () => {
       }),
     );
 
-    expect(transformSessionToDriverRoute(session)).toMatchObject({
+    expect(route).toMatchObject({
       driverName: "driver2",
       stops: [
         {
