@@ -69,6 +69,8 @@ export default function DriverAssistPwaPage() {
       try {
         persistRoute(uploadedRoute);
         clearUploadedRoute();
+        // Defer storage-derived state until this effect completes to avoid a
+        // synchronous setState cascade during hydration.
         queueMicrotask(() => {
           setRoute(uploadedRoute);
           setOpenId(uploadedRoute.stops[0]?.id || null);
@@ -95,6 +97,8 @@ export default function DriverAssistPwaPage() {
       return;
     }
 
+    // Defer storage-derived state until this effect completes to avoid a
+    // synchronous setState cascade during hydration.
     queueMicrotask(() => {
       setRoute(savedRoute);
       setOpenId(savedRoute.stops[0]?.id || null);

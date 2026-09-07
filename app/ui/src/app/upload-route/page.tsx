@@ -37,6 +37,8 @@ export default function UploadRoutePage() {
     if (!uploadError) return;
 
     sessionStorage.removeItem(ROUTE_UPLOAD_ERROR_KEY);
+    // Defer storage-derived state until this effect completes to avoid a
+    // synchronous setState cascade during hydration.
     queueMicrotask(() => setError(uploadError));
   }, []);
 
