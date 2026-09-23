@@ -37,16 +37,31 @@ const persistedRouteStateSchema = z.object({
 
 type PersistedRouteState = z.infer<typeof persistedRouteStateSchema>;
 
+const MAX_ROUTE_PDF_BYTES = 10_000_000;
+
 // Guard the browser import path before we spend time parsing a file.
 export async function loadSessionFromFile(
-  file: Pick<File, "name" | "size" | "type" | "text">,
+  file: Pick<File, "name" | "size" | "type" | "text" | "arrayBuffer">,
 ): Promise<OptimizeRequestLike> {
-  const isJson =
-    file.type === "application/json" ||
-    file.name.toLowerCase().endsWith(".json");
+  const name = file.name.toLowerCase();
+  const isPdf = file.type === "application/pdf" || name.endsWith(".pdf");
+  const isJson = file.type === "application/json" || name.endsWith(".json");
+
+  if (isPdf) {
+    if (file.size > MAX_ROUTE_PDF_BYTES) {
+      throw new Error("File is too large to import.");
+    }
+
+    // Loaded lazily so the pdf-lib bundle is only fetched when a driver
+    // actually imports a PDF.
+    const { extractEmbeddedRouteJson } =
+      await import("./extractRouteJsonFromPdf");
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    return loadSessionFromText(await extractEmbeddedRouteJson(bytes));
+  }
 
   if (!isJson) {
-    throw new Error("Please select a valid .json save file.");
+    throw new Error("Please select the route PDF you were sent.");
   }
 
   if (file.size > MAX_SESSION_FILE_BYTES) {

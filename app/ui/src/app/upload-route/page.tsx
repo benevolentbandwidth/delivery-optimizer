@@ -27,9 +27,9 @@ export default function UploadRoutePage() {
 
   const handleFile = (f: File) => {
     setError(null);
-    // Only .json route files are accepted — CSV is rejected here.
-    if (!f.name.endsWith(".json")) {
-      setError("Only .json route files are accepted.");
+    // Routes arrive as the PDF WhatsApp delivered, with the data embedded.
+    if (!f.name.toLowerCase().endsWith(".pdf")) {
+      setError("Only .pdf route files are accepted.");
       return;
     }
     if (f.size > MAX_FILE_BYTES) {
@@ -68,14 +68,22 @@ export default function UploadRoutePage() {
     setError(null);
 
     try {
-      const text = await file.text();
+      // The PDF is only a carrier: the driver app consumes the route.json
+      // embedded inside it, never the rendered page.
+      const { extractEmbeddedRouteJson } =
+        await import("@/lib/driver-route/extractRouteJsonFromPdf");
+      const bytes = new Uint8Array(await file.arrayBuffer());
       if (!isCurrentOperation()) return;
+
+      const content = await extractEmbeddedRouteJson(bytes);
+      if (!isCurrentOperation()) return;
+
       sessionStorage.setItem(
         "routeFile",
-        JSON.stringify({ name: file.name, content: text }),
+        JSON.stringify({ name: file.name, content }),
       );
       if (!isCurrentOperation()) return;
-      router.push("/driver-view");
+      router.push("/driver_assist");
     } catch (err) {
       if (isCurrentOperation()) {
         setError(
@@ -100,9 +108,9 @@ export default function UploadRoutePage() {
   return (
     <HiFiUploadPage
       title="Upload your route"
-      dropzoneText="Drag and drop JSON files here, or"
-      description={`Import delivery details from a JSON file. Maximum file size of ${MAX_FILE_MB} MB.`}
-      accept=".json"
+      dropzoneText="Drag and drop your route PDF here, or"
+      description={`Upload the route PDF sent to you on WhatsApp. Maximum file size of ${MAX_FILE_MB} MB.`}
+      accept=".pdf,application/pdf"
       file={file}
       isDragging={isDragging}
       isProcessing={isProcessing}

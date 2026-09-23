@@ -15,10 +15,22 @@ env:
     availability:
       - BUILD
       - RUNTIME
-  - variable: WHATSAPP_SEND_ROUTE_SECRET
-    secret: WHATSAPP_SEND_ROUTE_SECRET
+  # WhatsApp Cloud API. Routes are sent from this runtime, so the token lives
+  # here rather than on the C++ service. Both secrets must be granted to the
+  # App Hosting service account before a rollout will succeed.
+  - variable: WHATSAPP_ACCESS_TOKEN
+    secret: WHATSAPP_ACCESS_TOKEN
     availability:
       - RUNTIME
+  - variable: WHATSAPP_PHONE_NUMBER_ID
+    secret: WHATSAPP_PHONE_NUMBER_ID
+    availability:
+      - RUNTIME
+  # Approved template that carries the route PDF as its document header.
+  - variable: WHATSAPP_ROUTE_TEMPLATE_NAME
+    value: driver_route_document
+  - variable: WHATSAPP_ROUTE_TEMPLATE_LANGUAGE
+    value: en_US
   - variable: FEEDBACK_ENABLED
     value: "1"
   - variable: FEEDBACK_GITHUB_REPO
