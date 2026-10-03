@@ -5,12 +5,7 @@ import {
 import type { DriverRoute } from "@/lib/driver-route/types";
 
 export const STORAGE_KEY = "driver_assist.routeState";
-export const UPLOADED_ROUTE_KEY = "routeFile";
-
-export type UploadedRouteFile = {
-  name: string;
-  content: string;
-};
+export const UPLOADED_ROUTE_KEY = "driver_assist.uploadedRoute";
 
 // Saved progress is the driver's working copy of the route.
 export function readSavedRoute(): DriverRoute | null {
@@ -28,24 +23,36 @@ export function readSavedRoute(): DriverRoute | null {
 }
 
 // The upload page only needs a short handoff, so sessionStorage is enough.
-export function readUploadedRouteFile(): UploadedRouteFile | null {
+export function readUploadedRoute(): DriverRoute | null {
   if (typeof window === "undefined") return null;
 
   try {
     const raw = window.sessionStorage.getItem(UPLOADED_ROUTE_KEY);
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as Partial<UploadedRouteFile>;
-    if (typeof parsed.name !== "string" || typeof parsed.content !== "string") {
-      return null;
-    }
-    return { name: parsed.name, content: parsed.content };
+    return parsePersistedRouteState(JSON.parse(raw)).route;
   } catch {
+    try {
+      window.sessionStorage.removeItem(UPLOADED_ROUTE_KEY);
+    } catch {
+      // Storage may be unavailable; the invalid handoff is still ignored.
+    }
     return null;
   }
 }
 
-export function clearUploadedRouteFile() {
-  window.sessionStorage.removeItem(UPLOADED_ROUTE_KEY);
+export function storeUploadedRoute(route: DriverRoute) {
+  window.sessionStorage.setItem(
+    UPLOADED_ROUTE_KEY,
+    JSON.stringify(createPersistedRouteState(route)),
+  );
+}
+
+export function clearUploadedRoute() {
+  try {
+    window.sessionStorage.removeItem(UPLOADED_ROUTE_KEY);
+  } catch {
+    // Storage may be unavailable; route state has already been read in memory.
+  }
 }
 
 // Store the route with a small version wrapper so future shape changes have room.

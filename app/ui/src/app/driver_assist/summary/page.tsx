@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { downloadRouteSummary } from "@/lib/driver-route/exportSummary";
 
 import DriverFooter from "../components/DriverFooter";
-import { WarningIcon } from "../components/icons";
 import { readSavedRoute } from "../storage";
 import SummaryStatBlock from "./components/SummaryStatBlock";
 import SummaryStopCard from "./components/SummaryStopCard";
@@ -30,10 +29,11 @@ export default function DriverAssistSummaryPage() {
   const [exportMessage, setExportMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!route) {
+    const savedRoute = readSavedRoute();
+    if (!savedRoute) {
       router.replace("/upload-route");
     }
-  }, [route, router]);
+  }, [router]);
 
   const totals = useMemo(() => {
     // Failed stops count as remaining because they still need office review.
@@ -68,13 +68,6 @@ export default function DriverAssistSummaryPage() {
       <section style={styles.container}>
         <div style={styles.topBar}>
           <h1 style={styles.appHeader}>Driver Assist</h1>
-          <button
-            type="button"
-            style={styles.warningButton}
-            aria-label="View remaining deliveries"
-          >
-            <WarningIcon />
-          </button>
         </div>
 
         <section style={styles.summarySection}>
